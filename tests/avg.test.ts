@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { AvgAggregation } from "../aggregations/avg.ts";
+import { AvgAggregation } from "../aggregation/avg.ts";
 import { Document } from "./../collection.ts";
 
 Deno.test("AvgAggregation should correctly aggregate average value", () => {

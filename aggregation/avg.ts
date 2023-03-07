@@ -1,5 +1,5 @@
 import { Document } from "./../collection.ts";
-import { AbstractAggregation } from "./../smart.aggregation.ts";
+import { AbstractAggregation } from "./index.ts";
 
 export class AvgAggregation extends AbstractAggregation {
   declare _cachedValue: number | undefined;

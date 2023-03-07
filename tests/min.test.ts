@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { MinAggregation } from "../aggregations/min.ts";
+import { MinAggregation } from "../aggregation/min.ts";
 import { Document } from "./../collection.ts";
 
 Deno.test("MinAggregation should correctly aggregate minimum value", () => {

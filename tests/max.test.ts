@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { MaxAggregation } from "../aggregations/max.ts";
+import { MaxAggregation } from "../aggregation/max.ts";
 import { Document } from "./../collection.ts";
 
 Deno.test("MaxAggregation should correctly aggregate maximum value", () => {
