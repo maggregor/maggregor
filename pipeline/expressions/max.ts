@@ -1,7 +1,7 @@
-import { Document } from "./../collection.ts";
-import { AbstractAggregation } from "./index.ts";
+import { Document } from "./../../collection.ts";
+import { ExpressionAggregation } from "./index.ts";
 
-export class MinAggregation extends AbstractAggregation {
+export class Max extends ExpressionAggregation {
   private values: Map<number, number> = new Map();
   declare _cachedValue: number | undefined;
 
@@ -9,7 +9,7 @@ export class MinAggregation extends AbstractAggregation {
     const value = doc[this.field] as number;
     const valueCount = this.values.get(value) || 0;
     this.values.set(value, valueCount + 1);
-    if (this._cachedValue === undefined || value < this._cachedValue) {
+    if (this._cachedValue === undefined || value > this._cachedValue) {
       this._cachedValue = value;
     }
   }
@@ -22,16 +22,16 @@ export class MinAggregation extends AbstractAggregation {
     } else {
       this.values.set(value, valueCount - 1);
     }
-    this._cachedValue = this.findMin();
+    this._cachedValue = this.findMax();
   }
 
-  private findMin(): number | undefined {
-    let min: number | undefined;
+  private findMax(): number | undefined {
+    let max: number | undefined;
     for (const [value, count] of this.values) {
-      if (count > 0 && (min === undefined || value < min)) {
-        min = value;
+      if (count > 0 && (max === undefined || value > max)) {
+        max = value;
       }
     }
-    return min;
+    return max;
   }
 }

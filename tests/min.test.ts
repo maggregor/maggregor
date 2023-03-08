@@ -1,9 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { MinAggregation } from "../aggregation/min.ts";
+import { Min } from "../pipeline/expressions/min.ts";
 import { Document } from "./../collection.ts";
 
 Deno.test("MinAggregation should correctly aggregate minimum value", () => {
-  const aggregation = new MinAggregation("score");
+  const aggregation = new Min("score");
   const documents: Document[] = [
     { id: 1, score: 10 },
     { id: 2, score: 5 },

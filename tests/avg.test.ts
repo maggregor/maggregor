@@ -1,9 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { AvgAggregation } from "../aggregation/avg.ts";
+import { Avg } from "../pipeline/expressions/avg.ts";
 import { Document } from "./../collection.ts";
 
 Deno.test("AvgAggregation should correctly aggregate average value", () => {
-  const aggregation = new AvgAggregation("score");
+  const aggregation = new Avg("score");
   const documents: Document[] = [
     { id: 1, score: 10 },
     { id: 2, score: 5 },

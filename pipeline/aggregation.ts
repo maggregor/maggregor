@@ -1,4 +1,10 @@
 import { Document } from "../collection.ts";
+
+/**
+ * Type for a field reference, which is a string.
+ */
+export type FieldReference = string;
+
 /**
  * Interface for an aggregation.
  */
@@ -30,12 +36,6 @@ export interface Aggregation {
   onDeleteDocument(doc: Document): void;
 
   /**
-   * Updates the cached value for the aggregation.
-   * @param cachedValue The new cached value for the aggregation.
-   */
-  updateCachedValue(cachedValue: unknown): void;
-
-  /**
    * Returns the cached value for the aggregation.
    * @returns The cached value for the aggregation.
    * @throws Throws an error if the aggregation has not been initialized.
@@ -44,19 +44,9 @@ export interface Aggregation {
 }
 
 /**
- * Type for a field reference, which is a string.
- */
-export type FieldReference = string;
-
-/**
  * Abstract class for an aggregation.
  */
 export abstract class AbstractAggregation implements Aggregation {
-  /**
-   * The cached value for the aggregation.
-   */
-  protected _cachedValue: unknown;
-
   /**
    * The reference to the field being aggregated.
    */
@@ -65,7 +55,7 @@ export abstract class AbstractAggregation implements Aggregation {
   /**
    * Indicates whether the aggregation has been initialized.
    */
-  private initialized = false;
+  protected initialized = false;
 
   /**
    * Constructor for the AbstractAggregation class.
@@ -103,28 +93,20 @@ export abstract class AbstractAggregation implements Aggregation {
    * @param oldDoc The old version of the document.
    * @param newDoc The new version of the document.
    */
-  onUpdateDocument(oldDoc: Document, newDoc: Document): void {
-    this.onDeleteDocument(oldDoc);
-    this.onAddDocument(newDoc);
-  }
-
-  /**
-   * Updates the cached value for the aggregation.
-   * @param cachedValue The new cached value for the aggregation.
-   */
-  updateCachedValue(cachedValue: unknown): void {
-    this._cachedValue = cachedValue;
-  }
+  abstract onUpdateDocument(oldDoc: Document, newDoc: Document): void;
 
   /**
    * Returns the cached value for the aggregation.
    * @returns The cached value for the aggregation.
    * @throws Throws an error
    */
-  get(): unknown {
-    if (!this.initialized) {
-      throw new Error("Aggregation not initialized");
-    }
-    return this._cachedValue;
+  abstract get(): unknown;
+
+  /**
+   * Returns the reference to the field being aggregated.
+   * @returns The reference to the field being aggregated.
+   */
+  getReference(): FieldReference {
+    return this.field;
   }
 }

@@ -1,7 +1,7 @@
-import { Document } from "./../collection.ts";
-import { AbstractAggregation } from "./index.ts";
+import { Document } from "./../../collection.ts";
+import { ExpressionAggregation } from "./index.ts";
 
-export class SumAggregation extends AbstractAggregation {
+export class Sum extends ExpressionAggregation {
   declare _cachedValue: number | undefined;
 
   onAddDocument(d: Document): void {
