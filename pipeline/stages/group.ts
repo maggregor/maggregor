@@ -16,7 +16,6 @@ export class Group extends StageAggregation {
     const key = doc[this.field] as string;
     if (!this.__cachedDocs.has(key)) {
       const aggregation: ExpressionAggregation = createExpression(
-        this.field,
         this.expression
       );
       aggregation.init([doc]);

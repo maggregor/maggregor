@@ -1,4 +1,5 @@
-import { Document } from "../collection.ts";
+import { Collection } from "./../collection.ts";
+import { ChangeEvent, Document } from "../collection.ts";
 
 /**
  * Type for a field reference, which is a string.
@@ -41,6 +42,11 @@ export interface Aggregation {
    * @throws Throws an error if the aggregation has not been initialized.
    */
   get(): unknown;
+
+  /**
+   * Watches the collection for changes and updates the aggregation accordingly.
+   */
+  watch(collection: Collection<Document>): void;
 }
 
 /**
@@ -63,6 +69,23 @@ export abstract class AbstractAggregation implements Aggregation {
    */
   constructor(field: FieldReference) {
     this.field = field;
+  }
+
+  /**
+   * Watches the collection for changes and updates the aggregation accordingly.
+   * @param collection
+   */
+  watch(collection: Collection<Document>): void {
+    !this.initialized && this.init(collection.values());
+    collection.addChangeListener((e: ChangeEvent) => {
+      if (e.type === "add") {
+        this.onAddDocument(e.document);
+      } else if (e.type === "delete") {
+        this.onDeleteDocument(e.document);
+      } else if (e.type === "update") {
+        this.onUpdateDocument(e.oldDocument, e.newDocument);
+      }
+    });
   }
 
   /**

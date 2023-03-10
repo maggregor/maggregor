@@ -23,15 +23,22 @@ export type ChangeEvent = AddEvent | UpdateEvent | DeleteEvent;
 
 export class Collection<T extends Document> {
   private documents: T[] = [];
-  private collectionName: string;
+  private collectionName: string | undefined;
   private lastId = 0;
   private eventListeners: ((
     event: ChangeEvent,
     collection: Collection<T>
   ) => void)[] = [];
 
-  constructor(collectionName: string) {
+  constructor(collectionName?: string) {
     this.collectionName = collectionName;
+  }
+
+  addMany(documents: T[]): T[] {
+    for (const document of documents) {
+      this.add(document);
+    }
+    return documents;
   }
 
   add(document: T): T {
@@ -70,7 +77,7 @@ export class Collection<T extends Document> {
     return false;
   }
 
-  name(): string {
+  name(): string | undefined {
     return this.collectionName;
   }
 

@@ -87,17 +87,6 @@ export abstract class ExpressionAggregation extends AbstractAggregation {
   protected _cachedValue: unknown;
 
   /**
-   * Initializes the aggregation with a collection of documents.
-   * @param collection The collection of documents to be used for initialization.
-   * @returns The initialized aggregation.
-   */
-  init(collection: Array<Document>): Aggregation {
-    collection.forEach((doc) => this.onAddDocument(doc));
-    this.initialized = true;
-    return this;
-  }
-
-  /**
    * Method called when a new document is added to the collection.
    * @param doc The document that was added.
    */

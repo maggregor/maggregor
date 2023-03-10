@@ -1,25 +1,29 @@
 import { Document } from "./../../collection.ts";
 import { ExpressionAggregation } from "./index.ts";
+import { calculateHash } from "./../../utils/hash.ts";
 
 export class CountDistinct extends ExpressionAggregation {
-  declare _cachedValue: number | undefined;
-  private values: Map<number, number> = new Map();
+  __valueHashes: Map<string, number> = new Map();
 
   onAddDocument(doc: Document): void {
-    const value = doc[this.field] as number;
-    const valueCount = this.values.get(value) || 0;
-    this.values.set(value, valueCount + 1);
-    this._cachedValue = this.values.size;
+    const input = doc[this.field] as Record<string, unknown> | string | number;
+    const hash = calculateHash(input);
+    const count = this.__valueHashes.get(hash) || 0;
+    this.__valueHashes.set(hash, count + 1);
   }
 
   onDeleteDocument(doc: Document): void {
-    const value = doc[this.field] as number;
-    const valueCount = this.values.get(value) || 0;
-    if (valueCount === 1) {
-      this.values.delete(value);
+    const input = doc[this.field] as Record<string, unknown> | string | number;
+    const hash = calculateHash(input);
+    const count = this.__valueHashes.get(hash) || 0;
+    if (count > 1) {
+      this.__valueHashes.set(hash, count - 1);
     } else {
-      this.values.set(value, valueCount - 1);
+      this.__valueHashes.delete(hash);
     }
-    this._cachedValue = this.values.size;
+  }
+
+  public get(): number {
+    return this.__valueHashes.size;
   }
 }

@@ -4,23 +4,28 @@ import { Max } from "./expressions/max.ts";
 import { Min } from "./expressions/min.ts";
 import { FieldReference } from "./aggregation.ts";
 import { CountDistinct } from "./expressions/count-distinct.ts";
-import { Expression, ExpressionAggregation } from "./expressions/index.ts";
+import {
+  AvgExpression,
+  CountDistinctExpression,
+  Expression,
+  ExpressionAggregation,
+  MaxExpression,
+  MinExpression,
+  SumExpression,
+} from "./expressions/index.ts";
 
-export const createExpression = (
-  field: FieldReference,
-  type: Expression
-): ExpressionAggregation => {
+export const createExpression = (type: Expression): ExpressionAggregation => {
   switch (Object.keys(type)[0]) {
     case "sum":
-      return new Sum(field);
+      return new Sum((type as SumExpression).sum);
     case "max":
-      return new Max(field);
+      return new Max((type as MaxExpression).max);
     case "avg":
-      return new Avg(field);
+      return new Avg((type as AvgExpression).avg);
     case "min":
-      return new Min(field);
+      return new Min((type as MinExpression).min);
     case "countDistinct":
-      return new CountDistinct(field);
+      return new CountDistinct((type as CountDistinctExpression).countDistinct);
     default:
       throw new Error("Invalid expression type");
   }
