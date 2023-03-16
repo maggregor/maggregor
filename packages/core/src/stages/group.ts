@@ -2,16 +2,11 @@ import { createExpression } from "@core/factory.ts";
 import type { ExpressionAggregation } from "@core/expressions/index.ts";
 import { Document } from "@core/utils/collection.ts";
 import { FieldReference } from "@core/aggregation.ts";
-import { Expression } from "@core/expressions/index.ts";
 import { StageAggregation } from "@core/stages/index.ts";
 
 export class Group extends StageAggregation {
   private __cachedDocs: Map<string, ExpressionAggregation> = new Map();
   public type = "group";
-
-  constructor(field: FieldReference, private expression: Expression) {
-    super(field);
-  }
 
   onAddDocument(doc: Document): void {
     const key = doc[this.field] as string;

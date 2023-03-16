@@ -50,6 +50,10 @@ export interface Aggregation {
    * Type for a field reference, which is a string.
    */
   type: string;
+  /**
+   * Identifier
+   */
+  getUniqIdentifier(): string;
 }
 
 /**
@@ -139,5 +143,9 @@ export abstract class AbstractAggregation implements Aggregation {
    */
   getReference(): FieldReference {
     return this.field;
+  }
+
+  getUniqIdentifier(): string {
+    return `${this.type}-${this.field}`;
   }
 }
