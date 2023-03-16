@@ -1,5 +1,5 @@
-import { Document } from "./../../collection.ts";
-import { ExpressionAggregation } from "./index.ts";
+import { Document } from "@core/utils/collection.ts";
+import { ExpressionAggregation } from "@core/expressions/index.ts";
 
 export class Sum extends ExpressionAggregation {
   declare _cachedValue: number | undefined;

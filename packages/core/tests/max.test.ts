@@ -1,6 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { Max } from "../pipeline/expressions/max.ts";
-import { Document } from "./../collection.ts";
+import { assertEquals } from "asserts";
+import { Max } from "@core/index.ts";
+import { Document } from "@core/utils/collection.ts";
 
 Deno.test("MaxAggregation should correctly aggregate maximum value", () => {
   const aggregation = new Max("score");

@@ -1,5 +1,4 @@
-import { Collection } from "./../collection.ts";
-import { ChangeEvent, Document } from "../collection.ts";
+import { ChangeEvent, Collection, Document } from "@core/utils/collection.ts";
 
 /**
  * Type for a field reference, which is a string.

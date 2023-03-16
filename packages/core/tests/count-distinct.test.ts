@@ -1,6 +1,6 @@
-import { CountDistinct } from "./../pipeline/expressions/count-distinct.ts";
-import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { Document } from "./../collection.ts";
+import { CountDistinct } from "@core/index.ts";
+import { assertEquals } from "asserts";
+import { Document } from "@core/utils/collection.ts";
 
 Deno.test(
   "CountDistinctAggregation should correctly aggregate distinct values",

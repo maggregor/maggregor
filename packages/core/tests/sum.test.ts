@@ -1,6 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { Sum } from "../pipeline/expressions/sum.ts";
-import { Document } from "./../collection.ts";
+import { assertEquals } from "asserts";
+import { Sum } from "@core/index.ts";
+import { Document } from "@core/utils/collection.ts";
 
 Deno.test("SumAggregation should correctly aggregate sum", () => {
   const aggregation = new Sum("score");

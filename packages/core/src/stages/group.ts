@@ -1,9 +1,9 @@
-import { createExpression } from "./../factory.ts";
-import type { ExpressionAggregation } from "./../expressions/index.ts";
-import { Document } from "../../collection.ts";
-import { FieldReference } from "../aggregation.ts";
-import { Expression } from "../expressions/index.ts";
-import { StageAggregation } from "./index.ts";
+import { createExpression } from "@core/factory.ts";
+import type { ExpressionAggregation } from "@core/expressions/index.ts";
+import { Document } from "@core/utils/collection.ts";
+import { FieldReference } from "@core/aggregation.ts";
+import { Expression } from "@core/expressions/index.ts";
+import { StageAggregation } from "@core/stages/index.ts";
 
 export class Group extends StageAggregation {
   private __cachedDocs: Map<string, ExpressionAggregation> = new Map();

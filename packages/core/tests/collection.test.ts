@@ -1,5 +1,5 @@
-import { Collection, Document } from "./../collection.ts";
-import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
+import { Collection, Document } from "@core/utils/collection.ts";
+import { assertEquals } from "asserts";
 
 Deno.test("Collection - add, delete, update and get", () => {
   const collection = new Collection<Document>("test");

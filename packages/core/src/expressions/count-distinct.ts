@@ -1,6 +1,6 @@
-import { Document } from "./../../collection.ts";
-import { ExpressionAggregation } from "./index.ts";
-import { calculateHash } from "./../../utils/hash.ts";
+import { Document } from "@core/utils/collection.ts";
+import { ExpressionAggregation } from "@core/expressions/index.ts";
+import { calculateHash } from "@core/utils/hash.ts";
 
 export class CountDistinct extends ExpressionAggregation {
   __valueHashes: Map<string, number> = new Map();

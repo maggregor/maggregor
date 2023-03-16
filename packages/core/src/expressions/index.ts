@@ -1,5 +1,5 @@
-import { AbstractAggregation } from "../aggregation.ts";
-import { Document } from "../../collection.ts";
+import { AbstractAggregation } from "@core/aggregation.ts";
+import { Document } from "@core/utils/collection.ts";
 
 export type SumExpression = {
   sum: FieldReference;

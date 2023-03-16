@@ -1,8 +1,8 @@
-import { Sum } from "./expressions/sum.ts";
-import { Avg } from "./expressions/avg.ts";
-import { Max } from "./expressions/max.ts";
-import { Min } from "./expressions/min.ts";
-import { CountDistinct } from "./expressions/count-distinct.ts";
+import { Sum } from "@core/expressions/sum.ts";
+import { Avg } from "@core/expressions/avg.ts";
+import { Max } from "@core/expressions/max.ts";
+import { Min } from "@core/expressions/min.ts";
+import { CountDistinct } from "@core/expressions/count-distinct.ts";
 import {
   AvgExpression,
   CountDistinctExpression,
@@ -11,7 +11,7 @@ import {
   MaxExpression,
   MinExpression,
   SumExpression,
-} from "./expressions/index.ts";
+} from "@core/expressions/index.ts";
 
 export const createExpression = (type: Expression): ExpressionAggregation => {
   switch (Object.keys(type)[0]) {

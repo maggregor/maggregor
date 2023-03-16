@@ -1,5 +1,5 @@
-import type { Document } from "./../../collection.ts";
-import { ExpressionAggregation } from "./index.ts";
+import type { Document } from "@core/utils/collection.ts";
+import { ExpressionAggregation } from "@core/expressions/index.ts";
 
 export class Avg extends ExpressionAggregation {
   declare _cachedValue: number | undefined;

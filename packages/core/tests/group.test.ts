@@ -1,7 +1,6 @@
-import { assertEquals } from "https://deno.land/std@0.178.0/testing/asserts.ts";
-import { Document } from "../collection.ts";
-import { Expression } from "../pipeline/expressions/index.ts";
-import { Group } from "../pipeline/stages/group.ts";
+import { assertEquals } from "asserts";
+import { Document } from "@core/utils/collection.ts";
+import { Expression, Group } from "@core/index.ts";
 
 Deno.test("Group should correctly aggregate documents", () => {
   const aggregation = new Group("country", { max: "score" } as Expression);

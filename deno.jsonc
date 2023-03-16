@@ -1,8 +1,0 @@
-{
-  "tasks": {
-    "dev": "deno run --watch main.ts",
-    "request": "deno run --watch --allow-net request/index.ts",
-    "parser": "deno run parser/index.ts",
-    "parse": "deno run --watch parser/parse.ts"
-  }
-}

@@ -1,8 +1,5 @@
-import { Document } from "../collection.ts";
-import { Collection } from "../collection.ts";
-import { CountDistinct } from "../pipeline/expressions/count-distinct.ts";
-import { Max } from "../pipeline/expressions/max.ts";
-import { Sum } from "../pipeline/expressions/sum.ts";
+import { Collection, Document } from "@core/utils/collection.ts";
+import { Max, Sum, CountDistinct } from "@core/index.ts";
 
 const COUNT_DOCUMENTS = 1000;
 const COUNT_ITERATIONS = 10000;
