@@ -1,7 +1,7 @@
 {
   "imports": {
     "@core/": "./packages/core/src/",
-    "@parser": "./packages/parser/dist",
+    "@parser/": "./packages/mongodb-parser/dist/",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts"
   }
 }

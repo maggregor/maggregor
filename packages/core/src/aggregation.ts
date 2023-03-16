@@ -54,6 +54,10 @@ export interface Aggregation {
    * Identifier
    */
   getUniqIdentifier(): string;
+  /**
+   * Get the field reference
+   */
+  getField(): FieldReference;
 }
 
 /**
@@ -141,7 +145,7 @@ export abstract class AbstractAggregation implements Aggregation {
    * Returns the reference to the field being aggregated.
    * @returns The reference to the field being aggregated.
    */
-  getReference(): FieldReference {
+  getField(): FieldReference {
     return this.field;
   }
 

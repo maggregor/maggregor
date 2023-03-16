@@ -5,8 +5,7 @@
     "packages/tests",
     "packages/benchs",
     "packages/core",
-    "packages/cli",
-    "packages/server"
+    "packages/mongodb-adapter"
   ],
   "deno.lint": true,
   "deno.config": "packages/core/deno.jsonc",
