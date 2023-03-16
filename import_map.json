@@ -1,6 +1,7 @@
 {
   "imports": {
-    "@core/": "./src/",
+    "@core/": "./packages/core/src/",
+    "@parser": "./packages/parser/dist",
     "asserts": "https://deno.land/std@0.178.0/testing/asserts.ts"
   }
 }
