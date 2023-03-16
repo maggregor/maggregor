@@ -1,0 +1,3 @@
+[submodule "packages/ts-mongo-aggregation-parser"]
+	path = packages/ts-mongo-aggregation-parser
+	url = https://github.com/estebgonza/ts-mongo-aggregation-parser
