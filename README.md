@@ -1,6 +1,7 @@
 # maggregordb
-
 MaggregorDB is an in-memory database that performs aggregations very quickly.
+
+![MaggregorDB](https://github.com/estebgonza/maggregordb/actions/workflows/tests.yaml/badge.svg)
 
 ## Packages
 
