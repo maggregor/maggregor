@@ -5,6 +5,7 @@ export class Avg extends ExpressionAggregation {
   declare _cachedValue: number | undefined;
   private sum = 0;
   private count = 0;
+  public type = "avg";
 
   onAddDocument(d: Document): void {
     const value = d[this.field] as number;

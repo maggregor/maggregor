@@ -47,12 +47,21 @@ export interface Aggregation {
    * Watches the collection for changes and updates the aggregation accordingly.
    */
   watch(collection: Collection<Document>): void;
+  /**
+   * Type for a field reference, which is a string.
+   */
+  type: string;
 }
 
 /**
  * Abstract class for an aggregation.
  */
 export abstract class AbstractAggregation implements Aggregation {
+  /**
+   * The type of the aggregation.
+   */
+  public abstract type: string;
+
   /**
    * The reference to the field being aggregated.
    */

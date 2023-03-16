@@ -4,6 +4,7 @@ import { ExpressionAggregation } from "./index.ts";
 export class Min extends ExpressionAggregation {
   private values: Map<number, number> = new Map();
   declare _cachedValue: number | undefined;
+  public type = "min";
 
   onAddDocument(doc: Document): void {
     const value = doc[this.field] as number;

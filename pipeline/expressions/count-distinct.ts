@@ -4,6 +4,7 @@ import { calculateHash } from "./../../utils/hash.ts";
 
 export class CountDistinct extends ExpressionAggregation {
   __valueHashes: Map<string, number> = new Map();
+  public type = "countDistinct";
 
   onAddDocument(doc: Document): void {
     const input = doc[this.field] as Record<string, unknown> | string | number;

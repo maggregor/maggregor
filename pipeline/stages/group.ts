@@ -7,6 +7,7 @@ import { StageAggregation } from "./index.ts";
 
 export class Group extends StageAggregation {
   private __cachedDocs: Map<string, ExpressionAggregation> = new Map();
+  public type = "group";
 
   constructor(field: FieldReference, private expression: Expression) {
     super(field);

@@ -2,7 +2,6 @@ import { Sum } from "./expressions/sum.ts";
 import { Avg } from "./expressions/avg.ts";
 import { Max } from "./expressions/max.ts";
 import { Min } from "./expressions/min.ts";
-import { FieldReference } from "./aggregation.ts";
 import { CountDistinct } from "./expressions/count-distinct.ts";
 import {
   AvgExpression,
