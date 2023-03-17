@@ -14,8 +14,8 @@ export class AggregationStore {
    *
    * @param config
    */
-  constructor(config: AggregationStoreConfig) {
-    config.aggregations?.forEach((aggregation) => {
+  constructor(config?: AggregationStoreConfig) {
+    config?.aggregations?.forEach((aggregation) => {
       this.aggregations.set(aggregation.getUniqIdentifier(), aggregation);
     });
     console.log(`Created new aggregation store.`);
