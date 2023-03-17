@@ -11,15 +11,17 @@ const throwUnsupportedFeatureError = (feature: string) => {
 export const findAvailableAggregation = (
   query: string,
   store: AggregationStore
-) => {
+): Aggregation | undefined => {
   const ast = MongoDBParser.parse(query) as ASTStageList;
-  // do something with the parsed query
   const visitor = new AggregationFinder(store);
+  // Visit the AST and find the aggregation
   ast.accept(visitor);
+  return visitor.getFoundAggregation();
 };
 
 export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
   private store: AggregationStore;
+  private foundAggregation: Aggregation | undefined;
 
   constructor(store: AggregationStore) {
     super();
@@ -46,6 +48,13 @@ export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
     if (allGroups.length === 0) {
       throw new Error("No group aggregation found");
     }
+
+    const operator = stageGroup.properties[0].operation.operator;
+    const operationFieldName = stageGroup.properties[0].operation.field.name;
+    this.foundAggregation = allGroups.find((g) => {
+      const e = g.getExpression();
+      return e.type === operator && e.field === operationFieldName;
+    });
   }
 
   private findGroups(store: AggregationStore): Group[] {
@@ -55,5 +64,9 @@ export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
         return a.type === "group";
       })
       .map((a: Aggregation) => a as Group);
+  }
+
+  getFoundAggregation(): Aggregation | undefined {
+    return this.foundAggregation;
   }
 }
