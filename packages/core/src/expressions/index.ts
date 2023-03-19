@@ -2,23 +2,28 @@ import { AbstractAggregation } from "@core/aggregation.ts";
 import { Document } from "@core/utils/collection.ts";
 
 export type SumExpression = {
-  sum: FieldReference;
+  type: "sum";
+  field: FieldReference;
 };
 
 export type AvgExpression = {
-  avg: FieldReference;
+  type: "avg";
+  field: FieldReference;
 };
 
 export type MaxExpression = {
-  max: FieldReference;
+  type: "max";
+  field: FieldReference;
 };
 
 export type MinExpression = {
-  min: FieldReference;
+  type: "min";
+  field: FieldReference;
 };
 
 export type CountDistinctExpression = {
-  countDistinct: FieldReference;
+  type: "countDistinct";
+  field: FieldReference;
 };
 
 export type Expression =

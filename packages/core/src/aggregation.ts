@@ -139,7 +139,7 @@ export abstract class AbstractAggregation implements Aggregation {
    * @returns The cached value for the aggregation.
    * @throws Throws an error
    */
-  abstract get(): unknown;
+  abstract get(): unknown | unknown[] | Map<string, unknown>;
 
   /**
    * Returns the reference to the field being aggregated.

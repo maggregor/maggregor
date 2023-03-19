@@ -16,8 +16,9 @@ export class Group extends StageAggregation {
       );
       aggregation.init([doc]);
       this.__cachedDocs.set(key, aggregation);
+    } else {
+      this.__cachedDocs.get(key)!.onAddDocument(doc);
     }
-    this.__cachedDocs.get(key)!.onAddDocument(doc);
   }
 
   onDeleteDocument(doc: Document): void {

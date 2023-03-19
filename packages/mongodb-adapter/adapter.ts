@@ -1,3 +1,5 @@
+import { StageAggregation } from "@core/stages/index.ts";
+import { ASTProperty } from "@parser/index.d.ts";
 import { Aggregation } from "@core/aggregation.ts";
 import { Group } from "@core/stages/group.ts";
 import * as MongoDBParser from "@parser/index.js";
@@ -17,6 +19,26 @@ export const findAvailableAggregation = (
   // Visit the AST and find the aggregation
   ast.accept(visitor);
   return visitor.getFoundAggregation();
+};
+
+export const findResults = (
+  query: string,
+  store: AggregationStore
+): unknown[] => {
+  const aggregation = findAvailableAggregation(query, store);
+  if (!aggregation) {
+    throw new Error("No aggregation found");
+  }
+  const stage = aggregation as StageAggregation;
+  const ast = MongoDBParser.parse(query) as ASTStageList;
+  const visitor = new OutputBuilder(stage);
+  // Visit the AST and find the output
+  ast.accept(visitor);
+  const output = visitor.getOutput();
+  if (!output) {
+    throw new Error("No output found");
+  }
+  return output;
 };
 
 export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
@@ -55,6 +77,9 @@ export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
       const e = g.getExpression();
       return e.type === operator && e.field === operationFieldName;
     });
+    if (!this.foundAggregation) {
+      throw new Error("No group aggregation found");
+    }
   }
 
   private findGroups(store: AggregationStore): Group[] {
@@ -68,5 +93,39 @@ export class AggregationFinder extends MongoDBParser.BaseASTVisitor {
 
   getFoundAggregation(): Aggregation | undefined {
     return this.foundAggregation;
+  }
+}
+
+export class OutputBuilder extends MongoDBParser.BaseASTVisitor {
+  private stage: StageAggregation;
+  private outputPropertyName: string | undefined;
+  private groupBy: string | undefined;
+
+  constructor(aggregation: StageAggregation) {
+    super();
+    this.stage = aggregation;
+  }
+
+  // visitStageGroup(stageGroup: ASTStageGroup) {
+  //   this.groupBy = stageGroup.id.name;
+  //   super.visitStageGroup(stageGroup);
+  // }
+
+  visitProperty(property: ASTProperty) {
+    this.outputPropertyName = property.field.name;
+  }
+
+  getOutput(): unknown[] | undefined {
+    const results = this.stage.get();
+    if (this.outputPropertyName) {
+      // const groupKey = this.groupBy;
+      const outputFieldName = this.outputPropertyName;
+      return [...results.entries()].map((e) => {
+        return {
+          _id: e[0],
+          [outputFieldName]: e[1],
+        };
+      });
+    }
   }
 }

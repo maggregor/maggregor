@@ -5,8 +5,10 @@ import { createExpression } from "@core/factory.ts";
 export abstract class StageAggregation extends AbstractAggregation {
   private uniqIdentifier: string;
 
+  abstract get(): Map<string, unknown>;
+
   constructor(field: FieldReference, protected expression: Expression) {
-    super(field);
+    super(field.replace("$", "")); // Remove the $ from the field
     this.uniqIdentifier = `${this.field}.${createExpression(
       this.expression
     ).getUniqIdentifier()}`;
@@ -14,5 +16,9 @@ export abstract class StageAggregation extends AbstractAggregation {
 
   getUniqIdentifier(): string {
     return this.uniqIdentifier;
+  }
+
+  getExpression(): Expression {
+    return this.expression;
   }
 }
