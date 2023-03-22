@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 import { Expression, evaluateExpression } from "../expressions/index.ts";
 
 export interface Stage {
@@ -6,13 +7,39 @@ export interface Stage {
   next?: Stage;
 }
 
+export type AccumulatorOperator = "$sum" | "$avg" | "$min" | "$max";
+
+export const accumulatorFunctions = {
+  $sum: (e: Expression, data: any[]) => {
+    return data.reduce((acc, item) => acc + evaluateExpression(e, item), 0);
+  },
+  $avg: (e: Expression, data: any[]) => {
+    return (
+      data.reduce((acc, item) => acc + evaluateExpression(e, item), 0) /
+      data.length
+    );
+  },
+  $min: (e: Expression, data: any[]) => {
+    return data.reduce((acc, item) => {
+      const value = evaluateExpression(e, item);
+      return value < acc ? value : acc;
+    }, Infinity);
+  },
+  $max: (e: Expression, data: any[]) => {
+    return data.reduce((acc, item) => {
+      const value = evaluateExpression(e, item);
+      return value > acc ? value : acc;
+    }, -Infinity);
+  },
+};
+
 export interface IGroupStage extends Stage {
   options: GroupStageOptions;
 }
 
 export type GroupStageOptions = {
   _id: Expression;
-  [key: string]: Expression;
+  [key: string]: { [key in AccumulatorOperator]?: Expression } | Expression;
 };
 
 export type StageName = "match" | "group" | "sort" | "limit" | "skip";
@@ -68,23 +95,15 @@ export class GroupStage implements IGroupStage {
       const newItem: { [key: string]: any } = { _id: key };
 
       groupKeys.forEach((groupKey) => {
-        const operation = Object.keys(this.options[groupKey])[0];
-        const field = this.options[groupKey][operation as any];
-        if (operation === "$sum") {
-          newItem[groupKey] = items.reduce(
-            (acc, item) =>
-              acc +
-              (typeof field === "number"
-                ? field
-                : evaluateExpression(field, item)),
-            0
-          );
-        } else if (operation === "$avg") {
-          newItem[groupKey] =
-            items.reduce(
-              (acc, item) => acc + evaluateExpression(field, item),
-              0
-            ) / items.length;
+        const operator = Object.keys(this.options[groupKey]).filter(
+          (e) => e in accumulatorFunctions
+        )[0]! as AccumulatorOperator;
+        if (operator in accumulatorFunctions) {
+          // @ts-ignore - Temporary fix
+          const field = this.options[groupKey][operator];
+          newItem[groupKey] = accumulatorFunctions[
+            operator as AccumulatorOperator
+          ](field, items);
         }
       });
       return newItem;
@@ -96,7 +115,7 @@ if (import.meta.main) {
   const pipeline = createPipeline([
     new GroupStage({
       _id: { field: "genre" },
-      avgScore: { $avg: { field: "score" } } as any,
+      avgScore: { $avg: { field: "score" } },
       sumScore: {
         $sum: {
           operator: "$multiply",
@@ -104,15 +123,19 @@ if (import.meta.main) {
             { field: "score" },
             {
               operator: "$multiply",
-              value: [{ field: "score" }, { field: "score" }],
+              value: [
+                {
+                  operator: "$multiply",
+                  value: [{ field: "score" }, { field: "score" }],
+                } as Expression,
+                { field: "score" },
+              ],
             },
           ],
         },
-      } as any,
-    }),
-    new GroupStage({
-      _id: { operator: "$toUpper", value: { field: "_id" } },
-      avgScoreWesh: { $avg: { field: "avgScore" } } as any,
+      },
+      minScore: { $min: { field: "score" } },
+      maxScore: { $max: { field: "score" } },
     }),
   ]);
 
