@@ -1,6 +1,5 @@
 import { assertEquals } from "asserts";
 import { GroupStage, LimitStage, MatchStage } from "@core/pipeline/stages.ts";
-import { Document } from "@core/index.ts";
 
 const sampleData = [
   { genre: "action", score: 10 },
@@ -11,7 +10,7 @@ const sampleData = [
   { genre: "drama", score: 60 },
 ];
 Deno.test({
-  name: "Simple group stage without pipeline and without reduce",
+  name: "Simple group stage",
   fn() {
     const groupStage = new GroupStage({
       groupExpr: { field: "genre" },

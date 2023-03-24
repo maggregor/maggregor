@@ -1,5 +1,9 @@
-import { assertEquals } from "asserts";
-import { Expression, evaluateExpression } from "@core/pipeline/expressions.ts";
+import { assertEquals, assertNotEquals } from "asserts";
+import {
+  Expression,
+  evaluateExpression,
+  toHashExpression,
+} from "@core/pipeline/expressions.ts";
 import { Document } from "@core/index.ts";
 
 Deno.test({
@@ -219,6 +223,45 @@ Deno.test({
     assertEquals(
       evaluateExpression(expression, {} as Document),
       "Hello World! How are you?"
+    );
+  },
+});
+
+Deno.test({
+  name: "toHashExpression equals",
+  fn() {
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    const expression2: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    // expr1 = expr1
+    assertEquals(toHashExpression(expression1), toHashExpression(expression1));
+    // expr1 = expr2
+    assertEquals(toHashExpression(expression1), toHashExpression(expression2));
+    // expr2 = expr2
+    assertEquals(toHashExpression(expression2), toHashExpression(expression2));
+  },
+});
+
+Deno.test({
+  name: "toHashExpression not equals",
+  fn() {
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    const expression2: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 3 }],
+    };
+    // expr1 != expr2
+    assertNotEquals(
+      toHashExpression(expression1),
+      toHashExpression(expression2)
     );
   },
 });

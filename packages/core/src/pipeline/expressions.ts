@@ -1,4 +1,6 @@
 import { Document, DocumentFieldValue } from "../index.ts";
+import { crypto } from "https://deno.land/std/crypto/mod.ts";
+import { toHashString } from "https://deno.land/std@0.181.0/crypto/to_hash_string.ts";
 
 /**
  * An expression
@@ -209,4 +211,11 @@ function getFieldValue(
     }
   }
   return value as DocumentFieldValue;
+}
+
+// Generate a uniq hash for an expression
+export function toHashExpression(expression: Expression): string {
+  const encoded = new TextEncoder().encode(JSON.stringify(expression));
+  const hash = crypto.subtle.digestSync("SHA-384", encoded);
+  return toHashString(hash);
 }
