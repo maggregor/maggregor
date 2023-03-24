@@ -1,8 +1,10 @@
 
-![MaggregorCache](https://user-images.githubusercontent.com/32603471/227653980-69847cd5-fcfb-46de-b7f4-a779547cc7ae.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32603471/227660775-500b7b52-37f6-469c-beea-f3d0f940b4cd.png">
+  <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/227661043-e747c07d-7813-432d-a866-d1e700461c80.png">
+</picture>
 
-![MaggregorCache](https://github.com/estebgonza/maggregordb/actions/workflows/tests.yaml/badge.svg)
-
+[![MaggregorCache Tests](https://github.com/estebgonza/maggregordb/actions/workflows/tests.yaml/badge.svg)](#)
 ## Packages
 
 | Packages           | Description |
