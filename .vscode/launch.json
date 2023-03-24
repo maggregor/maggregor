@@ -1,0 +1,24 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "request": "launch",
+      "name": "Launch Program",
+      "type": "node",
+      "cwd": "${workspaceFolder}/packages/core/",
+      "runtimeExecutable": "/opt/homebrew/bin/deno",
+      "runtimeArgs": [
+        "task",
+        "test",
+        "src/pipeline/*.test.ts",
+        "--watch",
+        "--filter",
+        "\"\\$not\""
+      ],
+      "attachSimplePort": 9229
+    }
+  ]
+}
