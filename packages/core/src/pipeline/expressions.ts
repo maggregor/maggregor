@@ -1,6 +1,4 @@
-import { Document, DocumentFieldValue } from "../index.ts";
-import { crypto } from "https://deno.land/std/crypto/mod.ts";
-import { toHashString } from "https://deno.land/std@0.181.0/crypto/to_hash_string.ts";
+import { Document, DocumentFieldValue } from "@core/index.ts";
 
 /**
  * An expression
@@ -10,8 +8,9 @@ export interface Expression {
   operator?: ExpressionOperator;
   value?: ExpressionValue | ExpressionValue[];
 }
-type ExpressionResult = any;
-type ExpressionValue = number | string | boolean | Expression;
+// deno-lint-ignore no-explicit-any
+export type ExpressionResult = any;
+export type ExpressionValue = number | string | boolean | Expression;
 export type ExpressionOperator =
   | "$add"
   | "$subtract"
@@ -211,11 +210,4 @@ function getFieldValue(
     }
   }
   return value as DocumentFieldValue;
-}
-
-// Generate a uniq hash for an expression
-export function toHashExpression(expression: Expression): string {
-  const encoded = new TextEncoder().encode(JSON.stringify(expression));
-  const hash = crypto.subtle.digestSync("SHA-384", encoded);
-  return toHashString(hash);
 }

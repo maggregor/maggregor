@@ -1,10 +1,14 @@
 import { Stage } from "@core/pipeline/stages.ts";
+import { Document } from "../index.ts";
 
 export interface Pipeline {
   stages: Stage[];
 }
 
-export function executePipeline(pipeline: Pipeline, data: any[]): any[] {
+export function executePipeline(
+  pipeline: Pipeline,
+  data: Document[]
+): Document[] {
   let result = [...data];
   let currentStage: Stage | undefined = pipeline.stages[0];
   do {

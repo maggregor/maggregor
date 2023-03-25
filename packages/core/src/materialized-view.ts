@@ -1,20 +1,24 @@
 import { Expression, evaluateExpression } from "@core/pipeline/expressions.ts";
 import { CollectionListener, Document } from "@core/index.ts";
-import { CachedAccumulator } from "./cached-accumulator.ts";
+import {
+  CachedAccumulator,
+  AccumulatorDefinition,
+  createCachedAccumulator,
+} from "@core/pipeline/accumulators/index.ts";
 
 export interface MaterializedViewOptions {
   groupBy: Expression;
-  accumulators: CachedAccumulator[];
+  accumulatorDefs: AccumulatorDefinition[];
 }
 
 export class MaterializedView implements CollectionListener {
   private groupBy: Expression;
-  private accumulators: CachedAccumulator[];
+  private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();
 
   constructor(options: MaterializedViewOptions) {
     this.groupBy = options.groupBy;
-    this.accumulators = options.accumulators;
+    this.definitions = options.accumulatorDefs;
   }
 
   addDocument(doc: Document): void {
@@ -23,7 +27,7 @@ export class MaterializedView implements CollectionListener {
     if (!this.results.has(groupByValueString)) {
       this.results.set(
         groupByValueString,
-        this.accumulators.map((a) => a.clone())
+        this.definitions.map((d) => createCachedAccumulator(d))
       );
     }
     const accumulators = this.results.get(groupByValueString);
@@ -44,17 +48,25 @@ export class MaterializedView implements CollectionListener {
     this.updateDocument(oldDoc, newDoc);
   }
 
-  // deno-lint-ignore no-explicit-any
-  getView(): any {
-    const results = [];
-    for (const [key, value] of this.results) {
-      const result = { _id: JSON.parse(key) };
-      for (let i = 0; i < this.accumulators.length; i++) {
+  /**
+   * _id is the groupBy expression
+   * Each accumulator is a field in the document
+   *
+   * @returns
+   */
+  getView(): Document[] {
+    const accumulatorHashes = this.getAccumulatorHashes();
+    return Array.from(this.results.entries()).map(([key, value]) => {
+      const obj: Document = { _id: JSON.parse(key) };
+      value.forEach((a, i) => {
         // @ts-ignore - TODO: fix this
-        result[this.accumulators[i].getId()] = value[i].getCachedValue();
-      }
-      results.push(result);
-    }
-    return results;
+        obj[accumulatorHashes[i]] = a.getCachedValue();
+      });
+      return obj;
+    });
+  }
+
+  getAccumulatorHashes(): string[] {
+    return this.definitions.map((d) => createCachedAccumulator(d).hash);
   }
 }
