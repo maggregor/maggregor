@@ -55,9 +55,11 @@ Deno.test({
   name: "Pipeline with match stage",
   fn() {
     const pipeline = createPipeline([
-      new MatchStage([
-        { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
-      ]),
+      new MatchStage({
+        filterExprs: [
+          { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
+        ],
+      }),
     ]);
     const result = executePipeline(pipeline, sampleData);
     assertEquals(result, [
@@ -84,9 +86,11 @@ Deno.test({
   name: "Pipeline with two stages: match and group",
   fn() {
     const pipeline = createPipeline([
-      new MatchStage([
-        { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
-      ]),
+      new MatchStage({
+        filterExprs: [
+          { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
+        ],
+      }),
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {
@@ -114,10 +118,12 @@ Deno.test({
   name: "Pipeline with two stages: group and match with two conditions",
   fn() {
     const pipeline = createPipeline([
-      new MatchStage([
-        { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
-        { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
-      ]),
+      new MatchStage({
+        filterExprs: [
+          { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
+          { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+        ],
+      }),
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {

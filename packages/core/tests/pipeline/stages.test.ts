@@ -33,9 +33,11 @@ Deno.test({
 Deno.test({
   name: "Simple match stage",
   fn() {
-    const matchStage = new MatchStage([
-      { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
-    ]);
+    const matchStage = new MatchStage({
+      filterExprs: [
+        { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
+      ],
+    });
     const result = matchStage.execute(sampleData);
     assertEquals(result, [
       { genre: "action", score: 10 },
