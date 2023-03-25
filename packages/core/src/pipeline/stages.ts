@@ -62,16 +62,18 @@ export class GroupStage implements IGroupStage {
   }
 }
 
-export type MatchStageOptions = Array<Expression>;
+export type MatchStageOptions = {
+  filterExprs: Expression[];
+};
 
 export class MatchStage implements Stage {
   name: StageName;
   next?: Stage | undefined;
-  expressions: Expression[];
+  options: MatchStageOptions;
 
-  constructor(exprs: MatchStageOptions) {
+  constructor(options: MatchStageOptions) {
     this.name = "match" as StageName;
-    this.expressions = exprs;
+    this.options = options;
   }
 
   /**
@@ -82,8 +84,9 @@ export class MatchStage implements Stage {
    * @returns The document if it matches, otherwise undefined
    */
   execute(doc: Document[]): Document[] {
+    const filterExprs = this.options.filterExprs;
     return doc.filter((i) =>
-      this.expressions.every((e) => evaluateExpression(e, i))
+      filterExprs.every((e) => evaluateExpression(e, i))
     );
   }
 }

@@ -69,4 +69,8 @@ export class MaterializedView implements CollectionListener {
   getAccumulatorHashes(): string[] {
     return this.definitions.map((d) => createCachedAccumulator(d).hash);
   }
+
+  getGroupExpression(): Expression {
+    return this.groupBy;
+  }
 }
