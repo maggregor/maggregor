@@ -1,6 +1,6 @@
 import { Document } from "@core/index.ts";
 import { evaluateExpression, Expression } from "@core/pipeline/expressions.ts";
-import { Accumulator } from "@core/pipeline/accumulators.ts";
+import { Accumulator } from "@core/pipeline/accumulators/index.ts";
 
 export interface Stage {
   name: StageName;

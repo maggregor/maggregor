@@ -1,12 +1,12 @@
 import { assertEquals } from "asserts";
 import { createPipeline, executePipeline } from "@core/pipeline/pipeline.ts";
 import { GroupStage, MatchStage, LimitStage } from "@core/pipeline/stages.ts";
-import { AvgAccumulator } from "@core/pipeline/accumulators.ts";
+import { AvgBasicAccumulator } from "@core/pipeline/accumulators/index.ts";
 import {
-  SumAccumulator,
-  MinAccumulator,
-  MaxAccumulator,
-} from "@core/pipeline/accumulators.ts";
+  SumBasicAccumulator,
+  MinBasicAccumulator,
+  MaxBasicAccumulator,
+} from "@core/pipeline/accumulators/index.ts";
 
 const sampleData = [
   { genre: "action", score: 10 },
@@ -24,10 +24,10 @@ Deno.test({
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {
-          avgScore: new AvgAccumulator({ field: "score" }),
-          sumScore: new SumAccumulator({ field: "score" }),
-          minScore: new MinAccumulator({ field: "score" }),
-          maxScore: new MaxAccumulator({ field: "score" }),
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+          sumScore: new SumBasicAccumulator({ field: "score" }),
+          minScore: new MinBasicAccumulator({ field: "score" }),
+          maxScore: new MaxBasicAccumulator({ field: "score" }),
         },
       }),
     ]);
@@ -90,10 +90,10 @@ Deno.test({
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {
-          avgScore: new AvgAccumulator({ field: "score" }),
-          sumScore: new SumAccumulator({ field: "score" }),
-          minScore: new MinAccumulator({ field: "score" }),
-          maxScore: new MaxAccumulator({ field: "score" }),
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+          sumScore: new SumBasicAccumulator({ field: "score" }),
+          minScore: new MinBasicAccumulator({ field: "score" }),
+          maxScore: new MaxBasicAccumulator({ field: "score" }),
         },
       }),
     ]);
@@ -121,10 +121,10 @@ Deno.test({
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {
-          avgScore: new AvgAccumulator({ field: "score" }),
-          sumScore: new SumAccumulator({ field: "score" }),
-          minScore: new MinAccumulator({ field: "score" }),
-          maxScore: new MaxAccumulator({ field: "score" }),
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+          sumScore: new SumBasicAccumulator({ field: "score" }),
+          minScore: new MinBasicAccumulator({ field: "score" }),
+          maxScore: new MaxBasicAccumulator({ field: "score" }),
         },
       }),
     ]);
@@ -148,8 +148,8 @@ Deno.test({
       new GroupStage({
         groupExpr: { field: "genre" },
         accumulators: {
-          avgScore: new AvgAccumulator({ field: "score" }),
-          avgScoreOnComplexExpression: new AvgAccumulator({
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+          avgScoreOnComplexExpression: new AvgBasicAccumulator({
             operator: "$add",
             value: [
               {

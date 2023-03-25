@@ -5,7 +5,7 @@ import {
   MaxCachedAccumulator,
   AvgCachedAccumulator,
   CountCachedAccumulator,
-} from "@core/cache/cached-accumulator.ts";
+} from "@core/pipeline/accumulators/index.ts";
 
 Deno.test({
   name: "SumCachedAccumulator",
@@ -83,7 +83,7 @@ Deno.test({
     avgAccumulator.delete(1);
     assertEquals(avgAccumulator.getCachedValue(), 3);
     avgAccumulator.delete(3);
-    assertEquals(avgAccumulator.getCachedValue(), undefined);
+    assertEquals(avgAccumulator.getCachedValue(), 0);
   },
 });
 
@@ -92,17 +92,27 @@ Deno.test({
   fn() {
     const countAccumulator = new CountCachedAccumulator();
     assertEquals(countAccumulator.getCachedValue(), 0);
-    countAccumulator.add(1);
+    countAccumulator.add(true);
     assertEquals(countAccumulator.getCachedValue(), 1);
-    countAccumulator.add(2);
+    countAccumulator.add(true);
     assertEquals(countAccumulator.getCachedValue(), 2);
-    countAccumulator.add(3);
+    countAccumulator.add(true);
     assertEquals(countAccumulator.getCachedValue(), 3);
-    countAccumulator.delete(2);
+    countAccumulator.delete(true);
     assertEquals(countAccumulator.getCachedValue(), 2);
-    countAccumulator.delete(1);
+    countAccumulator.delete(false);
+    assertEquals(countAccumulator.getCachedValue(), 2);
+    countAccumulator.delete(true);
     assertEquals(countAccumulator.getCachedValue(), 1);
-    countAccumulator.delete(3);
+    countAccumulator.delete(false);
+    assertEquals(countAccumulator.getCachedValue(), 1);
+    countAccumulator.delete(true);
+    assertEquals(countAccumulator.getCachedValue(), 0);
+    countAccumulator.add(false);
+    assertEquals(countAccumulator.getCachedValue(), 0);
+    countAccumulator.add(false);
+    assertEquals(countAccumulator.getCachedValue(), 0);
+    countAccumulator.add(false);
     assertEquals(countAccumulator.getCachedValue(), 0);
   },
 });
