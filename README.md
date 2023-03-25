@@ -15,14 +15,20 @@
 
 ## Documentation
 
-### Accumulators, Operators, Stages and Expressions
+### Operators, Stages and Expressions
 
 These are replicated paradigms from MongoDB and are used to evaluate an incoming aggregation pipeline from a MongoDB client.
 
+### BasicAccumulator
+
+`BasicAccumulator` implements basic logic for an accumulator operation.
+The supported operations are: `$min`, `$max`, `$count`, `$sum`, `$avg`.
+
 ### CachedAccumulator
 
-`CachedAccumulator` is a class that implements logic to cache and update the result of an accumulator operation based on changes in documents.
+`CachedAccumulator` implements logic to cache and update the result of an accumulator operation based on changes in documents.
 The supported operations are: `$min`, `$max`, `$count`, `$sum`, `$avg`.
+In Maggregor they are a part of MaterializedViews, they are used to keep up to date the result of an classic accumulator operation.
 
 ### Materialized Views
 
