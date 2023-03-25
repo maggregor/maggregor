@@ -8,6 +8,7 @@ export interface Expression {
   operator?: ExpressionOperator;
   value?: ExpressionValue | ExpressionValue[];
 }
+// deno-lint-ignore no-explicit-any
 export type ExpressionResult = any;
 export type ExpressionValue = number | string | boolean | Expression;
 export type ExpressionOperator =
