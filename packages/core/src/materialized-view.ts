@@ -49,8 +49,9 @@ export class MaterializedView implements CollectionListener {
   }
 
   /**
-   * _id is the group by value
-   * Accumulator hash and value
+   * _id is the groupBy expression
+   * Each accumulator is a field in the document
+   *
    * @returns
    */
   getView(): Document[] {
