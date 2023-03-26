@@ -7,6 +7,7 @@ import {
   MinBasicAccumulator,
   MaxBasicAccumulator,
 } from "@core/pipeline/accumulators/index.ts";
+import { MaterializedView } from "../../src/materialized-view.ts";
 
 const sampleData = [
   { genre: "action", score: 10 },
@@ -184,5 +185,50 @@ Deno.test({
         avgScoreOnComplexExpression: 250,
       },
     ]);
+  },
+});
+
+Deno.test({
+  name: "Pipeline with match stage and MV",
+  fn() {
+    const pipeline = createPipeline([
+      new MatchStage({
+        filterExprs: [
+          { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
+        ],
+      }),
+      // new GroupStage({
+      //   groupExpr: { field: "genre" },
+      //   accumulators: {
+      //     avgScore: new AvgBasicAccumulator({ field: "score" }),
+      //     sumScore: new SumBasicAccumulator({ field: "score" }),
+      //     minScore: new MinBasicAccumulator({ field: "score" }),
+      //     maxScore: new MaxBasicAccumulator({ field: "score" }),
+      //   },
+      // }),
+    ]);
+    const mv = new MaterializedView({
+      groupBy: { field: "genre" },
+      accumulatorDefs: [
+        {
+          operator: "avg",
+          expression: { field: "score" },
+        },
+      ],
+    });
+    mv.addDocument({ genre: "action", score: 10 });
+    mv.addDocument({ genre: "action", score: 20 });
+    mv.addDocument({ genre: "action", score: 30 });
+    mv.addDocument({ genre: "drama", score: 40 });
+    mv.addDocument({ genre: "drama", score: 50 });
+    mv.addDocument({ genre: "drama", score: 60 });
+    const result = executePipeline(pipeline, mv.getView());
+    console.log(result);
+    assertEquals(result.length, 1);
+    // assertEquals(result, [
+    //   { genre: "action", score: 10 },
+    //   { genre: "action", score: 20 },
+    //   { genre: "action", score: 30 },
+    // ]);
   },
 });

@@ -1,5 +1,9 @@
 import { Document } from "@core/index.ts";
-import { evaluateExpression, Expression } from "@core/pipeline/expressions.ts";
+import {
+  evaluateExpression,
+  Expression,
+  resolveAllExpressionFields,
+} from "@core/pipeline/expressions.ts";
 import { Accumulator } from "@core/pipeline/accumulators/index.ts";
 
 export interface Stage {
@@ -83,11 +87,10 @@ export class MatchStage implements Stage {
    * @param doc - The document to match against
    * @returns The document if it matches, otherwise undefined
    */
-  execute(doc: Document[]): Document[] {
-    const filterExprs = this.options.filterExprs;
-    return doc.filter((i) =>
-      filterExprs.every((e) => evaluateExpression(e, i))
-    );
+  execute(docs: Document[]): Document[] {
+    const { filterExprs } = this.options;
+    const filters = resolveAllExpressionFields(filterExprs, docs);
+    return docs.filter((i) => filters.every((e) => evaluateExpression(e, i)));
   }
 }
 

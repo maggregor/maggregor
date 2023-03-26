@@ -1,5 +1,6 @@
-import { Document, DocumentFieldValue } from "@core/index.ts";
+import { crypto, toHashString } from "https://deno.land/std/crypto/mod.ts";
 
+import { Document, DocumentFieldValue } from "@core/index.ts";
 /**
  * An expression
  */
@@ -210,4 +211,70 @@ function getFieldValue(
     }
   }
   return value as DocumentFieldValue;
+}
+
+/**
+ * Convert an expression to a hash string
+ *
+ * @param expression
+ * @returns
+ */
+export function toHashExpression(expression: Expression): string {
+  const encoded = new TextEncoder().encode(JSON.stringify(expression));
+  const hashed = crypto.subtle.digestSync("SHA-384", encoded);
+  return toHashString(hashed).slice(0, 8);
+}
+
+export function replaceExpressionByHash(
+  expression: Expression,
+  hash: string
+): Expression {
+  const hashExpression = toHashExpression(expression);
+  if (hashExpression === hash) {
+    return {
+      field: hash,
+    };
+  }
+
+  if (expression.value === undefined) {
+    return expression;
+  }
+
+  if (Array.isArray(expression.value)) {
+    const args = expression.value.map((arg) =>
+      // @ts-ignore - Fix this
+      replaceExpressionByHash(arg, hash)
+    );
+    return {
+      ...expression,
+      value: args,
+    };
+  }
+
+  return expression;
+}
+
+/**
+ * Returns a new expression array with all the expressions that have a field
+ * Check if field in the collection of documents are a hash of an expression
+ *
+ * @param expressions
+ * @param doc
+ * @returns
+ */
+export function resolveAllExpressionField(
+  expressions: Expression[],
+  doc: Document[]
+): Expression[] {
+  // Potentially really expensive operation
+  // TODO: Optimize this, probably by looking for the first object in the array
+  const allDocKeys = [...new Set(doc.flatMap((d) => Object.keys(d)))];
+  const exprs = expressions;
+  allDocKeys.forEach((docKey) => {
+    const potentialHash = docKey;
+    for (let i = 0; i < exprs.length; i++) {
+      exprs[i] = replaceExpressionByHash(exprs[i], potentialHash);
+    }
+  });
+  return exprs;
 }

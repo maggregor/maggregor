@@ -1,6 +1,7 @@
 import { AccumulatorDefinition } from "@core/pipeline/accumulators/index.ts";
 import { assertEquals } from "asserts";
 import { MaterializedView } from "@core/materialized-view.ts";
+import { toHashExpression } from "@core/pipeline/expressions.ts";
 
 Deno.test({
   name: "MaterializedView",
@@ -31,21 +32,23 @@ Deno.test({
     const fieldName1 = accumulatorHashes[0];
     const fieldName2 = accumulatorHashes[1];
 
+    const groupByExprHash = toHashExpression(mv.getGroupExpression());
+
     assertEquals(mv.getView(), [
       {
-        _id: "action",
+        [groupByExprHash]: "action",
         [fieldName1]: 60,
         [fieldName2]: 90,
       },
 
       {
-        _id: "marvel",
+        [groupByExprHash]: "marvel",
         [fieldName1]: -100,
         [fieldName2]: -90,
       },
 
       {
-        _id: "begaudeau",
+        [groupByExprHash]: "begaudeau",
         [fieldName1]: 1998,
         [fieldName2]: 2018,
       },

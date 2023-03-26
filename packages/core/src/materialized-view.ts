@@ -1,4 +1,8 @@
-import { Expression, evaluateExpression } from "@core/pipeline/expressions.ts";
+import {
+  Expression,
+  evaluateExpression,
+  toHashExpression,
+} from "@core/pipeline/expressions.ts";
 import { CollectionListener, Document } from "@core/index.ts";
 import {
   CachedAccumulator,
@@ -57,7 +61,9 @@ export class MaterializedView implements CollectionListener {
   getView(): Document[] {
     const accumulatorHashes = this.getAccumulatorHashes();
     return Array.from(this.results.entries()).map(([key, value]) => {
-      const obj: Document = { _id: JSON.parse(key) };
+      const obj: Document = {
+        [toHashExpression(this.groupBy)]: JSON.parse(key),
+      };
       value.forEach((a, i) => {
         // @ts-ignore - TODO: fix this
         obj[accumulatorHashes[i]] = a.getCachedValue();
@@ -72,5 +78,9 @@ export class MaterializedView implements CollectionListener {
 
   getGroupExpression(): Expression {
     return this.groupBy;
+  }
+
+  getAccumulatorDefinitions(): AccumulatorDefinition[] {
+    return this.definitions;
   }
 }
