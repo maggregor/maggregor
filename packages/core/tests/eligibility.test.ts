@@ -1,8 +1,12 @@
-import { CountBasicAccumulator } from "@core/pipeline/accumulators/basic.ts";
+import {
+  AvgBasicAccumulator,
+  CountBasicAccumulator,
+} from "@core/pipeline/accumulators/basic.ts";
 import { assertEquals } from "asserts";
 import { MaterializedView } from "@core/materialized-view.ts";
 import { GroupStage, MatchStage } from "@core/pipeline/stages.ts";
 import { isEligible } from "@core/eligibility.ts";
+import { createPipeline } from "../src/pipeline/pipeline.ts";
 
 Deno.test("isEligible", () => {
   const mv = new MaterializedView({
@@ -84,4 +88,92 @@ Deno.test("isEligible - MatchStage", () => {
     ],
   };
   assertEquals(isEligible(pipeline, mv), true);
+});
+
+Deno.test(
+  "notEligible: the groupExpr must be equals to materialized view groupBy",
+  () => {
+    const pipeline = createPipeline([
+      new MatchStage({
+        filterExprs: [
+          { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+        ],
+      }),
+      new GroupStage({
+        groupExpr: { field: "genre" },
+        accumulators: {
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+        },
+      }),
+    ]);
+    const mv = new MaterializedView({
+      groupBy: { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+      accumulatorDefs: [
+        {
+          operator: "avg",
+          expression: { field: "score" },
+        },
+      ],
+    });
+    mv.addDocument({ genre: "action", score: 10 });
+    assertEquals(isEligible(pipeline, mv), false);
+  }
+);
+
+Deno.test(
+  "notEligible: the filterExprs must be equals to materialized view groupBy",
+  () => {
+    const pipeline = createPipeline([
+      new MatchStage({
+        filterExprs: [
+          { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+        ],
+      }),
+      new GroupStage({
+        groupExpr: { field: "genre" },
+        accumulators: {
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+        },
+      }),
+    ]);
+    const mv = new MaterializedView({
+      groupBy: { field: "genre" },
+      accumulatorDefs: [
+        {
+          operator: "avg",
+          expression: { field: "score" },
+        },
+      ],
+    });
+    mv.addDocument({ genre: "action", score: 10 });
+    assertEquals(isEligible(pipeline, mv), false);
+  }
+);
+
+Deno.test("notEligible: more than one condition in the match stage", () => {
+  const pipeline = createPipeline([
+    new MatchStage({
+      filterExprs: [
+        { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+        { operator: "$lt", value: [{ field: "score" }, { value: 20 }] },
+      ],
+    }),
+    new GroupStage({
+      groupExpr: { field: "genre" },
+      accumulators: {
+        avgScore: new AvgBasicAccumulator({ field: "score" }),
+      },
+    }),
+  ]);
+  const mv = new MaterializedView({
+    groupBy: { field: "genre" },
+    accumulatorDefs: [
+      {
+        operator: "avg",
+        expression: { field: "score" },
+      },
+    ],
+  });
+  mv.addDocument({ genre: "action", score: 10 });
+  assertEquals(isEligible(pipeline, mv), false);
 });

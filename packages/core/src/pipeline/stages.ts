@@ -46,7 +46,8 @@ export class GroupStage implements IGroupStage {
   execute(data: Document[]): Document[] {
     const { groupExpr, accumulators } = this.options;
     const groups = data.reduce((acc, doc) => {
-      const key = evaluateExpression(groupExpr, doc);
+      const resolved = resolveAllExpressionFields([groupExpr], [doc]);
+      const key = evaluateExpression(resolved[0], doc);
       if (acc[key]) {
         acc[key].push(doc);
       } else {
@@ -57,9 +58,17 @@ export class GroupStage implements IGroupStage {
 
     return Object.entries(groups).map(([key, docs]) => {
       const group = { _id: key };
+
       Object.entries(accumulators).forEach(([outputField, accumulator]) => {
-        // @ts-ignore - accumulator is a valid accumulator
-        group[outputField] = accumulator.evaluate(docs);
+        // @ts-ignore - Fix this
+        const allDocKeys = [...new Set(docs.flatMap((d) => Object.keys(d)))];
+        if (allDocKeys.includes(accumulator.hash)) {
+          // @ts-ignore - Fix this
+          group[outputField] = docs[0][accumulator.hash];
+        } else {
+          // @ts-ignore - Fix this
+          group[outputField] = accumulator.evaluate(docs);
+        }
       });
       return group;
     });

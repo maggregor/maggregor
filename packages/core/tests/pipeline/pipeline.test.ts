@@ -197,15 +197,12 @@ Deno.test({
           { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
         ],
       }),
-      // new GroupStage({
-      //   groupExpr: { field: "genre" },
-      //   accumulators: {
-      //     avgScore: new AvgBasicAccumulator({ field: "score" }),
-      //     sumScore: new SumBasicAccumulator({ field: "score" }),
-      //     minScore: new MinBasicAccumulator({ field: "score" }),
-      //     maxScore: new MaxBasicAccumulator({ field: "score" }),
-      //   },
-      // }),
+      new GroupStage({
+        groupExpr: { field: "genre" },
+        accumulators: {
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+        },
+      }),
     ]);
     const mv = new MaterializedView({
       groupBy: { field: "genre" },
@@ -223,12 +220,47 @@ Deno.test({
     mv.addDocument({ genre: "drama", score: 50 });
     mv.addDocument({ genre: "drama", score: 60 });
     const result = executePipeline(pipeline, mv.getView());
-    console.log(result);
     assertEquals(result.length, 1);
-    // assertEquals(result, [
-    //   { genre: "action", score: 10 },
-    //   { genre: "action", score: 20 },
-    //   { genre: "action", score: 30 },
-    // ]);
+    assertEquals(result, [{ _id: "action", avgScore: 20 }]);
+  },
+});
+
+Deno.test({
+  name: "Pipeline with match stage on boolean expression and group by boolean",
+  fn() {
+    const pipeline = createPipeline([
+      new MatchStage({
+        filterExprs: [
+          { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+        ],
+      }),
+      new GroupStage({
+        groupExpr: {
+          operator: "$gt",
+          value: [{ field: "score" }, { value: 10 }],
+        },
+        accumulators: {
+          avgScore: new AvgBasicAccumulator({ field: "score" }),
+        },
+      }),
+    ]);
+    const mv = new MaterializedView({
+      groupBy: { operator: "$gt", value: [{ field: "score" }, { value: 10 }] },
+      accumulatorDefs: [
+        {
+          operator: "avg",
+          expression: { field: "score" },
+        },
+      ],
+    });
+    mv.addDocument({ genre: "action", score: 10 });
+    mv.addDocument({ genre: "action", score: 20 });
+    mv.addDocument({ genre: "action", score: 30 });
+    mv.addDocument({ genre: "drama", score: 40 });
+    mv.addDocument({ genre: "drama", score: 50 });
+    mv.addDocument({ genre: "drama", score: 60 });
+    const result = executePipeline(pipeline, mv.getView());
+    assertEquals(result.length, 1);
+    assertEquals(result, [{ _id: "true", avgScore: 40 }]);
   },
 });

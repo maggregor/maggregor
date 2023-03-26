@@ -404,7 +404,6 @@ Deno.test({
       },
     ];
     const newExpr = resolveAllExpressionFields([exp1, exp2], documents);
-    console.log(newExpr);
     assertEquals(newExpr, [{ field: hash1 }, { field: hash2 }]);
   },
 });

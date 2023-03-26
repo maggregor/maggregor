@@ -262,7 +262,7 @@ export function replaceExpressionByHash(
  * @param doc
  * @returns
  */
-export function resolveAllExpressionField(
+export function resolveAllExpressionFields(
   expressions: Expression[],
   doc: Document[]
 ): Expression[] {
@@ -270,11 +270,36 @@ export function resolveAllExpressionField(
   // TODO: Optimize this, probably by looking for the first object in the array
   const allDocKeys = [...new Set(doc.flatMap((d) => Object.keys(d)))];
   const exprs = expressions;
-  allDocKeys.forEach((docKey) => {
-    const potentialHash = docKey;
-    for (let i = 0; i < exprs.length; i++) {
-      exprs[i] = replaceExpressionByHash(exprs[i], potentialHash);
-    }
-  });
+
+  for (let i = 0; i < exprs.length; i++) {
+    let expr = exprs[i];
+    let smallestExpression = Infinity;
+    allDocKeys.forEach((docKey) => {
+      const potentialHash = docKey;
+      const replaced = replaceExpressionByHash(exprs[i], potentialHash);
+      if (countExpressionInTree(replaced) < smallestExpression) {
+        smallestExpression = countExpressionInTree(replaced);
+        expr = replaced;
+      }
+    });
+    exprs[i] = expr;
+  }
   return exprs;
+}
+
+// Returns the number of nested expressions in an expression tree
+function countExpressionInTree(e: Expression): number {
+  if (e.value === undefined) {
+    return 0;
+  }
+
+  if (Array.isArray(e.value)) {
+    // @ts-ignore - Fix this
+    return e.value.reduce(
+      // @ts-ignore - Fix this
+      (acc, val) => acc + countExpressionInTree(val as Expression),
+      1
+    );
+  }
+  return 1;
 }
