@@ -1,5 +1,11 @@
 import { assertEquals, assertNotEquals } from "asserts";
-import { Expression, evaluateExpression } from "@core/pipeline/expressions.ts";
+import {
+  Expression,
+  evaluateExpression,
+  replaceExpressionByHash,
+  resolveAllExpressionFields,
+  toHashExpression,
+} from "@core/pipeline/expressions.ts";
 import { Document } from "@core/index.ts";
 
 Deno.test({
@@ -220,5 +226,184 @@ Deno.test({
       evaluateExpression(expression, {} as Document),
       "Hello World! How are you?"
     );
+  },
+});
+
+Deno.test({
+  name: "toHashExpression equals",
+  fn() {
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    const expression2: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    // expr1 = expr1
+    assertEquals(toHashExpression(expression1), toHashExpression(expression1));
+    // expr1 = expr2
+    assertEquals(toHashExpression(expression1), toHashExpression(expression2));
+    // expr2 = expr2
+    assertEquals(toHashExpression(expression2), toHashExpression(expression2));
+  },
+});
+
+Deno.test({
+  name: "toHashExpression not equals",
+  fn() {
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 2 }],
+    };
+    const expression2: Expression = {
+      operator: "$add",
+      value: [{ value: 1 }, { value: 3 }],
+    };
+    // expr1 != expr2
+    assertNotEquals(
+      toHashExpression(expression1),
+      toHashExpression(expression2)
+    );
+  },
+});
+
+Deno.test({
+  name: "replaceExpressionByHash",
+  fn() {
+    const hash = toHashExpression({
+      field: "action",
+    });
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ field: "action" }, { value: 2 }],
+    };
+    const newExpr = replaceExpressionByHash(expression1, hash);
+    // { field: "action" } is replaced by { field: hash }
+    assertEquals(newExpr, {
+      operator: "$add",
+      value: [{ field: hash }, { value: 2 }],
+    });
+  },
+});
+
+Deno.test({
+  name: "replaceExpressionByHash with nested expression",
+  fn() {
+    const hash = toHashExpression({
+      field: "action",
+    });
+    const expression1: Expression = {
+      operator: "$add",
+      value: [
+        { field: "action" },
+        { operator: "$add", value: [{ field: "action" }, { value: 2 }] },
+      ],
+    };
+    const newExpr = replaceExpressionByHash(expression1, hash);
+    // { field: "action" } is replaced by { field: hash }
+    assertEquals(newExpr, {
+      operator: "$add",
+      value: [
+        { field: hash },
+        { operator: "$add", value: [{ field: hash }, { value: 2 }] },
+      ],
+    });
+  },
+});
+
+Deno.test({
+  name: "replaceExpressionByHash with in two nested expression",
+  fn() {
+    const hash = toHashExpression({
+      field: "action",
+    });
+    const expression1: Expression = {
+      operator: "$add",
+      value: [
+        { field: "action" },
+        { operator: "$add", value: [{ field: "action" }, { value: 2 }] },
+        { operator: "$add", value: [{ field: "action" }, { value: 2 }] },
+      ],
+    };
+    const newExpr = replaceExpressionByHash(expression1, hash);
+    // { field: "action" } is replaced by { field: hash }
+    assertEquals(newExpr, {
+      operator: "$add",
+      value: [
+        { field: hash },
+        { operator: "$add", value: [{ field: hash }, { value: 2 }] },
+        { operator: "$add", value: [{ field: hash }, { value: 2 }] },
+      ],
+    });
+  },
+});
+
+Deno.test({
+  name: "replaceExpressionByHash hash of operation expression",
+  fn() {
+    const hash = toHashExpression({
+      operator: "$add",
+      value: [{ field: "action" }, { value: 2 }],
+    });
+    const expression1: Expression = {
+      operator: "$add",
+      value: [{ field: "action" }, { value: 2 }],
+    };
+    const newExpr = replaceExpressionByHash(expression1, hash);
+    // { operator: "$add", value: [{ field: "action" }, { value: 2 }] } is replaced by { field: hash }
+    assertEquals(newExpr, {
+      field: hash,
+    });
+  },
+});
+
+Deno.test({
+  name: "replaceExpressionByHash hash of operation expression with nested expression",
+  fn() {
+    const hash = toHashExpression({
+      operator: "$add",
+      value: [
+        { field: "action" },
+        { operator: "$add", value: [{ field: "action" }, { value: 2 }] },
+      ],
+    });
+    const expression1: Expression = {
+      operator: "$add",
+      value: [
+        { field: "action" },
+        { operator: "$add", value: [{ field: "action" }, { value: 2 }] },
+      ],
+    };
+    const newExpr = replaceExpressionByHash(expression1, hash);
+    // { operator: "$add", value: [{ field: "action" }, { value: 2 }] } is replaced by { field: hash }
+    assertEquals(newExpr, {
+      field: hash,
+    });
+  },
+});
+
+Deno.test({
+  name: "resolveAllExpressionFields",
+  fn() {
+    const exp1: Expression = { field: "action" };
+    const exp2: Expression = {
+      operator: "$concat",
+      value: [{ field: "action" }, { value: "!!!" }],
+    };
+    const hash1 = toHashExpression(exp1);
+    const hash2 = toHashExpression(exp2);
+    const documents = [
+      {
+        [hash1]: "action1",
+        [hash2]: "action1!!!",
+      },
+      {
+        [hash1]: "action2",
+        [hash2]: "action2!!!",
+      },
+    ];
+    const newExpr = resolveAllExpressionFields([exp1, exp2], documents);
+    assertEquals(newExpr, [{ field: hash1 }, { field: hash2 }]);
   },
 });
