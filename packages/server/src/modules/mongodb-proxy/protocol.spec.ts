@@ -29,5 +29,8 @@ describe('Protocol', () => {
       },
     });
     expect(buffer.readInt32LE()).toEqual(135);
+    expect(buffer.readInt32LE(4)).toEqual(123);
+    expect(buffer.readInt32LE(8)).toEqual(0);
+    expect(buffer.readInt32LE(12)).toEqual(2013);
   });
 });

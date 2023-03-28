@@ -104,13 +104,14 @@ export class MongoDBTcpProxyService extends EventEmitter {
       );
 
       const indirection = new IndirectionTransform(socket);
-      // passTrough
       socket
+        // Uncomment this line to log
         // .pipe(createStreamLogger('client => server'))
         .pipe(indirection)
         .pipe(proxySocket);
 
       proxySocket
+        // Uncomment this line to log
         // .pipe(createStreamLogger('server => client'))
         .pipe(socket);
 
@@ -169,6 +170,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
 function handleError(err: Error) {
   // Ignore disconnection errors
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore - Code is not in the type definition
   if (err.code === 'EPIPE') {
     return;
@@ -177,50 +179,10 @@ function handleError(err: Error) {
 }
 
 function createStreamLogger(name: string) {
-  return new StreamLogger(name);
-}
-
-class StreamLogger extends Transform {
-  buffer: Uint8Array[];
-  currentNeed: number;
-  name: string;
-
-  constructor(name: string) {
-    super();
-    this.buffer = [];
-    this.currentNeed = 0;
-    this.name = name;
-  }
-
-  async _transform(
-    chunk: Uint8Array,
-    encoding: unknown,
-    callback: (err?: Error) => void,
-  ): Promise<void> {
-    try {
-      this.buffer.push(chunk);
-      if (chunk.length < this.currentNeed) {
-        this.currentNeed -= chunk.length;
-      } else {
-        const acc = Buffer.concat(this.buffer);
-        // console.log(this.name, deserialize(acc));
-        const result = await ParseMessage(acc);
-        if ('needBytes' in result) {
-          this.buffer = [acc];
-          this.currentNeed = result.needBytes;
-        } else {
-          this.emit('message', result.msg);
-          this.buffer = [];
-          this.currentNeed = 0;
-          // this._write(acc.subarray(result.readBytes), null, callback);
-          return;
-        }
-        this.push(this.buffer);
-        callback();
-      }
-      // this.push(this.buffer);
-    } catch (err) {
-      callback(err as Error);
-    }
-  }
+  return new Transform({
+    transform: async (chunk, encoding, callback) => {
+      console.log(name, chunk);
+      callback(null, chunk);
+    },
+  });
 }

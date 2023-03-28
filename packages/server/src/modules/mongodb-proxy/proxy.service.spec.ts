@@ -47,10 +47,7 @@ describe('TcpProxyService', () => {
     const collection = db.collection('test');
     await collection.insertOne({ a: 1 });
     const docs = await collection.aggregate([{ $match: {} }]).toArray();
-    // Expect document but ignore _id with random value
     expect(docs.length).toBe(1);
-    expect(docs[0].a).toBe(2);
+    expect(docs[0].a).toBe(1);
   });
-
-  // afterAll(() => {});
 });

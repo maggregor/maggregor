@@ -20,70 +20,13 @@ export class IndirectionTransform extends Transform {
       msg: FullMessage;
       readBytes: number;
     };
-    const pipeline = findAggregationPipeline(msg);
 
-    Buffer.from('aze');
-    if (pipeline) {
-      console.log(
-        `Pipeline detected. Response to ${msg.header.requestID}. Sent fake response`,
-      );
-
-      const messageLength = 130;
-      const requestID = 0;
-      const responseTo = msg.header.requestID;
-      const opCode = OpCode.OP_MSG;
-      const flagBits = 0;
-
-      const message = Uint32Array.from([
-        messageLength,
-        requestID,
-        responseTo,
-        opCode,
-        flagBits,
-        Buffer.from('Body'),
-      ]);
-
-      return;
+    if (findAggregationPipeline(msg)) {
+      console.log(`Aggregation pipeline detected (${msg.header.requestID})`);
     }
     this.push(chunk);
     callback();
   }
-}
-
-function encodeResult(
-  responseTo: number,
-  dbName: string,
-  collectionName: string,
-  data: any[],
-) {
-  return {
-    header: {
-      messageLength: 130,
-      requestID: 0,
-      responseTo: responseTo,
-      opCode: 2013,
-    },
-    contents: {
-      opCode: 'OP_MSG',
-      flagBits: 0,
-      sections: [
-        {
-          kind: 'Body',
-          body: serialize({
-            data: {
-              cursor: {
-                firstBatch: data,
-                id: 0,
-                ns: `${dbName}.${collectionName}`,
-              },
-              ok: 1,
-            },
-          }),
-        },
-      ],
-      checksum: null,
-    },
-  };
 }
 
 function findAggregationPipeline(
