@@ -1,7 +1,6 @@
-import { ParseMessage, OpCode, FullMessage, OpMsg } from './parse';
 import { Transform } from 'stream';
 import net from 'net';
-import { serialize } from 'bson';
+import { decode, encode } from './protocol';
 
 export class IndirectionTransform extends Transform {
   socket: net.Socket;
@@ -16,40 +15,61 @@ export class IndirectionTransform extends Transform {
     encoding: unknown,
     callback: (err?: Error) => void,
   ): Promise<void> {
-    const { msg } = (await ParseMessage(chunk)) as {
-      msg: FullMessage;
-      readBytes: number;
-    };
-
-    if (findAggregationPipeline(msg)) {
-      console.log(`Aggregation pipeline detected (${msg.header.requestID})`);
+    const buffer = Buffer.from(chunk);
+    if (buffer.readUint32LE(12) === 2013) {
+      // OP_MSG
+      const msg = decode(buffer);
+      const payload = msg.contents.sections[0].payload;
+      const { pipeline } = payload;
+      const requestID = msg.header.requestID;
+      const collectionName = payload.aggregate;
+      const dbName = payload.$db;
+      if (pipeline) {
+        // Aggregation pipeline detected
+        console.log(
+          `Aggregation pipeline detected (requestID=${requestID}): ${JSON.stringify(
+            pipeline,
+          )} on ${dbName}.${collectionName}`,
+        );
+        const results = buildAndEncodeResults(requestID, 'test', 'test', [
+          { _id: 'test', a: 10 },
+        ]);
+        this.socket.write(results);
+        return;
+      }
     }
     this.push(chunk);
     callback();
   }
 }
 
-function findAggregationPipeline(
-  msg: FullMessage,
-): Array<{ [key: string]: string }> {
-  const { opCode } = msg.header;
-  const contents = msg.contents as OpMsg;
-  if (opCode === OpCode.OP_MSG) {
-    const query = contents as unknown as QueryAggregationMessage;
-    return query.sections[0]?.body?.data?.pipeline;
-  }
+function buildAndEncodeResults(
+  requestID: number,
+  collectionName: string,
+  dbName: string,
+  data: any[],
+): Buffer {
+  return encode({
+    header: {
+      requestID: 0,
+      responseTo: requestID,
+      opCode: 2013, // OP_MSG
+    },
+    contents: {
+      flagBits: 0,
+      sections: [
+        {
+          kind: 0,
+          payload: {
+            cursor: {
+              firstBatch: data,
+              id: 0,
+              ns: `${dbName}.${collectionName}`,
+            },
+            ok: 1,
+          },
+        },
+      ],
+    },
+  });
 }
-
-type QueryAggregationMessage = {
-  sections: Array<{
-    kind: string;
-    body: {
-      data: {
-        aggregate: string;
-        pipeline: Array<{
-          [key: string]: string;
-        }>;
-      };
-    };
-  }>;
-};

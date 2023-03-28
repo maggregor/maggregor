@@ -42,12 +42,12 @@ describe('TcpProxyService', () => {
   //   expect(docs[0].a).toBe(1);
   // });
 
-  it('Simple proxy and change results', async () => {
+  it('Change results', async () => {
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
     await collection.insertOne({ a: 1 });
-    const docs = await collection.aggregate([{ $match: {} }]).toArray();
+    const docs = await collection.aggregate([{ $match: { a: 1 } }]).toArray();
     expect(docs.length).toBe(1);
-    expect(docs[0].a).toBe(1);
+    expect(docs[0].a).toBe(10);
   });
 });

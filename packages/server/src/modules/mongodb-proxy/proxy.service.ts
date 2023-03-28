@@ -2,9 +2,8 @@ import { Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import { IndirectionTransform } from './indirection';
-import { Transform, PassThrough } from 'stream';
-import { deserialize } from 'bson';
-import { ParseMessage } from './parse';
+import { Transform } from 'stream';
+import { decode } from './protocol';
 
 /**
  * Options for the TcpProxy instance
@@ -112,7 +111,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
       proxySocket
         // Uncomment this line to log
-        // .pipe(createStreamLogger('server => client'))
+        .pipe(createStreamLogger('server => client'))
         .pipe(socket);
 
       proxySocket.on('error', handleError);
@@ -181,7 +180,10 @@ function handleError(err: Error) {
 function createStreamLogger(name: string) {
   return new Transform({
     transform: async (chunk, encoding, callback) => {
-      console.log(name, chunk);
+      const opCode = chunk.readUInt32LE(12);
+      if (opCode === 2013) {
+        console.debug(name, JSON.stringify(decode(chunk)));
+      }
       callback(null, chunk);
     },
   });

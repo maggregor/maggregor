@@ -4,7 +4,6 @@ describe('Protocol', () => {
   it('encode', () => {
     const buffer = encode({
       header: {
-        messageLength: 0,
         requestID: 123,
         responseTo: 0,
         opCode: 2013, // OP_MSG
@@ -28,9 +27,11 @@ describe('Protocol', () => {
         ],
       },
     });
-    expect(buffer.readInt32LE()).toEqual(135);
-    expect(buffer.readInt32LE(4)).toEqual(123);
-    expect(buffer.readInt32LE(8)).toEqual(0);
-    expect(buffer.readInt32LE(12)).toEqual(2013);
+    expect(buffer.readInt32LE()).toEqual(135); // messageLength
+    expect(buffer.readInt32LE(4)).toEqual(123); // requestID
+    expect(buffer.readInt32LE(8)).toEqual(0); // responseTo
+    expect(buffer.readInt32LE(12)).toEqual(2013); // OP_MSG
+    expect(buffer.readInt32LE(16)).toEqual(0); // flagBits
+    expect(buffer.readInt8(20)).toEqual(0); // kind
   });
 });

@@ -7,7 +7,7 @@ type MongoDBSection = {
 
 type MongoDBMessage = {
   header: {
-    messageLength: number;
+    messageLength?: number;
     requestID: number;
     responseTo: number;
     opCode: number;
@@ -22,8 +22,8 @@ type MongoDBMessage = {
 export function encode(message: MongoDBMessage): Buffer {
   const sectionsBuffer = Buffer.concat(
     message.contents.sections.map((section) => {
-      const payloadBuffer = serialize(section.payload);
       const kindBuffer = Buffer.from([section.kind]);
+      const payloadBuffer = serialize(section.payload);
       return Buffer.concat([kindBuffer, payloadBuffer]);
     }),
   );
@@ -33,10 +33,7 @@ export function encode(message: MongoDBMessage): Buffer {
 
   const headerBuffer = Buffer.alloc(16);
   headerBuffer.writeInt32LE(
-    message.header.messageLength +
-      flagBitsBuffer.length +
-      sectionsBuffer.length +
-      16,
+    flagBitsBuffer.length + sectionsBuffer.length + 16,
     0,
   );
   headerBuffer.writeInt32LE(message.header.requestID, 4);
