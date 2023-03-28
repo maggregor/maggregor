@@ -11,7 +11,7 @@
 |--------------------|-------------|
 | `packages/core`    | The core database package (cached aggregations) |
 | `packages/mongodb-parser`  | A MongoDB aggregation query parser [ts-mongo-aggregation-parser](https://github.com/estebgonza/ts-mongo-aggregation-parser) |
-| `packages/server` | Expose the proxy and web interface |
+| `packages/server` | Proxy the MongoDB Wire Protocol and intercepts Aggregation Pipeline queries |
 
 ## Documentation
 
