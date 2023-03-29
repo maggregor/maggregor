@@ -1,37 +1,54 @@
-import { encode, decode } from './protocol';
+import { MongoDBMessage, decodeMessage, encodeMessage } from './protocol';
+import { deserialize } from 'bson';
 
-describe('Protocol', () => {
-  it('encode', () => {
-    const buffer = encode({
-      header: {
-        requestID: 123,
-        responseTo: 0,
-        opCode: 2013, // OP_MSG
+const OP_MSG_1: MongoDBMessage = {
+  header: {
+    requestID: 123,
+    responseTo: 0,
+    opCode: 2013, // OP_MSG
+  },
+  contents: {
+    flagBits: 0,
+    sections: [
+      {
+        kind: 0, // Body section
+        payload: {
+          hello: 'world',
+        },
       },
-      contents: {
-        flagBits: 0,
-        sections: [
-          {
-            kind: 0,
-            payload: {
-              data: {
-                cursor: {
-                  firstBatch: [{ _id: '1', name: 'test' }],
-                  id: 0,
-                  ns: `test.test`,
-                },
-                ok: 1,
-              },
-            },
-          },
-        ],
-      },
+    ],
+  },
+};
+
+describe('MongoDB wire protocol', () => {
+  describe('encodeOpMessage', () => {
+    it('should encode a OP_MSG', () => {
+      const buffer = encodeMessage(OP_MSG_1);
+      expectBufferIsCorrectlyEncoded(buffer, OP_MSG_1);
     });
-    expect(buffer.readInt32LE()).toEqual(135); // messageLength
-    expect(buffer.readInt32LE(4)).toEqual(123); // requestID
-    expect(buffer.readInt32LE(8)).toEqual(0); // responseTo
-    expect(buffer.readInt32LE(12)).toEqual(2013); // OP_MSG
-    expect(buffer.readInt32LE(16)).toEqual(0); // flagBits
-    expect(buffer.readInt8(20)).toEqual(0); // kind
+  });
+  it('should encode and decode a OP_MSG', () => {
+    expectBufferEncodeDecodeToBeEqual(encodeMessage(OP_MSG_1));
   });
 });
+
+function expectBufferIsCorrectlyEncoded(
+  actual: Buffer,
+  expected: MongoDBMessage,
+) {
+  expect(actual.readUint32LE(4)).toBe(expected.header.requestID);
+  expect(actual.readUint32LE(8)).toBe(expected.header.responseTo);
+  expect(actual.readUint32LE(12)).toBe(expected.header.opCode);
+  expect(actual.readUint32LE(16)).toBe(expected.contents.flagBits);
+  expected.contents.sections.forEach((section, index) => {
+    expect(actual.readUint8(20 + index * 5)).toBe(section.kind);
+    expect(deserialize(actual.subarray(21 + index * 5))).toEqual(
+      section.payload,
+    );
+  });
+}
+
+function expectBufferEncodeDecodeToBeEqual(buffer: Buffer) {
+  const encodedBuffer = encodeMessage(decodeMessage(buffer));
+  expect(encodedBuffer).toEqual(buffer);
+}

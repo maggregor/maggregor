@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
-import { IndirectionTransform } from './indirection';
+import { InterceptedPipeline, PipelineInterceptor } from './interceptor';
 import { Transform } from 'stream';
-import { decode } from './protocol';
+import { decodeMessage } from './protocol';
 
 /**
  * Options for the TcpProxy instance
@@ -102,11 +102,19 @@ export class MongoDBTcpProxyService extends EventEmitter {
         },
       );
 
-      const indirection = new IndirectionTransform(socket);
+      const interceptor = new PipelineInterceptor(socket);
+
+      interceptor.registerHook((i: InterceptedPipeline) => {
+        console.log(
+          `Received: ${i.pipeline} on ${i.dbName}.${i.collectionName}`,
+        );
+        return null;
+      });
+
       socket
         // Uncomment this line to log
-        // .pipe(createStreamLogger('client => server'))
-        .pipe(indirection)
+        .pipe(createStreamLogger('client => server'))
+        .pipe(interceptor)
         .pipe(proxySocket);
 
       proxySocket
@@ -180,9 +188,14 @@ function handleError(err: Error) {
 function createStreamLogger(name: string) {
   return new Transform({
     transform: async (chunk, encoding, callback) => {
-      const opCode = chunk.readUInt32LE(12);
-      if (opCode === 2013) {
-        console.debug(name, JSON.stringify(decode(chunk)));
+      try {
+        console.debug(name, JSON.stringify(decodeMessage(chunk)));
+      } catch (e) {
+        console.debug(
+          name,
+          "Can't decode message, opcode:",
+          chunk.readUInt32LE(0),
+        );
       }
       callback(null, chunk);
     },
