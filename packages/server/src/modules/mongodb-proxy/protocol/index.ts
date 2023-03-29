@@ -181,6 +181,7 @@ export {
   OP_QUERY,
   OP_MSG,
   OP_COMPRESSED,
+  OP_REPLY,
   encodeMessage,
   decodeMessage,
   encodeResults,

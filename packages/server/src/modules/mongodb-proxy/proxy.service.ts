@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
-import { InterceptedPipeline, PipelineInterceptor } from './interceptor';
+import {
+  AggregateInterceptor,
+  AggregateInterceptorHook,
+} from './interceptors/aggregate-interceptor';
 import { Transform } from 'stream';
 import { decodeMessage } from './protocol';
+import {
+  ReplyInterceptor,
+  ReplyInterceptorHook,
+} from './interceptors/reply-interceptor';
 
 /**
  * Options for the TcpProxy instance
@@ -27,42 +34,14 @@ export interface MongoDBProxyOptions {
  * Hook functions to modify incoming/outgoing data on the proxy
  */
 export interface MongoDBProxyHooks {
-  /**
-   * Function that is called with incoming client data and can modify the data before it is sent to the target
-   * @param data - The incoming client data
-   * @param socket - The client socket object
-   * @returns The modified data to send to the target
-   */
-  clientData?: (data: Buffer, socket: net.Socket) => Promise<Buffer>;
-
-  /**
-   * Function that is called with incoming target data and can modify the data before it is sent to the client
-   * @param data - The incoming target data
-   * @param socket - The target socket object
-   * @returns The modified data to send to the client
-   */
-  targetData?: (data: Buffer, socket: net.Socket) => Promise<Buffer>;
-
-  /**
-   * On receive message from client
-   * @param data - The incoming client data
-   * @param socket - The client socket object
-   * @returns The modified data to send to the target
-   */
+  onAggregateQueryFromClient?: AggregateInterceptorHook;
+  onResultFromServer?: ReplyInterceptorHook;
 }
 
 /**
  * Event names emitted by the TcpProxy instance
  */
 export interface TcpProxyEvents {
-  /**
-   * Emitted when data is received from a client
-   */
-  'client-data': (data: Buffer, socket: net.Socket) => void;
-  /**
-   * Emitted when data is received from the target server
-   */
-  'target-data': (data: Buffer, socket: net.Socket) => void;
   /**
    * Emitted when the proxy server has started listening for incoming connections
    */
@@ -88,42 +67,30 @@ export class MongoDBTcpProxyService extends EventEmitter {
    * @param options - The options for the TcpProxy instance.
    * @param hooks - The hooks for the TcpProxy instance.
    */
-  constructor(options: MongoDBProxyOptions, hooks: MongoDBProxyHooks = {}) {
+  constructor(options: MongoDBProxyOptions, hooks?: MongoDBProxyHooks) {
     super();
     this.options = options;
-    this.hooks = hooks;
+    this.hooks = {
+      onAggregateQueryFromClient: () => undefined,
+      onResultFromServer: () => undefined,
+      ...hooks,
+    };
     this.server = net.createServer(async (socket) => {
       const proxySocket = new net.Socket();
-      proxySocket.connect(
-        this.options.targetPort,
-        this.options.targetHost,
-        () => {
-          this.emit('target-connected');
-        },
-      );
-
-      const interceptor = new PipelineInterceptor(socket);
-
-      interceptor.registerHook((i: InterceptedPipeline) => {
-        console.log(
-          `Received: ${i.pipeline} on ${i.dbName}.${i.collectionName}`,
-        );
-        return null;
-      });
-
-      socket
-        // Uncomment this line to log
-        .pipe(createStreamLogger('client => server'))
-        .pipe(interceptor)
-        .pipe(proxySocket);
-
-      proxySocket
-        // Uncomment this line to log
-        .pipe(createStreamLogger('server => client'))
-        .pipe(socket);
-
+      // Setup aggregate interceptor (client -> proxy)
+      const aggregateInterceptor = new AggregateInterceptor(socket);
+      aggregateInterceptor.registerHook(this.hooks.onAggregateQueryFromClient);
+      // Setup result interceptor (proxy -> client)
+      const resultInterceptor = new ReplyInterceptor();
+      resultInterceptor.registerHook(this.hooks.onResultFromServer);
+      // Setup bidirectional data flow
+      socket.pipe(aggregateInterceptor).pipe(proxySocket);
+      proxySocket.pipe(resultInterceptor).pipe(socket);
+      // Handle errors
       proxySocket.on('error', handleError);
       socket.on('error', handleError);
+      // Connect the new socket to the target server
+      proxySocket.connect(this.options.targetPort, this.options.targetHost);
     });
   }
 
@@ -146,13 +113,6 @@ export class MongoDBTcpProxyService extends EventEmitter {
    * Sets the hooks for the TcpProxy instance.
    * @param hooks - The hooks to set.
    * @returns The TcpProxy instance.
-   * @example
-   * const proxy = new TcpProxy({ targetHost: "localhost", targetPort: 8080, listenPort: 8081 });
-   * proxy.setHooks({
-   *  clientData: (data) => {
-   *   return data.toString().replace("foo", "bar");
-   * }
-   * });
    */
   setHooks(hooks: MongoDBProxyHooks) {
     this.hooks = hooks;
@@ -185,6 +145,7 @@ function handleError(err: Error) {
   console.error(err);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createStreamLogger(name: string) {
   return new Transform({
     transform: async (chunk, encoding, callback) => {
