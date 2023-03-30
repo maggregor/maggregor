@@ -30,6 +30,7 @@ describe('TcpProxyService', () => {
   afterAll(async () => {
     await mongodbClient.close();
     await mongodbServer.stop();
+    service.stop();
   });
 
   it('Simple aggregate query', async () => {
