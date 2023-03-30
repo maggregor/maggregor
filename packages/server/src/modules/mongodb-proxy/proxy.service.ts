@@ -6,7 +6,7 @@ import {
   AggregateInterceptorHook,
 } from './interceptors/aggregate-interceptor';
 import { Transform } from 'stream';
-import { decodeMessage } from './protocol';
+import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,

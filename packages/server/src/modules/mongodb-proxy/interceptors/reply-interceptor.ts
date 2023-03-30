@@ -38,7 +38,9 @@ export class ReplyInterceptor extends PassThrough {
           await hook(intercepted);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error(e);
+    }
     this.push(chunk);
     callback();
   }

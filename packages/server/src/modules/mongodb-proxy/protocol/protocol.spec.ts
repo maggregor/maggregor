@@ -1,4 +1,4 @@
-import { MongoDBMessage, decodeMessage, encodeMessage } from '.';
+import { MongoDBMessage, decodeMessage, encodeMessage } from './protocol';
 import { deserialize } from 'bson';
 
 const OP_MSG_1: MongoDBMessage = {
