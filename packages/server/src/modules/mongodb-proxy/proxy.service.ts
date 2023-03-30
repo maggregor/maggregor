@@ -83,7 +83,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
       // Setup result interceptor (proxy -> client)
       const resultInterceptor = new ReplyInterceptor();
       resultInterceptor.registerHook(this.hooks.onResultFromServer);
-      // Setup bidirectional data flow
+      // Setup bidirectional data flow between client, interceptors and proxy
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
       proxySocket.pipe(resultInterceptor).pipe(socket);
       // Handle errors
