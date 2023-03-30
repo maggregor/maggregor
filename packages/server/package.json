@@ -22,9 +22,11 @@
   "dependencies": {
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
+    "@nestjs/mongoose": "^9.2.2",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/swagger": "^6.2.1",
     "bson": "^5.1.0",
+    "mongoose": "^7.0.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0"
   },
