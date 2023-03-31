@@ -1,11 +1,11 @@
-import { AccumulatorDefinition } from "@core/pipeline/accumulators/index.ts";
-import { assertEquals } from "asserts";
-import { MaterializedView } from "@core/materialized-view.ts";
-import { toHashExpression } from "@core/pipeline/expressions.ts";
+import { MaterializedView } from "src/materialized-view";
+import { AccumulatorDefinition } from "src/pipeline/accumulators";
+import { toHashExpression } from "src/pipeline/expressions";
+import { expect } from "vitest";
+import { describe, it } from "vitest";
 
-Deno.test({
-  name: "MaterializedView",
-  fn() {
+describe("MaterializedView", () => {
+  it("should correctly calculate accumulators and group by expression", () => {
     const acc1: AccumulatorDefinition = {
       operator: "sum",
       expression: { field: "score" },
@@ -34,24 +34,22 @@ Deno.test({
 
     const groupByExprHash = toHashExpression(mv.getGroupExpression());
 
-    assertEquals(mv.getView(), [
+    expect(mv.getView()).toEqual([
       {
         [groupByExprHash]: "action",
         [fieldName1]: 60,
         [fieldName2]: 90,
       },
-
       {
         [groupByExprHash]: "marvel",
         [fieldName1]: -100,
         [fieldName2]: -90,
       },
-
       {
         [groupByExprHash]: "begaudeau",
         [fieldName1]: 1998,
         [fieldName2]: 2018,
       },
     ]);
-  },
+  });
 });

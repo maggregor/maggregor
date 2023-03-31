@@ -1,56 +1,70 @@
+import { describe, it, expect } from "vitest";
 import {
   SumBasicAccumulator,
   AvgBasicAccumulator,
   MinBasicAccumulator,
   MaxBasicAccumulator,
   CountBasicAccumulator,
-} from "@core/pipeline/accumulators/index.ts";
-import { assertEquals } from "asserts";
+} from "../../src/pipeline/accumulators/basic";
 
-Deno.test({
-  name: "SumBasicAccumulator",
-  fn() {
+describe("SumBasicAccumulator", () => {
+  it('should have the operator "sum"', () => {
     const sumAccumulator = new SumBasicAccumulator({ field: "score" });
-    assertEquals(sumAccumulator.operator, "sum");
-    assertEquals(sumAccumulator.evaluate([{ score: 1 }, { score: 2 }]), 3);
-  },
+    expect(sumAccumulator.operator).toBe("sum");
+  });
+
+  it('should return the sum of "score" elements in an array', () => {
+    const sumAccumulator = new SumBasicAccumulator({ field: "score" });
+    expect(sumAccumulator.evaluate([{ score: 1 }, { score: 2 }])).toBe(3);
+  });
 });
 
-Deno.test({
-  name: "AvgBasicAccumulator",
-  fn() {
+describe("AvgBasicAccumulator", () => {
+  it('should have the operator "avg"', () => {
     const avgAccumulator = new AvgBasicAccumulator({ field: "score" });
-    assertEquals(avgAccumulator.operator, "avg");
-    assertEquals(avgAccumulator.evaluate([{ score: 1 }, { score: 2 }]), 1.5);
-  },
+    expect(avgAccumulator.operator).toBe("avg");
+  });
+
+  it('should return the average of "score" elements in an array', () => {
+    const avgAccumulator = new AvgBasicAccumulator({ field: "score" });
+    expect(avgAccumulator.evaluate([{ score: 1 }, { score: 2 }])).toBe(1.5);
+  });
 });
 
-Deno.test({
-  name: "MinBasicAccumulator",
-  fn() {
+describe("MinBasicAccumulator", () => {
+  it('should have the operator "min"', () => {
     const minAccumulator = new MinBasicAccumulator({ field: "score" });
-    assertEquals(minAccumulator.operator, "min");
-    assertEquals(minAccumulator.evaluate([{ score: 1 }, { score: 2 }]), 1);
-  },
+    expect(minAccumulator.operator).toBe("min");
+  });
+
+  it('should return the minimum value of "score" elements in an array', () => {
+    const minAccumulator = new MinBasicAccumulator({ field: "score" });
+    expect(minAccumulator.evaluate([{ score: 1 }, { score: 2 }])).toBe(1);
+  });
 });
 
-Deno.test({
-  name: "MaxBasicAccumulator",
-  fn() {
+describe("MaxBasicAccumulator", () => {
+  it('should have the operator "max"', () => {
     const maxAccumulator = new MaxBasicAccumulator({ field: "score" });
-    assertEquals(maxAccumulator.operator, "max");
-    assertEquals(maxAccumulator.evaluate([{ score: 1 }, { score: 2 }]), 2);
-  },
+    expect(maxAccumulator.operator).toBe("max");
+  });
+
+  it('should return the maximum value of "score" elements in an array', () => {
+    const maxAccumulator = new MaxBasicAccumulator({ field: "score" });
+    expect(maxAccumulator.evaluate([{ score: 1 }, { score: 2 }])).toBe(2);
+  });
 });
 
-Deno.test({
-  name: "CountBasicAccumulator",
-  fn() {
+describe("CountBasicAccumulator", () => {
+  it('should have the operator "count"', () => {
     const countAccumulator = new CountBasicAccumulator({ field: "present" });
-    assertEquals(countAccumulator.operator, "count");
-    assertEquals(
-      countAccumulator.evaluate([{ present: true }, { present: false }]),
-      1
-    );
-  },
+    expect(countAccumulator.operator).toBe("count");
+  });
+
+  it('should return the count of elements with a "present" property set to true in an array', () => {
+    const countAccumulator = new CountBasicAccumulator({ field: "present" });
+    expect(
+      countAccumulator.evaluate([{ present: true }, { present: false }])
+    ).toBe(1);
+  });
 });

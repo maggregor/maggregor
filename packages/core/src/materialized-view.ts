@@ -1,15 +1,15 @@
+import { CollectionListener } from "src";
+import {
+  AccumulatorDefinition,
+  CachedAccumulator,
+  createCachedAccumulator,
+} from "./pipeline/accumulators";
 import {
   Expression,
   evaluateExpression,
   toHashExpression,
-} from "@core/pipeline/expressions.ts";
-import { CollectionListener, Document } from "@core/index.ts";
-import {
-  CachedAccumulator,
-  AccumulatorDefinition,
-  createCachedAccumulator,
-} from "@core/pipeline/accumulators/index.ts";
-
+} from "./pipeline/expressions";
+import { Document } from "src";
 export interface MaterializedViewOptions {
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];

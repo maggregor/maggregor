@@ -22,14 +22,8 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - uses: actions/checkout@v3
-
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
       - name: Run tests for core
-        run: deno task test
+        run: pnpm install && pnpm test --reported=verbose
         working-directory: ./packages/core
 
       - name: Install libssl1.1 for MongoDB Memory Server (tests)

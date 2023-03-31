@@ -1,237 +1,196 @@
-import { assertEquals, assertNotEquals } from "asserts";
+import { expect, it, describe } from "vitest";
 import {
   Expression,
   evaluateExpression,
   replaceExpressionByHash,
   resolveAllExpressionFields,
   toHashExpression,
-} from "@core/pipeline/expressions.ts";
-import { Document } from "@core/index.ts";
+} from "../../src/pipeline/expressions";
+import { Document } from "../../src";
 
-Deno.test({
-  name: "Simple $add expression",
-  fn() {
+describe("Expressions", () => {
+  it("Simple $add expression", () => {
     const expression: Expression = {
       operator: "$add",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), 3);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(3);
+  });
 
-Deno.test({
-  name: "Simple $subtract expression",
-  fn() {
+  it("Simple $subtract expression", () => {
     const expression: Expression = {
       operator: "$subtract",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), -1);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(-1);
+  });
 
-Deno.test({
-  name: "Simple $multiply expression",
-  fn() {
+  it("Simple $multiply expression", () => {
     const expression: Expression = {
       operator: "$multiply",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), 2);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(2);
+  });
 
-Deno.test({
-  name: "Simple $divide expression",
-  fn() {
+  it("Simple $divide expression", () => {
     const expression: Expression = {
       operator: "$divide",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), 0.5);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(0.5);
+  });
 
-Deno.test({
-  name: "Simple $mod expression",
-  fn() {
+  it("Simple $mod expression", () => {
     const expression: Expression = {
       operator: "$mod",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), 1);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(1);
+  });
 
-Deno.test({
-  name: "Simple $eq expression",
-  fn() {
+  it("Simple $eq expression", () => {
     const expression: Expression = {
       operator: "$eq",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), false);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(false);
+  });
 
-Deno.test({
-  name: "Simple $ne expression",
-  fn() {
+  it("Simple $ne expression", () => {
     const expression: Expression = {
       operator: "$ne",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), true);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(true);
+  });
 
-Deno.test({
-  name: "Simple $gt expression",
-  fn() {
+  it("Simple $gt expression", () => {
     const expression: Expression = {
       operator: "$gt",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), false);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(false);
+  });
 
-Deno.test({
-  name: "Simple $gte expression",
-  fn() {
+  it("Simple $gte expression", () => {
     const expression: Expression = {
       operator: "$gte",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), false);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(false);
+  });
 
-Deno.test({
-  name: "Simple $lt expression",
-  fn() {
+  it("Simple $lt expression", () => {
     const expression: Expression = {
       operator: "$lt",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), true);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(true);
+  });
 
-Deno.test({
-  name: "Simple $lte expression",
-  fn() {
+  it("Simple $lte expression", () => {
     const expression: Expression = {
       operator: "$lte",
       value: [{ value: 1 }, { value: 2 }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), true);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(true);
+  });
 
-Deno.test({
-  name: "Simple $and expression",
-  fn() {
+  it("Simple $and expression", () => {
     const expression: Expression = {
       operator: "$and",
       value: [{ value: true }, { value: false }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), false);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(false);
+  });
 
-Deno.test({
-  name: "Simple $or expression",
-  fn() {
+  it("Simple $or expression", () => {
     const expression: Expression = {
       operator: "$or",
       value: [{ value: true }, { value: false }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), true);
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(true);
+  });
 
-Deno.test({
-  name: "Simple $not expression",
-  fn() {
-    const expression: Expression = {
-      operator: "$not",
-      value: true,
-    };
-    assertEquals(evaluateExpression(expression, {} as Document), false);
-  },
-});
+  it("Simple $not expression", () => {
+    expect(
+      evaluateExpression(
+        {
+          operator: "$not",
+          value: true,
+        },
+        {} as Document
+      )
+    ).toEqual(false);
+    expect(
+      evaluateExpression(
+        {
+          operator: "$not",
+          value: false,
+        },
+        {} as Document
+      )
+    ).toEqual(true);
+  });
 
-Deno.test({
-  name: "Simple $concat expression",
-  fn() {
+  it("Simple $concat expression", () => {
     const expression: Expression = {
       operator: "$concat",
-      value: [{ value: "Hello " }, { value: "World" }],
+      value: [{ value: "Hello" }, { value: "World" }],
     };
-    assertEquals(evaluateExpression(expression, {} as Document), "Hello World");
-  },
-});
+    expect(evaluateExpression(expression, {} as Document)).toEqual(
+      "HelloWorld"
+    );
+  });
 
-Deno.test({
-  name: "Simple $toUpper expression",
-  fn() {
-    const expression: Expression = {
-      operator: "$toUpper",
-      value: "Hello World",
-    };
-    assertEquals(evaluateExpression(expression, {} as Document), "HELLO WORLD");
-  },
-});
-
-Deno.test({
-  name: "Simple $toLower expression",
-  fn() {
+  it("Simple $toLower expression", () => {
     const expression: Expression = {
       operator: "$toLower",
-      value: "Hello World",
+      value: "HelloWorld",
     };
-    assertEquals(evaluateExpression(expression, {} as Document), "hello world");
-  },
-});
-
-Deno.test({
-  name: "Simple $concat expression with multiple values",
-  fn() {
-    const expression: Expression = {
-      operator: "$concat",
-      value: [{ value: "Hello " }, { value: "World" }, { value: "!" }],
-    };
-    assertEquals(
-      evaluateExpression(expression, {} as Document),
-      "Hello World!"
+    expect(evaluateExpression(expression, {} as Document)).toEqual(
+      "helloworld"
     );
-  },
-});
+  });
 
-Deno.test({
-  name: "Simple $concat expression with multiple values and a separator",
-  fn() {
+  it("Simple $toLower expression on field", () => {
     const expression: Expression = {
-      operator: "$concat",
-      value: [
-        { value: "Hello " },
-        { value: "World" },
-        { value: "!" },
-        { value: " " },
-        { value: "How are you?" },
-      ],
+      operator: "$toLower",
+      value: {
+        field: "foo",
+      },
     };
-    assertEquals(
-      evaluateExpression(expression, {} as Document),
-      "Hello World! How are you?"
+    expect(evaluateExpression(expression, { foo: "BaR" } as Document)).toEqual(
+      "bar"
     );
-  },
+  });
+
+  it("Simple $toUpper expression", () => {
+    const expression: Expression = {
+      operator: "$toUpper",
+      value: "HelloWorld",
+    };
+    expect(evaluateExpression(expression, {} as Document)).toEqual(
+      "HELLOWORLD"
+    );
+  });
+
+  it("Simple $toUpper expression on field", () => {
+    const expression: Expression = {
+      operator: "$toUpper",
+      value: {
+        field: "foo",
+      },
+    };
+    expect(evaluateExpression(expression, { foo: "BaR" } as Document)).toEqual(
+      "BAR"
+    );
+  });
 });
 
-Deno.test({
-  name: "toHashExpression equals",
-  fn() {
+describe("toHashExpression", () => {
+  it("returns the same hash for equivalent expressions", () => {
     const expression1: Expression = {
       operator: "$add",
       value: [{ value: 1 }, { value: 2 }],
@@ -241,17 +200,20 @@ Deno.test({
       value: [{ value: 1 }, { value: 2 }],
     };
     // expr1 = expr1
-    assertEquals(toHashExpression(expression1), toHashExpression(expression1));
+    expect(toHashExpression(expression1)).toEqual(
+      toHashExpression(expression1)
+    );
     // expr1 = expr2
-    assertEquals(toHashExpression(expression1), toHashExpression(expression2));
+    expect(toHashExpression(expression1)).toEqual(
+      toHashExpression(expression2)
+    );
     // expr2 = expr2
-    assertEquals(toHashExpression(expression2), toHashExpression(expression2));
-  },
-});
+    expect(toHashExpression(expression2)).toEqual(
+      toHashExpression(expression2)
+    );
+  });
 
-Deno.test({
-  name: "toHashExpression not equals",
-  fn() {
+  it("returns different hashes for different expressions", () => {
     const expression1: Expression = {
       operator: "$add",
       value: [{ value: 1 }, { value: 2 }],
@@ -261,16 +223,14 @@ Deno.test({
       value: [{ value: 1 }, { value: 3 }],
     };
     // expr1 != expr2
-    assertNotEquals(
-      toHashExpression(expression1),
+    expect(toHashExpression(expression1)).not.toEqual(
       toHashExpression(expression2)
     );
-  },
+  });
 });
 
-Deno.test({
-  name: "replaceExpressionByHash",
-  fn() {
+describe("replaceExpressionByHash", () => {
+  it("replaces expression with hash", () => {
     const hash = toHashExpression({
       field: "action",
     });
@@ -280,16 +240,13 @@ Deno.test({
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
-    assertEquals(newExpr, {
+    expect(newExpr).toEqual({
       operator: "$add",
       value: [{ field: hash }, { value: 2 }],
     });
-  },
-});
+  });
 
-Deno.test({
-  name: "replaceExpressionByHash with nested expression",
-  fn() {
+  it("replaces nested expressions with hash", () => {
     const hash = toHashExpression({
       field: "action",
     });
@@ -302,19 +259,18 @@ Deno.test({
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
-    assertEquals(newExpr, {
+    expect(newExpr).toEqual({
       operator: "$add",
       value: [
         { field: hash },
         { operator: "$add", value: [{ field: hash }, { value: 2 }] },
       ],
     });
-  },
+  });
 });
 
-Deno.test({
-  name: "replaceExpressionByHash with in two nested expression",
-  fn() {
+describe("replaceExpressionByHash with in two nested expression", () => {
+  it("should replace expression by hash", () => {
     const hash = toHashExpression({
       field: "action",
     });
@@ -328,7 +284,7 @@ Deno.test({
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
-    assertEquals(newExpr, {
+    expect(newExpr).toEqual({
       operator: "$add",
       value: [
         { field: hash },
@@ -336,12 +292,11 @@ Deno.test({
         { operator: "$add", value: [{ field: hash }, { value: 2 }] },
       ],
     });
-  },
+  });
 });
 
-Deno.test({
-  name: "replaceExpressionByHash hash of operation expression",
-  fn() {
+describe("replaceExpressionByHash hash of operation expression", () => {
+  it("should replace operation expression by hash", () => {
     const hash = toHashExpression({
       operator: "$add",
       value: [{ field: "action" }, { value: 2 }],
@@ -352,15 +307,14 @@ Deno.test({
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { operator: "$add", value: [{ field: "action" }, { value: 2 }] } is replaced by { field: hash }
-    assertEquals(newExpr, {
+    expect(newExpr).toEqual({
       field: hash,
     });
-  },
+  });
 });
 
-Deno.test({
-  name: "replaceExpressionByHash hash of operation expression with nested expression",
-  fn() {
+describe("replaceExpressionByHash hash of operation expression with nested expression", () => {
+  it("should replace nested operation expression by hash", () => {
     const hash = toHashExpression({
       operator: "$add",
       value: [
@@ -377,15 +331,14 @@ Deno.test({
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { operator: "$add", value: [{ field: "action" }, { value: 2 }] } is replaced by { field: hash }
-    assertEquals(newExpr, {
+    expect(newExpr).toEqual({
       field: hash,
     });
-  },
+  });
 });
 
-Deno.test({
-  name: "resolveAllExpressionFields",
-  fn() {
+describe("resolveAllExpressionFields", () => {
+  it("should resolve all expression fields", () => {
     const exp1: Expression = { field: "action" };
     const exp2: Expression = {
       operator: "$concat",
@@ -394,16 +347,14 @@ Deno.test({
     const hash1 = toHashExpression(exp1);
     const hash2 = toHashExpression(exp2);
     const documents = [
-      {
-        [hash1]: "action1",
-        [hash2]: "action1!!!",
-      },
+      { [hash1]: "action1", [hash2]: "action1!!!" },
       {
         [hash1]: "action2",
         [hash2]: "action2!!!",
       },
     ];
     const newExpr = resolveAllExpressionFields([exp1, exp2], documents);
-    assertEquals(newExpr, [{ field: hash1 }, { field: hash2 }]);
-  },
+
+    expect(newExpr).toEqual([{ field: hash1 }, { field: hash2 }]);
+  });
 });

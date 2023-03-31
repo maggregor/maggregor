@@ -1,10 +1,10 @@
-import { Document } from "@core/index.ts";
+import { Accumulator } from "./accumulators";
 import {
-  evaluateExpression,
   Expression,
   resolveAllExpressionFields,
-} from "@core/pipeline/expressions.ts";
-import { Accumulator } from "@core/pipeline/accumulators/index.ts";
+  evaluateExpression,
+} from "./expressions";
+import { Document } from "..";
 
 export interface Stage {
   name: StageName;

@@ -1,5 +1,5 @@
-import { assertEquals } from "asserts";
-import { GroupStage, LimitStage, MatchStage } from "@core/pipeline/stages.ts";
+import { GroupStage, LimitStage, MatchStage } from "src/pipeline/stages";
+import { describe, expect, it } from "vitest";
 
 const sampleData = [
   { genre: "action", score: 10 },
@@ -9,40 +9,38 @@ const sampleData = [
   { genre: "drama", score: 50 },
   { genre: "drama", score: 60 },
 ];
-Deno.test({
-  name: "Simple group stage",
-  fn() {
+
+describe("GroupStage", () => {
+  it("should group data by genre", () => {
     const groupStage = new GroupStage({
       groupExpr: { field: "genre" },
       accumulators: {},
     });
     const result = groupStage.execute(sampleData);
-    assertEquals(result, [{ _id: "action" }, { _id: "drama" }]);
-  },
+    expect(result).toEqual([{ _id: "action" }, { _id: "drama" }]);
+  });
 });
 
-Deno.test({
-  name: "Simple limit stage",
-  fn() {
+describe("LimitStage", () => {
+  it("should limit data to two items", () => {
     const limitStage = new LimitStage({ limit: 2 });
     const result = limitStage.execute(sampleData);
-    assertEquals(result, sampleData.slice(0, 2));
-  },
+    expect(result).toEqual(sampleData.slice(0, 2));
+  });
 });
 
-Deno.test({
-  name: "Simple match stage",
-  fn() {
+describe("MatchStage", () => {
+  it("should filter data by genre 'action'", async () => {
     const matchStage = new MatchStage({
       filterExprs: [
         { operator: "$eq", value: [{ field: "genre" }, { value: "action" }] },
       ],
     });
     const result = matchStage.execute(sampleData);
-    assertEquals(result, [
+    expect(result).toEqual([
       { genre: "action", score: 10 },
       { genre: "action", score: 20 },
       { genre: "action", score: 30 },
     ]);
-  },
+  });
 });

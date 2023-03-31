@@ -1,6 +1,6 @@
-import { crypto, toHashString } from "https://deno.land/std/crypto/mod.ts";
+import crypto from "crypto";
+import { Document, DocumentFieldValue } from "src";
 
-import { Document, DocumentFieldValue } from "@core/index.ts";
 /**
  * An expression
  */
@@ -210,7 +210,7 @@ function getFieldValue(
       return undefined;
     }
   }
-  return value as DocumentFieldValue;
+  return value as unknown as DocumentFieldValue;
 }
 
 /**
@@ -220,9 +220,10 @@ function getFieldValue(
  * @returns
  */
 export function toHashExpression(expression: Expression): string {
-  const encoded = new TextEncoder().encode(JSON.stringify(expression));
-  const hashed = crypto.subtle.digestSync("SHA-384", encoded);
-  return toHashString(hashed).slice(0, 8);
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify(expression))
+    .digest("hex");
 }
 
 export function replaceExpressionByHash(

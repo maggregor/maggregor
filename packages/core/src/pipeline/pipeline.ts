@@ -1,5 +1,5 @@
-import { Stage } from "@core/pipeline/stages.ts";
-import { Document } from "../index.ts";
+import { Stage } from "./stages";
+import { Document } from "../index";
 
 export interface Pipeline {
   stages: Stage[];

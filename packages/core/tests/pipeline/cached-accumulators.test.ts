@@ -1,118 +1,107 @@
-import { assertEquals } from "asserts";
+import { expect, describe, it } from "vitest";
 import {
   SumCachedAccumulator,
   MinCachedAccumulator,
   MaxCachedAccumulator,
   AvgCachedAccumulator,
   CountCachedAccumulator,
-} from "@core/pipeline/accumulators/index.ts";
+} from "../../src/pipeline/accumulators";
 
-Deno.test({
-  name: "SumCachedAccumulator",
-  fn() {
+describe("SumCachedAccumulator", () => {
+  it("should update the cached value correctly", () => {
     const sumAccumulator = new SumCachedAccumulator();
-    assertEquals(sumAccumulator.getCachedValue(), undefined);
+    expect(sumAccumulator.getCachedValue()).toBeUndefined();
     sumAccumulator.add(1);
-    assertEquals(sumAccumulator.getCachedValue(), 1);
+    expect(sumAccumulator.getCachedValue()).toEqual(1);
     sumAccumulator.add(2);
-    assertEquals(sumAccumulator.getCachedValue(), 3);
+    expect(sumAccumulator.getCachedValue()).toEqual(3);
     sumAccumulator.add(3);
-    assertEquals(sumAccumulator.getCachedValue(), 6);
+    expect(sumAccumulator.getCachedValue()).toEqual(6);
     sumAccumulator.delete(2);
-    assertEquals(sumAccumulator.getCachedValue(), 4);
+    expect(sumAccumulator.getCachedValue()).toEqual(4);
     sumAccumulator.delete(1);
-    assertEquals(sumAccumulator.getCachedValue(), 3);
+    expect(sumAccumulator.getCachedValue()).toEqual(3);
     sumAccumulator.delete(3);
-    assertEquals(sumAccumulator.getCachedValue(), 0);
-  },
+    expect(sumAccumulator.getCachedValue()).toEqual(0);
+  });
 });
 
-Deno.test({
-  name: "MinCachedAccumulator",
-  fn() {
+describe("MinCachedAccumulator", () => {
+  it("should update the cached value correctly", () => {
     const minAccumulator = new MinCachedAccumulator();
-    assertEquals(minAccumulator.getCachedValue(), undefined);
+    expect(minAccumulator.getCachedValue()).toBeUndefined();
     minAccumulator.add(1);
-    assertEquals(minAccumulator.getCachedValue(), 1);
+    expect(minAccumulator.getCachedValue()).toEqual(1);
     minAccumulator.add(2);
-    assertEquals(minAccumulator.getCachedValue(), 1);
+    expect(minAccumulator.getCachedValue()).toEqual(1);
     minAccumulator.add(3);
-    assertEquals(minAccumulator.getCachedValue(), 1);
+    expect(minAccumulator.getCachedValue()).toEqual(1);
     minAccumulator.delete(2);
-    assertEquals(minAccumulator.getCachedValue(), 1);
+    expect(minAccumulator.getCachedValue()).toEqual(1);
     minAccumulator.delete(1);
-    assertEquals(minAccumulator.getCachedValue(), 3);
+    expect(minAccumulator.getCachedValue()).toEqual(3);
     minAccumulator.delete(3);
-    assertEquals(minAccumulator.getCachedValue(), undefined);
-  },
+    expect(minAccumulator.getCachedValue()).toBeUndefined();
+  });
 });
 
-Deno.test({
-  name: "MaxCachedAccumulator",
-  fn() {
+describe("MaxCachedAccumulator", () => {
+  it("should update the cached value correctly", () => {
     const maxAccumulator = new MaxCachedAccumulator();
-    assertEquals(maxAccumulator.getCachedValue(), undefined);
+    expect(maxAccumulator.getCachedValue()).toBeUndefined();
     maxAccumulator.add(1);
-    assertEquals(maxAccumulator.getCachedValue(), 1);
+    expect(maxAccumulator.getCachedValue()).toEqual(1);
     maxAccumulator.add(2);
-    assertEquals(maxAccumulator.getCachedValue(), 2);
+    expect(maxAccumulator.getCachedValue()).toEqual(2);
     maxAccumulator.add(3);
-    assertEquals(maxAccumulator.getCachedValue(), 3);
+    expect(maxAccumulator.getCachedValue()).toEqual(3);
     maxAccumulator.delete(2);
-    assertEquals(maxAccumulator.getCachedValue(), 3);
+    expect(maxAccumulator.getCachedValue()).toEqual(3);
     maxAccumulator.delete(1);
-    assertEquals(maxAccumulator.getCachedValue(), 3);
+    expect(maxAccumulator.getCachedValue()).toEqual(3);
     maxAccumulator.delete(3);
-    assertEquals(maxAccumulator.getCachedValue(), undefined);
-  },
+    expect(maxAccumulator.getCachedValue()).toBeUndefined();
+  });
 });
 
-Deno.test({
-  name: "AvgCachedAccumulator",
-  fn() {
+describe("AvgCachedAccumulator", () => {
+  it("should update the cached value correctly", () => {
     const avgAccumulator = new AvgCachedAccumulator();
-    assertEquals(avgAccumulator.getCachedValue(), undefined);
+    expect(avgAccumulator.getCachedValue()).toBeUndefined();
     avgAccumulator.add(1);
-    assertEquals(avgAccumulator.getCachedValue(), 1);
+    expect(avgAccumulator.getCachedValue()).toEqual(1);
     avgAccumulator.add(2);
-    assertEquals(avgAccumulator.getCachedValue(), 1.5);
+    expect(avgAccumulator.getCachedValue()).toEqual(1.5);
     avgAccumulator.add(3);
-    assertEquals(avgAccumulator.getCachedValue(), 2);
+    expect(avgAccumulator.getCachedValue()).toEqual(2);
     avgAccumulator.delete(2);
-    assertEquals(avgAccumulator.getCachedValue(), 2);
+    expect(avgAccumulator.getCachedValue()).toEqual(2);
     avgAccumulator.delete(1);
-    assertEquals(avgAccumulator.getCachedValue(), 3);
+    expect(avgAccumulator.getCachedValue()).toEqual(3);
     avgAccumulator.delete(3);
-    assertEquals(avgAccumulator.getCachedValue(), 0);
-  },
+    expect(avgAccumulator.getCachedValue()).toEqual(0);
+  });
 });
 
-Deno.test({
-  name: "CountCachedAccumulator",
-  fn() {
+describe("CountCachedAccumulator", () => {
+  it("should update the cached value correctly", () => {
     const countAccumulator = new CountCachedAccumulator();
-    assertEquals(countAccumulator.getCachedValue(), 0);
+    expect(countAccumulator.getCachedValue()).toEqual(0);
     countAccumulator.add(true);
-    assertEquals(countAccumulator.getCachedValue(), 1);
+    expect(countAccumulator.getCachedValue()).toEqual(1);
     countAccumulator.add(true);
-    assertEquals(countAccumulator.getCachedValue(), 2);
+    expect(countAccumulator.getCachedValue()).toEqual(2);
+    countAccumulator.add(false);
+    expect(countAccumulator.getCachedValue()).toEqual(2);
     countAccumulator.add(true);
-    assertEquals(countAccumulator.getCachedValue(), 3);
+    expect(countAccumulator.getCachedValue()).toEqual(3);
     countAccumulator.delete(true);
-    assertEquals(countAccumulator.getCachedValue(), 2);
+    expect(countAccumulator.getCachedValue()).toEqual(2);
     countAccumulator.delete(false);
-    assertEquals(countAccumulator.getCachedValue(), 2);
+    expect(countAccumulator.getCachedValue()).toEqual(2);
     countAccumulator.delete(true);
-    assertEquals(countAccumulator.getCachedValue(), 1);
-    countAccumulator.delete(false);
-    assertEquals(countAccumulator.getCachedValue(), 1);
+    expect(countAccumulator.getCachedValue()).toEqual(1);
     countAccumulator.delete(true);
-    assertEquals(countAccumulator.getCachedValue(), 0);
-    countAccumulator.add(false);
-    assertEquals(countAccumulator.getCachedValue(), 0);
-    countAccumulator.add(false);
-    assertEquals(countAccumulator.getCachedValue(), 0);
-    countAccumulator.add(false);
-    assertEquals(countAccumulator.getCachedValue(), 0);
-  },
+    expect(countAccumulator.getCachedValue()).toEqual(0);
+  });
 });

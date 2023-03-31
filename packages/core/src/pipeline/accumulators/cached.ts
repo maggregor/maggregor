@@ -1,11 +1,7 @@
-import { Document } from "@core/index.ts";
-import { evaluateExpression, Expression } from "@core/pipeline/expressions.ts";
-import {
-  AccumulatorOperator,
-  CachedAccumulator,
-  Value,
-} from "@core/pipeline/accumulators/index.ts";
-import { BaseAccumulator } from "@core/pipeline/accumulators/common.ts";
+import { CachedAccumulator, Value, AccumulatorOperator } from ".";
+import { evaluateExpression, Expression } from "../expressions";
+import { BaseAccumulator } from "./common";
+import { Document } from "../../index";
 
 abstract class AbstractCachedAccumulator
   extends BaseAccumulator

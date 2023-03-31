@@ -1,7 +1,7 @@
-import { Document } from "@core/index.ts";
-import { evaluateExpression, Expression } from "@core/pipeline/expressions.ts";
-import { AccumulatorOperator } from "@core/pipeline/accumulators/index.ts";
-import { BaseAccumulator } from "@core/pipeline/accumulators/common.ts";
+import { Expression, evaluateExpression } from "../expressions";
+import { BaseAccumulator } from "./common";
+import { AccumulatorOperator } from ".";
+import { Document } from "../../index";
 
 export abstract class BasicAccumulator extends BaseAccumulator {
   abstract evaluate(docs: Document[]): number;

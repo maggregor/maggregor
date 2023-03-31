@@ -10,7 +10,7 @@ import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
-} from './interceptors/reply.interceptor';
+} from './interceptors/reply-interceptor';
 import { RequestService } from '../request/request.service';
 
 /**

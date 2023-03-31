@@ -1,22 +1,19 @@
 import {
-  SumBasicAccumulator,
   AvgBasicAccumulator,
-  MinBasicAccumulator,
-  MaxBasicAccumulator,
-  CountBasicAccumulator,
-} from "@core/pipeline/accumulators/index.ts";
-import { assert, assertEquals } from "asserts";
-import {
-  SumCachedAccumulator,
-  MinCachedAccumulator,
-  MaxCachedAccumulator,
   AvgCachedAccumulator,
+  SumBasicAccumulator,
+  SumCachedAccumulator,
+  MinBasicAccumulator,
+  MinCachedAccumulator,
+  MaxBasicAccumulator,
+  MaxCachedAccumulator,
+  CountBasicAccumulator,
   CountCachedAccumulator,
-} from "@core/pipeline/accumulators/index.ts";
+} from "src/pipeline/accumulators";
+import { assert, describe, expect, it } from "vitest";
 
-Deno.test({
-  name: "Cached accumulators equals basic accumulators",
-  fn() {
+describe("Cached accumulators equals basic accumulators", () => {
+  it("should be equal", () => {
     assert(
       new AvgBasicAccumulator({ field: "score" }).equals(
         new AvgCachedAccumulator({ field: "score" })
@@ -42,12 +39,11 @@ Deno.test({
         new CountCachedAccumulator({ field: "score" })
       )
     );
-  },
+  });
 });
 
-Deno.test({
-  name: "Cached accumulators do not equal basic accumulators",
-  fn() {
+describe("Cached accumulators do not equal basic accumulators", () => {
+  it("should not be equal", () => {
     assert(
       !new AvgBasicAccumulator({ field: "score" }).equals(
         new AvgCachedAccumulator({ field: "score2" })
@@ -73,57 +69,45 @@ Deno.test({
         new CountCachedAccumulator({ field: "score2" })
       )
     );
-  },
+  });
 });
 
-Deno.test({
-  name: "Cached accumulators same hash as basic accumulators",
-  fn() {
-    assertEquals(
-      new AvgBasicAccumulator({ field: "score" }).hash,
+describe("Cached accumulators same hash as basic accumulators", () => {
+  it("should be equal", () => {
+    expect(new AvgBasicAccumulator({ field: "score" }).hash).toBe(
       new AvgCachedAccumulator({ field: "score" }).hash
     );
-    assertEquals(
-      new SumBasicAccumulator({ field: "score" }).hash,
+    expect(new SumBasicAccumulator({ field: "score" }).hash).toBe(
       new SumCachedAccumulator({ field: "score" }).hash
     );
-    assertEquals(
-      new MinBasicAccumulator({ field: "score" }).hash,
+    expect(new MinBasicAccumulator({ field: "score" }).hash).toBe(
       new MinCachedAccumulator({ field: "score" }).hash
     );
-    assertEquals(
-      new MaxBasicAccumulator({ field: "score" }).hash,
+    expect(new MaxBasicAccumulator({ field: "score" }).hash).toBe(
       new MaxCachedAccumulator({ field: "score" }).hash
     );
-    assertEquals(
-      new CountBasicAccumulator({ field: "score" }).hash,
+    expect(new CountBasicAccumulator({ field: "score" }).hash).toBe(
       new CountCachedAccumulator({ field: "score" }).hash
     );
-  },
+  });
 });
 
-Deno.test({
-  name: "Cached accumulators different hash as basic accumulators",
-  fn() {
-    assert(
-      new AvgBasicAccumulator({ field: "score" }).hash !==
-        new AvgCachedAccumulator({ field: "score2" }).hash
+describe("Cached accumulators different hash as basic accumulators", () => {
+  it("should not be equal", () => {
+    expect(new AvgBasicAccumulator({ field: "score" }).hash).not.toBe(
+      new AvgCachedAccumulator({ field: "score2" }).hash
     );
-    assert(
-      new SumBasicAccumulator({ field: "score" }).hash !==
-        new SumCachedAccumulator({ field: "score2" }).hash
+    expect(new SumBasicAccumulator({ field: "score" }).hash).not.toBe(
+      new SumCachedAccumulator({ field: "score2" }).hash
     );
-    assert(
-      new MinBasicAccumulator({ field: "score" }).hash !==
-        new MinCachedAccumulator({ field: "score2" }).hash
+    expect(new MinBasicAccumulator({ field: "score" }).hash).not.toBe(
+      new MinCachedAccumulator({ field: "score2" }).hash
     );
-    assert(
-      new MaxBasicAccumulator({ field: "score" }).hash !==
-        new MaxCachedAccumulator({ field: "score2" }).hash
+    expect(new MaxBasicAccumulator({ field: "score" }).hash).not.toBe(
+      new MaxCachedAccumulator({ field: "score2" }).hash
     );
-    assert(
-      new CountBasicAccumulator({ field: "score" }).hash !==
-        new CountCachedAccumulator({ field: "score2" }).hash
+    expect(new CountBasicAccumulator({ field: "score" }).hash).not.toBe(
+      new CountCachedAccumulator({ field: "score2" }).hash
     );
-  },
+  });
 });

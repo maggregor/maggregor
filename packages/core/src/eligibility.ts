@@ -1,15 +1,18 @@
-import { toHashExpression } from "@core/pipeline/expressions.ts";
+import { MaterializedView } from "./materialized-view";
 import {
-  GroupStageOptions,
-  GroupStage,
+  resolveAllExpressionFields,
+  toHashExpression,
+} from "./pipeline/expressions";
+import { Pipeline } from "./pipeline/pipeline";
+import {
   Stage,
-  MatchStageOptions,
+  GroupStage,
+  GroupStageOptions,
   MatchStage,
-} from "@core/pipeline/stages.ts";
-import { MaterializedView } from "@core/materialized-view.ts";
-import { Pipeline } from "@core/pipeline/pipeline.ts";
-import { equal } from "asserts";
-import { resolveAllExpressionFields } from "./pipeline/expressions.ts";
+  MatchStageOptions,
+} from "./pipeline/stages";
+import { Document } from ".";
+import { deepEqual } from "./pipeline/accumulators/common";
 
 /**
  * Check if a pipeline is eligible for a materialized view.
@@ -38,8 +41,8 @@ export function isEligible(pipeline: Pipeline, mv: MaterializedView): boolean {
 }
 
 function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
-  if (stage instanceof GroupStage) {
-    const options: GroupStageOptions = stage.options;
+  if (stage.name === "group") {
+    const options: GroupStageOptions = (stage as GroupStage).options;
     const { groupExpr, accumulators } = options;
     const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
     const resolvedHash = toHashExpression(resolved);
@@ -50,8 +53,8 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     for (const accumulator of Object.values(accumulators)) {
       if (!mv.getAccumulatorHashes().includes(accumulator.hash)) return false;
     }
-  } else if (stage instanceof MatchStage) {
-    const options: MatchStageOptions = stage.options;
+  } else if (stage.name === "match") {
+    const options: MatchStageOptions = (stage as MatchStage).options;
     const { filterExprs } = options;
     // No filter expression means that all documents are eligible
     if (filterExprs.length === 0) return true;
@@ -60,7 +63,8 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     // The check is done on the _id field and not on the other fields.
     const filterExpr = filterExprs[0];
     // The filter expression must be equal to the materialized view's group expression
-    if (!equal(filterExpr, mv.getGroupExpression())) return false;
+    // @ts-ignore -  Change by good deepEqual
+    if (!deepEqual(filterExpr, mv.getGroupExpression())) return false;
   }
 
   return true;

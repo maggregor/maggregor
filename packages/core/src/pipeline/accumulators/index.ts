@@ -1,4 +1,5 @@
-import { CollectionListener, Document } from "@core/index.ts";
+import { CollectionListener } from "src";
+import { Expression } from "../expressions";
 import {
   BasicAccumulator,
   SumBasicAccumulator,
@@ -6,15 +7,14 @@ import {
   MinBasicAccumulator,
   MaxBasicAccumulator,
   CountBasicAccumulator,
-} from "@core/pipeline/accumulators/basic.ts";
+} from "./basic";
 import {
   SumCachedAccumulator,
   AvgCachedAccumulator,
   MinCachedAccumulator,
   MaxCachedAccumulator,
   CountCachedAccumulator,
-} from "@core/pipeline/accumulators/cached.ts";
-import { Expression } from "@core/pipeline/expressions.ts";
+} from "./cached";
 
 /**
  * Accumulator operators
@@ -24,8 +24,8 @@ export type AccumulatorOperator = "sum" | "avg" | "min" | "max" | "count";
 export type AccumulatorFunction = (doc: Document[]) => Value;
 export type Value = number | string | boolean | undefined;
 
-export * from "@core/pipeline/accumulators/basic.ts";
-export * from "@core/pipeline/accumulators/cached.ts";
+export * from "./basic";
+export * from "./cached";
 
 export interface Accumulator {
   operator: AccumulatorOperator;
