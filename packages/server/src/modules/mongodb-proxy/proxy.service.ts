@@ -4,13 +4,13 @@ import { EventEmitter } from 'events';
 import {
   AggregateInterceptor,
   AggregateInterceptorHook,
-} from './interceptors/aggregate-interceptor';
+} from './interceptors/aggregate.interceptor';
 import { Transform } from 'stream';
 import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
-} from './interceptors/reply-interceptor';
+} from './interceptors/reply.interceptor';
 
 /**
  * Options for the TcpProxy instance
