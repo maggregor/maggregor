@@ -1,5 +1,6 @@
 import { MongoDBMessage, decodeMessage, encodeMessage } from './protocol';
 import { deserialize } from 'bson';
+import { describe, expect, test } from 'vitest';
 
 const OP_MSG_1: MongoDBMessage = {
   header: {
@@ -22,12 +23,12 @@ const OP_MSG_1: MongoDBMessage = {
 
 describe('MongoDB wire protocol', () => {
   describe('encodeOpMessage', () => {
-    it('should encode a OP_MSG', () => {
+    test('should encode a OP_MSG', () => {
       const buffer = encodeMessage(OP_MSG_1);
       expectBufferIsCorrectlyEncoded(buffer, OP_MSG_1);
     });
   });
-  it('should encode and decode a OP_MSG', () => {
+  test('should encode and decode a OP_MSG', () => {
     expectBufferEncodeDecodeToBeEqual(encodeMessage(OP_MSG_1));
   });
 });

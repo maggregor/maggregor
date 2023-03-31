@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import {
@@ -62,7 +62,9 @@ export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
 
-  constructor(private readonly requestService: RequestService) {
+  constructor(
+    @Inject(RequestService) private readonly requestService: RequestService,
+  ) {
     super();
   }
 
@@ -118,7 +120,7 @@ function handleError(err: Error) {
   // Ignore disconnection errors
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore - Code is not in the type definition
-  if (err.code === 'EPIPE') {
+  if (err.code === 'ECONNREFUSED') {
     return;
   }
   console.error(err);

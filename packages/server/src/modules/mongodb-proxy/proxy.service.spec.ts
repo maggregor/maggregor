@@ -3,10 +3,9 @@ import { MongoDBTcpProxyService } from './proxy.service';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { RequestService } from '../request/request.service';
-
+import { describe, expect, beforeAll, afterAll, test } from 'vitest';
 // This will create an new instance of "MongoMemoryServer" and automatically start it
 
-// jest.setTimeout(60000);
 describe('TcpProxyService', () => {
   let service: MongoDBTcpProxyService;
   let mongodbClient: MongoClient;
@@ -19,16 +18,7 @@ describe('TcpProxyService', () => {
       },
     });
     const app: TestingModule = await Test.createTestingModule({
-      providers: [
-        MongoDBTcpProxyService,
-        {
-          provide: RequestService,
-          useValue: {
-            onAggregateQueryFromClient: jest.fn(),
-            onResultFromServer: jest.fn(),
-          },
-        },
-      ],
+      providers: [RequestService, MongoDBTcpProxyService],
     }).compile();
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
     service.initProxy({
@@ -43,16 +33,31 @@ describe('TcpProxyService', () => {
   });
 
   afterAll(async () => {
-    await mongodbClient.close();
-    await mongodbServer.stop();
+    await mongodbServer?.stop();
+    await mongodbClient?.close();
     service.stop();
   });
 
-  it('Simple aggregate query', async () => {
+  // test('Simple aggregate query', async () => {
+  //   const db = mongodbClient.db('test');
+  //   const collection = db.collection('test');
+  //   await collection.insertOne({ a: 1 });
+  //   const docs = await collection.aggregate([{ $match: { a: 1 } }]).toArray();
+  //   expect(docs.length).toBe(1);
+  //   expect(docs[0].a).toBe(1);
+  // });
+
+  test('Simple aggregate query with group', async () => {
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
-    await collection.insertOne({ a: 1 });
-    const docs = await collection.aggregate([{ $match: { a: 1 } }]).toArray();
+    await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
+    await collection.insertOne({ country: 'USA', city: 'Los Angeles', age: 1 });
+    await collection.insertOne({ country: 'USA', city: 'Los Angeles', age: 3 });
+    await collection.insertOne({ country: 'USA', city: 'Los Angeles', age: 2 });
+    await collection.insertOne({ country: 'USA', city: 'Chicago', age: 4 });
+    const docs = await collection
+      .aggregate([{ $group: { _id: '$country', sumAge: { $sum: '$age' } } }])
+      .toArray();
     expect(docs.length).toBe(1);
     expect(docs[0].a).toBe(1);
   });
