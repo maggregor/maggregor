@@ -18,7 +18,7 @@ export class ReplyInterceptor extends PassThrough {
   }
 
   registerHook(hook: ReplyInterceptorHook): void {
-    this.hooks.push(hook);
+    hook && this.hooks.push(hook);
   }
 
   async _transform(
@@ -38,9 +38,7 @@ export class ReplyInterceptor extends PassThrough {
           await hook(intercepted);
         }
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) {}
     this.push(chunk);
     callback();
   }

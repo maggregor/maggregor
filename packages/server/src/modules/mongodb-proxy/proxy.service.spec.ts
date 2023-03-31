@@ -16,7 +16,7 @@ describe('TcpProxyService', () => {
         port: 27017,
       },
     });
-    service = new MongoDBTcpProxyService({
+    service = new MongoDBTcpProxyService().initProxy({
       targetHost: '127.0.0.1',
       targetPort: 27017,
       listenPort: 4000,

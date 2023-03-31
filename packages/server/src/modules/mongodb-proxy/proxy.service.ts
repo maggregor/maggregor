@@ -15,7 +15,7 @@ import {
 /**
  * Options for the TcpProxy instance
  */
-export interface MongoDBProxyOptions {
+export type MongoDBProxyOptions = {
   /**
    * The hostname or IP address of the target server to proxy requests to
    */
@@ -28,15 +28,19 @@ export interface MongoDBProxyOptions {
    * The port number for the proxy server to listen on for incoming connections
    */
   listenPort: number;
-}
+  /**
+   * Hook functions to modify incoming/outgoing data on the proxy
+   */
+  hooks?: MongoDBProxyHooks;
+};
 
 /**
  * Hook functions to modify incoming/outgoing data on the proxy
  */
-export interface MongoDBProxyHooks {
+export type MongoDBProxyHooks = {
   onAggregateQueryFromClient?: AggregateInterceptorHook;
   onResultFromServer?: ReplyInterceptorHook;
-}
+};
 
 /**
  * Event names emitted by the TcpProxy instance
@@ -60,21 +64,11 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
-  private hooks: MongoDBProxyHooks;
+  private hooks: MongoDBProxyHooks = {};
 
-  /**
-   * Creates an instance of TcpProxy.
-   * @param options - The options for the TcpProxy instance.
-   * @param hooks - The hooks for the TcpProxy instance.
-   */
-  constructor(options: MongoDBProxyOptions, hooks?: MongoDBProxyHooks) {
-    super();
+  initProxy(options: MongoDBProxyOptions) {
     this.options = options;
-    this.hooks = {
-      onAggregateQueryFromClient: () => undefined,
-      onResultFromServer: () => undefined,
-      ...hooks,
-    };
+    this.hooks = options.hooks || {};
     this.server = net.createServer(async (socket) => {
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
@@ -92,6 +86,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
       // Connect the new socket to the target server
       proxySocket.connect(this.options.targetPort, this.options.targetHost);
     });
+    return this;
   }
 
   /**

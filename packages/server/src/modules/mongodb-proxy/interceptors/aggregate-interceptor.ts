@@ -24,7 +24,7 @@ export class AggregateInterceptor extends Transform {
   }
 
   registerHook(hook: AggregateInterceptorHook): void {
-    this.hooks.push(hook);
+    hook && this.hooks.push(hook);
   }
 
   async _transform(
