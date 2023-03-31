@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Request } from './request.interface';
 import { RequestModel } from './request.model';
+import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
+import { InterceptedAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
+import { MessageResultConfig } from '../mongodb-proxy/protocol';
 
 @Injectable()
-export class RequestService {
+export class RequestService implements MongoDBProxyListener {
   constructor(private readonly requestModel: typeof RequestModel) {}
 
   async create(request: Request): Promise<Request> {
@@ -25,5 +28,15 @@ export class RequestService {
 
   async delete(id: string): Promise<Request> {
     return this.requestModel.findByIdAndDelete(id);
+  }
+
+  async onAggregateQueryFromClient(
+    intercepted: InterceptedAggregate,
+  ): Promise<MessageResultConfig> {
+    return;
+  }
+
+  async onResultFromServer(intercepted: InterceptedAggregate): Promise<void> {
+    return;
   }
 }

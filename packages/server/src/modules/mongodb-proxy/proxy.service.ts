@@ -11,6 +11,7 @@ import {
   ReplyInterceptor,
   ReplyInterceptorHook,
 } from './interceptors/reply.interceptor';
+import { RequestService } from '../request/request.service';
 
 /**
  * Options for the TcpProxy instance
@@ -28,19 +29,15 @@ export type MongoDBProxyOptions = {
    * The port number for the proxy server to listen on for incoming connections
    */
   listenPort: number;
-  /**
-   * Hook functions to modify incoming/outgoing data on the proxy
-   */
-  hooks?: MongoDBProxyHooks;
 };
 
 /**
  * Hook functions to modify incoming/outgoing data on the proxy
  */
-export type MongoDBProxyHooks = {
-  onAggregateQueryFromClient?: AggregateInterceptorHook;
-  onResultFromServer?: ReplyInterceptorHook;
-};
+export interface MongoDBProxyListener {
+  onAggregateQueryFromClient: AggregateInterceptorHook;
+  onResultFromServer: ReplyInterceptorHook;
+}
 
 /**
  * Event names emitted by the TcpProxy instance
@@ -64,19 +61,23 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
-  private hooks: MongoDBProxyHooks = {};
+
+  constructor(private readonly requestService: RequestService) {
+    super();
+  }
 
   initProxy(options: MongoDBProxyOptions) {
     this.options = options;
-    this.hooks = options.hooks || {};
     this.server = net.createServer(async (socket) => {
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new AggregateInterceptor(socket);
-      aggregateInterceptor.registerHook(this.hooks.onAggregateQueryFromClient);
+      aggregateInterceptor.registerHook(
+        this.requestService.onAggregateQueryFromClient,
+      );
       // Setup result interceptor (proxy -> client)
       const resultInterceptor = new ReplyInterceptor();
-      resultInterceptor.registerHook(this.hooks.onResultFromServer);
+      resultInterceptor.registerHook(this.requestService.onResultFromServer);
       // Setup bidirectional data flow between client, interceptors and proxy
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
       proxySocket.pipe(resultInterceptor).pipe(socket);
@@ -102,23 +103,6 @@ export class MongoDBTcpProxyService extends EventEmitter {
   stop() {
     this.server.close();
     this.emit('closed');
-  }
-
-  /**
-   * Sets the hooks for the TcpProxy instance.
-   * @param hooks - The hooks to set.
-   * @returns The TcpProxy instance.
-   */
-  setHooks(hooks: MongoDBProxyHooks) {
-    this.hooks = hooks;
-  }
-
-  /**
-   * Gets the hooks for the TcpProxy instance.
-   * @returns The hooks for the TcpProxy instance.
-   */
-  getHooks() {
-    return this.hooks;
   }
 
   /**

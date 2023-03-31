@@ -1,6 +1,8 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { MongoDBTcpProxyService } from './proxy.service';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
+import { RequestService } from '../request/request.service';
 
 // This will create an new instance of "MongoMemoryServer" and automatically start it
 
@@ -16,7 +18,20 @@ describe('TcpProxyService', () => {
         port: 27017,
       },
     });
-    service = new MongoDBTcpProxyService().initProxy({
+    const app: TestingModule = await Test.createTestingModule({
+      providers: [
+        MongoDBTcpProxyService,
+        {
+          provide: RequestService,
+          useValue: {
+            onAggregateQueryFromClient: jest.fn(),
+            onResultFromServer: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
+    service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
+    service.initProxy({
       targetHost: '127.0.0.1',
       targetPort: 27017,
       listenPort: 4000,
