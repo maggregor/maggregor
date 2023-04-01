@@ -22,11 +22,8 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Install yarn
-        run: npm install -g yarn
-
-      - name: Run tests for core
-        run: yarn install
+      - name: Run tests for parser
+        run: pnpm install && pnpm build
         working-directory: packages/mongodb-parser
 
       - name: Run tests for core
