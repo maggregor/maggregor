@@ -24,7 +24,7 @@ jobs:
 
       - name: Run tests for parser
         run: pnpm install && pnpm build
-        working-directory: ./packages/mongodb-parser
+        working-directory: ../packages/mongodb-parser
 
       - name: Run tests for core
         run: pnpm install && pnpm test
