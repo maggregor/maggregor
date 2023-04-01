@@ -27,15 +27,15 @@ jobs:
 
       - name: Run tests for core
         run: yarn install
-        working-directory: ./packages/mongodb-parser
+        working-directory: packages/mongodb-parser
 
       - name: Run tests for core
         run: pnpm install && pnpm test
-        working-directory: ./packages/core
+        working-directory: packages/core
 
       - name: Install libssl1.1 for MongoDB Memory Server (tests)
         run: sudo apt install libssl-dev && echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list && sudo apt-get update && sudo apt-get install libssl1.1
 
       - name: Run tests for server
         run: pnpm install && pnpm test
-        working-directory: ./packages/server
+        working-directory: packages/server
