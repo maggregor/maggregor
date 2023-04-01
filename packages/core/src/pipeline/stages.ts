@@ -7,7 +7,7 @@ import {
 import { Document } from "..";
 
 export interface Stage {
-  name: StageName;
+  type: StageType;
   execute: (input: Document[], options?: Document) => Document[];
   next?: Stage;
 }
@@ -23,15 +23,15 @@ export type GroupStageOptions = {
   };
 };
 
-export type StageName = "match" | "group" | "sort" | "limit" | "skip";
+export type StageType = "match" | "group" | "sort" | "limit" | "skip";
 
 export class GroupStage implements IGroupStage {
-  name: StageName;
+  type: StageType;
   options: GroupStageOptions;
   next?: Stage | undefined;
 
   constructor(options: GroupStageOptions) {
-    this.name = "group" as StageName;
+    this.type = "group" as StageType;
     this.options = options;
   }
 
@@ -80,12 +80,12 @@ export type MatchStageOptions = {
 };
 
 export class MatchStage implements Stage {
-  name: StageName;
+  type: StageType;
   next?: Stage | undefined;
   options: MatchStageOptions;
 
   constructor(options: MatchStageOptions) {
-    this.name = "match" as StageName;
+    this.type = "match" as StageType;
     this.options = options;
   }
 
@@ -108,12 +108,12 @@ export type LimitStageOptions = {
 };
 
 export class LimitStage implements Stage {
-  name: StageName;
+  type: StageType;
   next?: Stage | undefined;
   limit: number;
 
   constructor(options: LimitStageOptions) {
-    this.name = "limit" as StageName;
+    this.type = "limit" as StageType;
     this.limit = options.limit;
   }
 

@@ -33,9 +33,9 @@ describe('TcpProxyService', () => {
   });
 
   afterAll(async () => {
-    await mongodbServer?.stop();
-    await mongodbClient?.close();
     service.stop();
+    await mongodbServer.stop();
+    await mongodbClient.close();
   });
 
   // test('Simple aggregate query', async () => {
@@ -59,6 +59,7 @@ describe('TcpProxyService', () => {
       .aggregate([{ $group: { _id: '$country', sumAge: { $sum: '$age' } } }])
       .toArray();
     expect(docs.length).toBe(1);
-    expect(docs[0].a).toBe(1);
+    expect(docs[0]._id).toBe('USA');
+    expect(docs[0].sumAge).toBe(40);
   });
 });

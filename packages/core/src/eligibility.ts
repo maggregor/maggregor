@@ -41,7 +41,7 @@ export function isEligible(pipeline: Pipeline, mv: MaterializedView): boolean {
 }
 
 function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
-  if (stage.name === "group") {
+  if (stage.type === "group") {
     const options: GroupStageOptions = (stage as GroupStage).options;
     const { groupExpr, accumulators } = options;
     const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
@@ -53,7 +53,7 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     for (const accumulator of Object.values(accumulators)) {
       if (!mv.getAccumulatorHashes().includes(accumulator.hash)) return false;
     }
-  } else if (stage.name === "match") {
+  } else if (stage.type === "match") {
     const options: MatchStageOptions = (stage as MatchStage).options;
     const { filterExprs } = options;
     // No filter expression means that all documents are eligible
