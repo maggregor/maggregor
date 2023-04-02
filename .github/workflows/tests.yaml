@@ -23,7 +23,8 @@ jobs:
         with:
           node-version: 19.x
 
-      - uses: pnpm/action-setup@v2.2.4
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Run tests for parser
         run: pnpm install && pnpm build
