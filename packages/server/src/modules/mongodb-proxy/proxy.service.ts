@@ -85,7 +85,6 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
   init() {
     this.server = net.createServer(async (socket) => {
-      this.logger.log('New connection from ' + socket.remoteAddress);
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new AggregateInterceptor(socket);
@@ -142,9 +141,9 @@ function handleError(err: Error) {
   // Ignore disconnection errors
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore - Code is not in the type definition
-  // if (err.code === 'ECONNREFUSED') {
-  //   return;
-  // }
+  if (err.code === 'ECONNRESET') {
+    return;
+  }
   console.error(err);
 }
 

@@ -42,10 +42,10 @@ export class RequestService implements MongoDBProxyListener {
     try {
       const sPipeline = '[' + objectToString(pipeline[0]) + ']';
       const parsed = parse(sPipeline);
-      console.log(
-        `Request ${intercepted.requestID} > Received pipeline: ${parsed
-          .map((s) => s.type)
-          .join(' -> ')}`,
+      Logger.log(
+        `> Request ${intercepted.requestID}: Pipeline (${
+          parsed.length
+        } stage(s)) ${parsed.map((s) => s.type).join(' -> ')}`,
       );
     } catch (e) {
       console.log('Parsing error on pipeline: ', e);
@@ -55,14 +55,14 @@ export class RequestService implements MongoDBProxyListener {
 
   // Event: on result from server
   async onResultFromServer(intercepted: InterceptedReply): Promise<void> {
-    console.log(
-      `Response to ${intercepted.responseTo} > Target server replied !`,
+    Logger.log(
+      `< Response ${intercepted.responseTo}: ${intercepted.data.length} documents`,
     );
     return;
   }
 }
 
-function objectToString(obj) {
+function objectToString(obj: object) {
   const entries = Object.entries(obj);
   const keyValuePairs = entries.map(([key, value]) => {
     const formattedValue =

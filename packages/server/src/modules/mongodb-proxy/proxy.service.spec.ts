@@ -33,15 +33,6 @@ describe('TcpProxyService', () => {
     await mongodbClient.close();
   });
 
-  // test('Simple aggregate query', async () => {
-  //   const db = mongodbClient.db('test');
-  //   const collection = db.collection('test');
-  //   await collection.insertOne({ a: 1 });
-  //   const docs = await collection.aggregate([{ $match: { a: 1 } }]).toArray();
-  //   expect(docs.length).toBe(1);
-  //   expect(docs[0].a).toBe(1);
-  // });
-
   test('Simple aggregate query with group', async () => {
     const db = mongodbClient.db('test');
     const collection = db.collection('test');

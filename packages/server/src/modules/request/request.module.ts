@@ -4,9 +4,11 @@ import { RequestController } from './request.controller';
 import { Request, RequestSchema } from './request.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseModule } from '../database/database.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     DatabaseModule,
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],

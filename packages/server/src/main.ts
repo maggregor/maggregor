@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
-import { ProxyModule } from './modules/mongodb-proxy/proxy.module';
+import { AppModule } from './modules/app.module';
 
 export async function bootstrap() {
-  const app = await NestFactory.create(ProxyModule);
-  await app.listen(3000);
+  const app = await NestFactory.create(AppModule);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();
