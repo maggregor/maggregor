@@ -174,7 +174,12 @@ function decodeMessage(buffer: Buffer): MongoDBMessage {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpReply(buffer: Buffer): MongoDBMessage {
-  throw new Error('Not implemented');
+  const header = decodeHeader(buffer);
+
+  return {
+    header,
+    contents: null,
+  };
 }
 
 export {

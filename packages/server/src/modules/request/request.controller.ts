@@ -7,7 +7,6 @@ import {
   Param,
   Body,
 } from '@nestjs/common';
-import { Request } from './request.interface';
 import { RequestService } from './request.service';
 
 @Controller('request')

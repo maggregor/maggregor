@@ -1,4 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import {
@@ -25,6 +26,10 @@ export type MongoDBProxyOptions = {
    * The port number of the target server to proxy requests to
    */
   targetPort: number;
+  /**
+   * The hostname or IP address for the proxy server to listen on for incoming connections
+   */
+  listenHost: string;
   /**
    * The port number for the proxy server to listen on for incoming connections
    */
@@ -61,16 +66,26 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
+  private readonly logger = new Logger(MongoDBTcpProxyService.name);
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
+    private readonly configService: ConfigService,
   ) {
     super();
+    this.options = {
+      targetHost: this.configService.get('MONGODB_HOST') || 'localhost',
+      targetPort: this.configService.get('MONGODB_PORT') || 27017,
+      listenHost: this.configService.get('MAGGREGOR_PROXY_HOST') || 'localhost',
+      listenPort: this.configService.get('MAGGREGOR_PROXY_PORT') || 4000,
+    };
+    this.init();
+    this.start();
   }
 
-  initProxy(options: MongoDBProxyOptions) {
-    this.options = options;
+  init() {
     this.server = net.createServer(async (socket) => {
+      this.logger.log('New connection from ' + socket.remoteAddress);
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new AggregateInterceptor(socket);
@@ -96,7 +111,14 @@ export class MongoDBTcpProxyService extends EventEmitter {
    * Starts the TcpProxy instance and begins listening for incoming connections.
    */
   start() {
-    this.server.listen(this.options.listenPort, () => this.emit('listening'));
+    this.server.listen(this.options.listenPort, this.options.listenHost, () => {
+      this.emit('listening');
+      const port = this.getListenPort();
+      const targetHost = this.options.targetHost;
+      const targetPort = this.options.targetPort;
+      this.logger.log(`Maggregor's MongoDB proxy is listening on port ${port}`);
+      this.logger.log(`Target MongoDB server: ${targetHost}:${targetPort}`);
+    });
   }
 
   /**
@@ -120,9 +142,9 @@ function handleError(err: Error) {
   // Ignore disconnection errors
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore - Code is not in the type definition
-  if (err.code === 'ECONNREFUSED') {
-    return;
-  }
+  // if (err.code === 'ECONNREFUSED') {
+  //   return;
+  // }
   console.error(err);
 }
 

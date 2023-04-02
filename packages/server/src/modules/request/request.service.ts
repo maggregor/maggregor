@@ -1,13 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { Request } from './request.interface';
-import { RequestModel } from './request.model';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
 import { InterceptedAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
-import { MessageResultConfig } from '../mongodb-proxy/protocol';
+import { MessageResultConfig } from '../mongodb-proxy/protocol/protocol';
 import { parse } from 'ts-mongo-aggregation-parser';
+import { InterceptedReply } from '../mongodb-proxy/interceptors/reply-interceptor';
+
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
-  constructor(private readonly requestModel: typeof RequestModel) {}
+  constructor(
+    @InjectModel(Request.name) private readonly requestModel: Model<Request>,
+  ) {}
 
   async create(request: Request): Promise<Request> {
     return this.requestModel.create(request);
@@ -22,7 +26,7 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async update(id: string, request: Request): Promise<Request> {
-    this.update(id, request);
+    await this.requestModel.updateOne({ _id: id }, request);
     return this.findOne(id);
   }
 
@@ -37,17 +41,23 @@ export class RequestService implements MongoDBProxyListener {
     const pipeline = intercepted.pipeline;
     try {
       const sPipeline = '[' + objectToString(pipeline[0]) + ']';
-      console.log('Incoming aggregate pipeline: ', sPipeline);
       const parsed = parse(sPipeline);
-      console.log('Parsed incoming aggregate pipeline: ', parsed);
+      console.log(
+        `Request ${intercepted.requestID} > Received pipeline: ${parsed
+          .map((s) => s.type)
+          .join(' -> ')}`,
+      );
     } catch (e) {
-      console.log('Parsing error: ', e);
+      console.log('Parsing error on pipeline: ', e);
     }
     return;
   }
 
   // Event: on result from server
-  async onResultFromServer(intercepted: InterceptedAggregate): Promise<void> {
+  async onResultFromServer(intercepted: InterceptedReply): Promise<void> {
+    console.log(
+      `Response to ${intercepted.responseTo} > Target server replied !`,
+    );
     return;
   }
 }

@@ -21,11 +21,6 @@ describe('TcpProxyService', () => {
       providers: [RequestService, MongoDBTcpProxyService],
     }).compile();
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
-    service.initProxy({
-      targetHost: '127.0.0.1',
-      targetPort: 27017,
-      listenPort: 4000,
-    });
     service.start();
     mongodbClient = await MongoClient.connect(
       `mongodb://127.0.0.1:${service.getListenPort()}`,

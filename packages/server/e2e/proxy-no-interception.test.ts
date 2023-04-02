@@ -50,9 +50,15 @@ const testAggregations: Array<{
 ];
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({
+    instance: {
+      port: 27017,
+      dbName: 'testdb',
+    },
+  });
   const uri = mongoServer.getUri();
-  client = new MongoClient(uri);
+  console.log(`MongoDB URI: ${uri}`);
+  client = new MongoClient('mongodb://localhost:4000/');
   await client.connect();
   db = client.db('testdb');
   await db.collection('myCollection').insertMany(

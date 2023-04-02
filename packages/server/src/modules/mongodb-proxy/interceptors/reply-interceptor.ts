@@ -1,8 +1,9 @@
 import { PassThrough } from 'stream';
-import { OP_REPLY, decodeMessage } from '../protocol';
+import { OP_MSG, OP_QUERY, OP_REPLY, decodeMessage } from '../protocol';
 
 export type InterceptedReply = {
   requestID: number;
+  responseTo: number;
 };
 
 export type ReplyInterceptorHook = (
@@ -30,9 +31,11 @@ export class ReplyInterceptor extends PassThrough {
     try {
       const msg = decodeMessage(buffer);
       const requestID = msg.header.requestID;
-      if (msg.header.opCode === OP_REPLY) {
+      const responseTo = msg.header.responseTo;
+      if (msg.header.opCode === OP_MSG) {
         const intercepted: InterceptedReply = {
           requestID,
+          responseTo,
         };
         for (const hook of this.hooks) {
           await hook(intercepted);
