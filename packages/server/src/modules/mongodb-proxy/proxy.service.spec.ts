@@ -4,7 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { RequestService } from '../request/request.service';
 import { describe, expect, beforeAll, afterAll, test } from 'vitest';
-// This will create an new instance of "MongoMemoryServer" and automatically start it
+import { ConfigService } from '@nestjs/config';
 
 describe('TcpProxyService', () => {
   let service: MongoDBTcpProxyService;
@@ -12,24 +12,37 @@ describe('TcpProxyService', () => {
   let mongodbServer: MongoMemoryServer;
 
   beforeAll(async () => {
-    mongodbServer = await MongoMemoryServer.create({
-      instance: {
-        port: 27017,
-      },
-    });
+    mongodbServer = await MongoMemoryServer.create();
     const app: TestingModule = await Test.createTestingModule({
-      providers: [RequestService, MongoDBTcpProxyService],
+      providers: [
+        MongoDBTcpProxyService,
+        {
+          provide: RequestService,
+          useValue: {},
+        },
+        {
+          // TODO: Improve the way to mock the ConfigService
+          provide: ConfigService,
+          useValue: {
+            get: (key: string) => {
+              if (key === 'MONGODB_PORT') {
+                return mongodbServer.getUri().split(':')[2].replace('/', '');
+              }
+            },
+          },
+        },
+      ],
     }).compile();
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
     service.start();
     mongodbClient = await MongoClient.connect(
-      `mongodb://127.0.0.1:${service.getListenPort()}`,
+      `mongodb://${service.getHost()}:${service.getPort()}/`,
     );
   });
 
   afterAll(async () => {
-    service.stop();
     await mongodbServer.stop();
+    service.stop();
     await mongodbClient.close();
   });
 

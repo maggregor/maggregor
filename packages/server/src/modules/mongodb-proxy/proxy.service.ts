@@ -70,13 +70,13 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
-    private readonly configService: ConfigService,
+    @Inject(ConfigService) private readonly configService: ConfigService,
   ) {
     super();
     this.options = {
-      targetHost: this.configService.get('MONGODB_HOST') || 'localhost',
+      targetHost: this.configService.get('MONGODB_HOST') || '127.0.0.1',
       targetPort: this.configService.get('MONGODB_PORT') || 27017,
-      listenHost: this.configService.get('MAGGREGOR_PROXY_HOST') || 'localhost',
+      listenHost: this.configService.get('MAGGREGOR_PROXY_HOST') || '127.0.0.1',
       listenPort: this.configService.get('MAGGREGOR_PROXY_PORT') || 4000,
     };
     this.init();
@@ -112,7 +112,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
   start() {
     this.server.listen(this.options.listenPort, this.options.listenHost, () => {
       this.emit('listening');
-      const port = this.getListenPort();
+      const port = this.getPort();
       const targetHost = this.options.targetHost;
       const targetPort = this.options.targetPort;
       this.logger.log(`Maggregor's MongoDB proxy is listening on port ${port}`);
@@ -129,11 +129,17 @@ export class MongoDBTcpProxyService extends EventEmitter {
   }
 
   /**
-   * Gets the options for the TcpProxy instance.
-   * @returns The options for the TcpProxy instance.
+   * Gets the port number the proxy is listening on
    */
-  getListenPort() {
+  getPort() {
     return this.options.listenPort;
+  }
+
+  /**
+   * Gets the host the proxy is listening on
+   */
+  getHost() {
+    return this.options.listenHost;
   }
 }
 
