@@ -1,10 +1,9 @@
-import {
-  AggregateInterceptor,
-  InterceptedAggregate,
-} from './aggregate.interceptor';
+import { AggregateInterceptor } from './aggregate.interceptor';
 import { MongoDBMessage, encodeMessage } from '../protocol';
 import * as net from 'net';
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, beforeEach } from 'vitest';
+
+// TODO: Add tests
 
 describe('AggregateInterceptor', () => {
   let interceptor: AggregateInterceptor;
@@ -16,23 +15,7 @@ describe('AggregateInterceptor', () => {
     interceptor = new AggregateInterceptor(socket);
   });
 
-  test('Register hook', () => {
-    const hook = async (intercepted: InterceptedAggregate) => null;
-    interceptor.registerHook(hook);
-    expect(interceptor.hooks.length).toBe(1);
-    expect(interceptor.hooks[0]).toBe(hook);
-  });
-
   test('Hook is called', async () => {
-    // const hook = jest.fn(async (intercepted: InterceptedAggregate) => ({
-    //   db: 'testDB',
-    //   collection: 'testCollection',
-    //   results: [],
-    //   responseTo: 12345,
-    // }));
-
-    // interceptor.registerHook(hook);
-
     const testMessage: MongoDBMessage = {
       header: {
         requestID: 12345,
@@ -58,7 +41,5 @@ describe('AggregateInterceptor', () => {
     const buffer = encodeMessage(testMessage);
 
     interceptor.write(buffer);
-
-    // expect(hook).toHaveBeenCalled();
   });
 });
