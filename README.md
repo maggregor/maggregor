@@ -5,13 +5,13 @@
 </picture>
 
 [![MaggregorCache Tests](https://github.com/estebgonza/maggregordb/actions/workflows/tests.yaml/badge.svg)](#)
-## Packages
+## Directory Structure
 
-| Packages           | Description |
+| Direcotry           | Description |
 |--------------------|-------------|
-| `packages/core`    | The core database package (cached aggregations) |
-| `packages/mongodb-parser`  | A MongoDB aggregation query parser [ts-mongo-aggregation-parser](https://github.com/estebgonza/ts-mongo-aggregation-parser) |
-| `packages/server` | Proxy the MongoDB Wire Protocol and intercepts Aggregation Pipeline queries |
+| `src/core`    | The core database package (cached aggregations) |
+| `src/parser`  | A MongoDB aggregation query parser [ts-mongo-aggregation-parser](https://github.com/estebgonza/ts-mongo-aggregation-parser) |
+| `src/server` | Proxy the MongoDB Wire Protocol and intercepts Aggregation Pipeline queries |
 
 ## Documentation
 
