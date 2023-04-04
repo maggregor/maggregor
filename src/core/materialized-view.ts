@@ -10,7 +10,7 @@ import {
   toHashExpression,
 } from './pipeline/expressions';
 import { Document } from '@core/index';
-export interface MaterializedViewOptions {
+export interface MaterializedViewDefinition {
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];
 }
@@ -20,7 +20,7 @@ export class MaterializedView implements CollectionListener {
   private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();
 
-  constructor(options: MaterializedViewOptions) {
+  constructor(options: MaterializedViewDefinition) {
     this.groupBy = options.groupBy;
     this.definitions = options.accumulatorDefs;
   }
