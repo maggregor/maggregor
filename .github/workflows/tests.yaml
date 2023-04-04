@@ -1,4 +1,4 @@
-name: All package tests
+name: Tests
 
 on:
   push:
@@ -15,28 +15,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
 
       - name: Use Node.js 19
         uses: actions/setup-node@v3
         with:
           node-version: 19.x
-
-      - name: Install pnpm
-        run: npm install -g pnpm
+          cache: "pnpm"
 
       - name: Install libssl1.1 for MongoDB Memory Server (tests)
         run: sudo apt install libssl-dev && echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list && sudo apt-get update && sudo apt-get install libssl1.1
 
-      - name: Run tests for parser
-        run: pnpm install && pnpm build
-        working-directory: packages/mongodb-parser
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Run tests for core
-        run: pnpm install && pnpm test
-        working-directory: packages/core
+      - name: Build project
+        run: pnpm build
 
-      - name: Run tests for server
-        run: pnpm install && pnpm test
-        working-directory: packages/server
+      - name: Run tests
+        run: pnpm test
