@@ -31,7 +31,7 @@ export interface Accumulator {
   operator: AccumulatorOperator;
   expression: Expression | undefined;
   outputFieldName: string;
-  hash: string;
+  getHash(): string;
   equals(acc: Accumulator): boolean;
 }
 

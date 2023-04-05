@@ -8,7 +8,9 @@ export abstract class BasicAccumulator extends BaseAccumulator {
 }
 
 export class AvgBasicAccumulator extends BasicAccumulator {
-  declare operator: 'avg';
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('avg', definition);
+  }
 
   public evaluate(docs: Document[]): number {
     return (
@@ -21,7 +23,9 @@ export class AvgBasicAccumulator extends BasicAccumulator {
 }
 
 export class CountBasicAccumulator extends BasicAccumulator {
-  declare operator: 'count';
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('count', definition);
+  }
 
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
@@ -32,7 +36,9 @@ export class CountBasicAccumulator extends BasicAccumulator {
 }
 
 export class SumBasicAccumulator extends BasicAccumulator {
-  declare operator: 'sum';
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('sum', definition);
+  }
 
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
@@ -43,7 +49,9 @@ export class SumBasicAccumulator extends BasicAccumulator {
 }
 
 export class MinBasicAccumulator extends BasicAccumulator {
-  declare operator: 'min';
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('min', definition);
+  }
 
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
@@ -54,7 +62,9 @@ export class MinBasicAccumulator extends BasicAccumulator {
 }
 
 export class MaxBasicAccumulator extends BaseAccumulator {
-  declare operator: 'max';
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('max', definition);
+  }
 
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {

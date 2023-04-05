@@ -49,7 +49,8 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     if (resolvedHash !== mvGroupExprHash) return false;
     // All accumulators must be present in the materialized view
     for (const accumulator of Object.values(accumulators)) {
-      if (!mv.getAccumulatorHashes().includes(accumulator.hash)) return false;
+      if (!mv.getAccumulatorHashes().includes(accumulator.getHash()))
+        return false;
     }
   } else if (stage.type === 'match') {
     const options: MatchStageOptions = (stage as MatchStage).options;

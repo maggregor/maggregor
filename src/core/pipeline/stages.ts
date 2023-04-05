@@ -57,11 +57,11 @@ export class GroupStage {
 
       accumulators.forEach((acc) => {
         const allDocKeys = [...new Set(docs.flatMap((d) => Object.keys(d)))];
-        if (allDocKeys.includes(acc.hash)) {
-          group[acc.outputFieldName] = docs[0][acc.hash];
+        if (allDocKeys.includes(acc.getHash())) {
+          group[acc.outputFieldName] = docs[0][acc.getHash()];
         } else {
           // @ts-ignore
-          group[acc.outputFieldName] = accumulator.evaluate(docs);
+          group[acc.outputFieldName] = acc.evaluate(docs);
         }
       });
       return group;

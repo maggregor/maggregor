@@ -47,7 +47,7 @@ describe('isEligible', () => {
 
   test('should return false if the pipeline is not eligible', () => {
     const mv = new MaterializedView({
-      groupBy: { field: 'name' },
+      groupBy: { field: 'yes' },
       accumulatorDefs: [
         {
           operator: 'count',
@@ -164,7 +164,7 @@ describe('isEligible', () => {
 
   test('should not be eligible', () => {
     const mv = new MaterializedView({
-      groupBy: { field: 'name' },
+      groupBy: { field: 'noname' },
       accumulatorDefs: [
         {
           operator: 'count',

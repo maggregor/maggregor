@@ -200,19 +200,12 @@ it('advanced group stage', () => {
           expression: { field: 'score' },
         }),
         createBasicAccumulator({
-          outputFieldName: 'sumScore',
-          operator: 'sum',
-          expression: { field: 'score' },
-        }),
-        createBasicAccumulator({
-          outputFieldName: 'minScore',
-          operator: 'min',
-          expression: { field: 'score' },
-        }),
-        createBasicAccumulator({
-          outputFieldName: 'maxScore',
-          operator: 'max',
-          expression: { field: 'score' },
+          outputFieldName: 'avgScoreOnComplexExpression',
+          operator: 'avg',
+          expression: {
+            operator: '$multiply',
+            value: [{ field: 'score' }, { value: 5 }],
+          },
         }),
       ],
     }),

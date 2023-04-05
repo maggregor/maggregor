@@ -8,10 +8,23 @@ export abstract class BaseAccumulator implements Accumulator {
   public outputFieldName: string | undefined;
   public hash: string;
 
-  constructor(def?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(
+    operator: AccumulatorOperator,
+    def?: Omit<AccumulatorDefinition, 'operator'>,
+  ) {
+    this.operator = operator;
     this.expression = def?.expression;
     this.outputFieldName = def?.outputFieldName;
-    this.hash = hash({ expression: this.expression, operator: this.operator });
+  }
+
+  public getHash() {
+    if (!this.hash) {
+      this.hash = hash({
+        expression: this.expression,
+        operator: this.operator,
+      });
+    }
+    return this.hash;
   }
 
   public equals(acc: Accumulator): boolean {

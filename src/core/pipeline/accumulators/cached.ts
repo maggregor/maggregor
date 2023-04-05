@@ -1,4 +1,9 @@
-import { CachedAccumulator, Value, AccumulatorOperator } from '.';
+import {
+  CachedAccumulator,
+  Value,
+  AccumulatorOperator,
+  AccumulatorDefinition,
+} from '.';
 import { evaluateExpression, Expression } from '../expressions';
 import { BaseAccumulator } from './common';
 import { Document } from '../../index';
@@ -35,8 +40,11 @@ abstract class AbstractCachedAccumulator
 }
 
 export class SumCachedAccumulator extends AbstractCachedAccumulator {
-  declare operator: 'sum';
   declare __cachedValue: number | undefined;
+
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('sum', definition);
+  }
 
   add(val: number): void {
     this.__cachedValue
@@ -50,9 +58,12 @@ export class SumCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class AvgCachedAccumulator extends AbstractCachedAccumulator {
-  declare operator: 'avg';
   declare __cachedValue: number | undefined;
   private __count = 0;
+
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('avg', definition);
+  }
 
   add(val: number): void {
     this.__cachedValue
@@ -72,9 +83,12 @@ export class AvgCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class MinCachedAccumulator extends AbstractCachedAccumulator {
-  declare operator: 'min';
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
+
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('min', definition);
+  }
 
   add(val: number): void {
     if (this.__cachedValue === undefined || val < this.__cachedValue) {
@@ -104,9 +118,12 @@ export class MinCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class MaxCachedAccumulator extends AbstractCachedAccumulator {
-  declare operator: 'max';
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
+
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('max', definition);
+  }
 
   add(val: number): void {
     if (this.__cachedValue === undefined || val > this.__cachedValue) {
@@ -136,8 +153,11 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class CountCachedAccumulator extends AbstractCachedAccumulator {
-  declare operator: 'count';
   protected __cachedValue: number = 0;
+
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
+    super('count', definition);
+  }
 
   add(val: boolean): void {
     val && this.__cachedValue++;
