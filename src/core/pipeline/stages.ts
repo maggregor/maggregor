@@ -12,27 +12,23 @@ export interface Stage {
   next?: Stage;
 }
 
-export interface IGroupStage extends Stage {
-  options: GroupStageOptions;
-}
-
-export type GroupStageOptions = {
+export type GroupStageDefinition = {
   groupExpr: Expression;
-  accumulators: {
-    [outputField: string]: Accumulator;
-  };
+  accumulators: Accumulator[];
 };
 
 export type StageType = 'match' | 'group' | 'sort' | 'limit' | 'skip';
 
-export class GroupStage implements IGroupStage {
+export class GroupStage {
   type: StageType;
-  options: GroupStageOptions;
+  groupExpr: Expression;
+  accumulators: Accumulator[];
   next?: Stage | undefined;
 
-  constructor(options: GroupStageOptions) {
+  constructor(options: GroupStageDefinition) {
     this.type = 'group' as StageType;
-    this.options = options;
+    this.groupExpr = options.groupExpr;
+    this.accumulators = options.accumulators;
   }
 
   /**
@@ -44,7 +40,7 @@ export class GroupStage implements IGroupStage {
    * @returns The grouped documents
    */
   execute(data: Document[]): Document[] {
-    const { groupExpr, accumulators } = this.options;
+    const { groupExpr, accumulators } = this;
     const groups = data.reduce((acc, doc) => {
       const resolved = resolveAllExpressionFields([groupExpr], [doc]);
       const key = evaluateExpression(resolved[0], doc);
@@ -59,13 +55,13 @@ export class GroupStage implements IGroupStage {
     return Object.entries(groups).map(([key, docs]) => {
       const group = { _id: key };
 
-      Object.entries(accumulators).forEach(([outputField, accumulator]) => {
+      accumulators.forEach((acc) => {
         const allDocKeys = [...new Set(docs.flatMap((d) => Object.keys(d)))];
-        if (allDocKeys.includes(accumulator.hash)) {
-          group[outputField] = docs[0][accumulator.hash];
+        if (allDocKeys.includes(acc.hash)) {
+          group[acc.outputFieldName] = docs[0][acc.hash];
         } else {
           // @ts-ignore
-          group[outputField] = accumulator.evaluate(docs);
+          group[acc.outputFieldName] = accumulator.evaluate(docs);
         }
       });
       return group;

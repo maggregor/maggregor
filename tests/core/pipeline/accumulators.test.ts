@@ -14,28 +14,28 @@ import {
 describe('Cached accumulators equals basic accumulators', () => {
   it('should be equal', () => {
     assert(
-      new AvgBasicAccumulator({ field: 'score' }).equals(
-        new AvgCachedAccumulator({ field: 'score' }),
+      new AvgBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new AvgCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
     assert(
-      new SumBasicAccumulator({ field: 'score' }).equals(
-        new SumCachedAccumulator({ field: 'score' }),
+      new SumBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new SumCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
     assert(
-      new MinBasicAccumulator({ field: 'score' }).equals(
-        new MinCachedAccumulator({ field: 'score' }),
+      new MinBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new MinCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
     assert(
-      new MaxBasicAccumulator({ field: 'score' }).equals(
-        new MaxCachedAccumulator({ field: 'score' }),
+      new MaxBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new MaxCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
     assert(
-      new CountBasicAccumulator({ field: 'score' }).equals(
-        new CountCachedAccumulator({ field: 'score' }),
+      new CountBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new CountCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
   });
@@ -44,28 +44,28 @@ describe('Cached accumulators equals basic accumulators', () => {
 describe('Cached accumulators do not equal basic accumulators', () => {
   it('should not be equal', () => {
     assert(
-      !new AvgBasicAccumulator({ field: 'score' }).equals(
-        new AvgCachedAccumulator({ field: 'score2' }),
+      !new AvgBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new AvgCachedAccumulator({ expression: { field: 'score2' } }),
       ),
     );
     assert(
-      !new SumBasicAccumulator({ field: 'score' }).equals(
-        new SumCachedAccumulator({ field: 'score2' }),
+      !new SumBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new SumCachedAccumulator({ expression: { field: 'score2' } }),
       ),
     );
     assert(
-      !new MinBasicAccumulator({ field: 'score' }).equals(
-        new MinCachedAccumulator({ field: 'score2' }),
+      !new MinBasicAccumulator({ expression: { field: 'score' } }).equals(
+        new MinCachedAccumulator({ expression: { field: 'score3' } }),
       ),
     );
     assert(
-      !new MaxBasicAccumulator({ field: 'score' }).equals(
-        new MaxCachedAccumulator({ field: 'score2' }),
+      !new MaxBasicAccumulator({ expression: { field: 'score4' } }).equals(
+        new MaxCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
     assert(
-      !new CountBasicAccumulator({ field: 'score' }).equals(
-        new CountCachedAccumulator({ field: 'score2' }),
+      !new CountBasicAccumulator({ expression: { field: 'score1' } }).equals(
+        new CountCachedAccumulator({ expression: { field: 'score' } }),
       ),
     );
   });
@@ -73,40 +73,50 @@ describe('Cached accumulators do not equal basic accumulators', () => {
 
 describe('Cached accumulators same hash as basic accumulators', () => {
   it('should be equal', () => {
-    expect(new AvgBasicAccumulator({ field: 'score' }).hash).toBe(
-      new AvgCachedAccumulator({ field: 'score' }).hash,
-    );
-    expect(new SumBasicAccumulator({ field: 'score' }).hash).toBe(
-      new SumCachedAccumulator({ field: 'score' }).hash,
-    );
-    expect(new MinBasicAccumulator({ field: 'score' }).hash).toBe(
-      new MinCachedAccumulator({ field: 'score' }).hash,
-    );
-    expect(new MaxBasicAccumulator({ field: 'score' }).hash).toBe(
-      new MaxCachedAccumulator({ field: 'score' }).hash,
-    );
-    expect(new CountBasicAccumulator({ field: 'score' }).hash).toBe(
-      new CountCachedAccumulator({ field: 'score' }).hash,
-    );
+    expect(
+      new AvgBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).toBe(new AvgCachedAccumulator({ expression: { field: 'score' } }).hash);
+    expect(
+      new SumBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).toBe(new SumCachedAccumulator({ expression: { field: 'score' } }).hash);
+    expect(
+      new MinBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).toBe(new MinCachedAccumulator({ expression: { field: 'score' } }).hash);
+    expect(
+      new MaxBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).toBe(new MaxCachedAccumulator({ expression: { field: 'score' } }).hash);
+    expect(
+      new CountBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).toBe(new CountCachedAccumulator({ expression: { field: 'score' } }).hash);
   });
 });
 
 describe('Cached accumulators different hash as basic accumulators', () => {
   it('should not be equal', () => {
-    expect(new AvgBasicAccumulator({ field: 'score' }).hash).not.toBe(
-      new AvgCachedAccumulator({ field: 'score2' }).hash,
+    expect(
+      new AvgBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).not.toBe(
+      new AvgCachedAccumulator({ expression: { field: 'score2' } }).hash,
     );
-    expect(new SumBasicAccumulator({ field: 'score' }).hash).not.toBe(
-      new SumCachedAccumulator({ field: 'score2' }).hash,
+    expect(
+      new SumBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).not.toBe(
+      new SumCachedAccumulator({ expression: { field: 'score2' } }).hash,
     );
-    expect(new MinBasicAccumulator({ field: 'score' }).hash).not.toBe(
-      new MinCachedAccumulator({ field: 'score2' }).hash,
+    expect(
+      new MinBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).not.toBe(
+      new MinCachedAccumulator({ expression: { field: 'score2' } }).hash,
     );
-    expect(new MaxBasicAccumulator({ field: 'score' }).hash).not.toBe(
-      new MaxCachedAccumulator({ field: 'score2' }).hash,
+    expect(
+      new MaxBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).not.toBe(
+      new MaxCachedAccumulator({ expression: { field: 'score2' } }).hash,
     );
-    expect(new CountBasicAccumulator({ field: 'score' }).hash).not.toBe(
-      new CountCachedAccumulator({ field: 'score2' }).hash,
+    expect(
+      new CountBasicAccumulator({ expression: { field: 'score' } }).hash,
+    ).not.toBe(
+      new CountCachedAccumulator({ expression: { field: 'score2' } }).hash,
     );
   });
 });

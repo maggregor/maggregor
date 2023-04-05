@@ -30,6 +30,7 @@ export * from './cached';
 export interface Accumulator {
   operator: AccumulatorOperator;
   expression: Expression | undefined;
+  outputFieldName: string;
   hash: string;
   equals(acc: Accumulator): boolean;
 }
@@ -43,46 +44,47 @@ export interface CachedAccumulator extends Accumulator, CollectionListener {
 
 export type AccumulatorDefinition = {
   operator: AccumulatorOperator;
+  outputFieldName?: string;
   expression?: Expression;
 };
 
 export function createBasicAccumulator(
-  definition: AccumulatorDefinition,
+  def: AccumulatorDefinition,
 ): BasicAccumulator {
-  if (definition.expression === undefined) {
+  if (def.expression === undefined) {
     throw new Error('Expression is required');
   }
-  switch (definition.operator) {
+  switch (def.operator) {
     case 'sum':
-      return new SumBasicAccumulator(definition.expression);
+      return new SumBasicAccumulator(def);
     case 'avg':
-      return new AvgBasicAccumulator(definition.expression);
+      return new AvgBasicAccumulator(def);
     case 'min':
-      return new MinBasicAccumulator(definition.expression);
+      return new MinBasicAccumulator(def);
     case 'max':
-      return new MaxBasicAccumulator(definition.expression);
+      return new MaxBasicAccumulator(def);
     case 'count':
-      return new CountBasicAccumulator(definition.expression);
+      return new CountBasicAccumulator(def);
     default:
-      throw new Error(`Unknown operator ${definition.operator}`);
+      throw new Error(`Unknown operator ${def.operator}`);
   }
 }
 
 export function createCachedAccumulator(
-  definition: AccumulatorDefinition,
+  def: AccumulatorDefinition,
 ): CachedAccumulator {
-  switch (definition.operator) {
+  switch (def.operator) {
     case 'sum':
-      return new SumCachedAccumulator(definition.expression);
+      return new SumCachedAccumulator(def);
     case 'avg':
-      return new AvgCachedAccumulator(definition.expression);
+      return new AvgCachedAccumulator(def);
     case 'min':
-      return new MinCachedAccumulator(definition.expression);
+      return new MinCachedAccumulator(def);
     case 'max':
-      return new MaxCachedAccumulator(definition.expression);
+      return new MaxCachedAccumulator(def);
     case 'count':
-      return new CountCachedAccumulator(definition.expression);
+      return new CountCachedAccumulator(def);
     default:
-      throw new Error(`Unknown operator ${definition.operator}`);
+      throw new Error(`Unknown operator ${def.operator}`);
   }
 }

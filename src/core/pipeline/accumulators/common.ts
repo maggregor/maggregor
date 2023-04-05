@@ -1,18 +1,16 @@
-import { Accumulator, AccumulatorOperator } from '.';
+import { Accumulator, AccumulatorDefinition, AccumulatorOperator } from '.';
 import { Expression } from '../expressions';
 import crypto from 'crypto';
 
 export abstract class BaseAccumulator implements Accumulator {
   public operator: AccumulatorOperator;
-  public expression: Expression | undefined;
+  public expression: Expression;
+  public outputFieldName: string | undefined;
   public hash: string;
 
-  protected constructor(
-    operator: AccumulatorOperator,
-    expression?: Expression,
-  ) {
-    this.operator = operator;
-    this.expression = expression;
+  constructor(def?: Omit<AccumulatorDefinition, 'operator'>) {
+    this.expression = def?.expression;
+    this.outputFieldName = def?.outputFieldName;
     this.hash = hash({ expression: this.expression, operator: this.operator });
   }
 

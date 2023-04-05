@@ -33,9 +33,12 @@ describe('isEligible', () => {
       stages: [
         new GroupStage({
           groupExpr: { field: 'name' },
-          accumulators: {
-            count: new CountBasicAccumulator({ field: 'name' }),
-          },
+          accumulators: [
+            new CountBasicAccumulator({
+              expression: { field: 'name' },
+              outputFieldName: 'count',
+            }),
+          ],
         }),
       ],
     };
@@ -56,9 +59,12 @@ describe('isEligible', () => {
       stages: [
         new GroupStage({
           groupExpr: { field: 'name' },
-          accumulators: {
-            count: new CountBasicAccumulator({ field: 'age' }),
-          },
+          accumulators: [
+            new CountBasicAccumulator({
+              expression: { field: 'name' },
+              outputFieldName: 'count',
+            }),
+          ],
         }),
       ],
     };
@@ -110,9 +116,12 @@ describe('isEligible', () => {
       }),
       new GroupStage({
         groupExpr: { field: 'genre' },
-        accumulators: {
-          avgScore: new AvgBasicAccumulator({ field: 'score' }),
-        },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'genre' },
+            outputFieldName: 'count',
+          }),
+        ],
       }),
     ]);
     const mv = new MaterializedView({
@@ -141,9 +150,12 @@ describe('isEligible', () => {
       stages: [
         new GroupStage({
           groupExpr: { field: 'name' },
-          accumulators: {
-            count: new CountBasicAccumulator({ field: 'name' }),
-          },
+          accumulators: [
+            new CountBasicAccumulator({
+              expression: { field: 'name' },
+              outputFieldName: 'count',
+            }),
+          ],
         }),
       ],
     };
@@ -164,9 +176,12 @@ describe('isEligible', () => {
       stages: [
         new GroupStage({
           groupExpr: { field: 'name' },
-          accumulators: {
-            count: new CountBasicAccumulator({ field: 'age' }),
-          },
+          accumulators: [
+            new CountBasicAccumulator({
+              expression: { field: 'name' },
+              outputFieldName: 'count',
+            }),
+          ],
         }),
       ],
     };
@@ -218,9 +233,12 @@ describe('isEligible', () => {
       }),
       new GroupStage({
         groupExpr: { field: 'genre' },
-        accumulators: {
-          avgScore: new AvgBasicAccumulator({ field: 'score' }),
-        },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'genre' },
+            outputFieldName: 'count',
+          }),
+        ],
       }),
     ]);
     const mv = new MaterializedView({
@@ -288,7 +306,7 @@ describe('isEligible', () => {
     test('Simple group stage', () => {
       const groupStage = new GroupStage({
         groupExpr: { field: 'genre' },
-        accumulators: {},
+        accumulators: [],
       });
       const result = groupStage.execute(sampleData);
       expect(result).toEqual([{ _id: 'action' }, { _id: 'drama' }]);
@@ -323,9 +341,12 @@ describe('isEligible', () => {
         }),
         new GroupStage({
           groupExpr: { field: 'genre' },
-          accumulators: {
-            avgScore: new AvgBasicAccumulator({ field: 'score' }),
-          },
+          accumulators: [
+            new CountBasicAccumulator({
+              expression: { field: 'genre' },
+              outputFieldName: 'count',
+            }),
+          ],
         }),
       ]);
       const mv = new MaterializedView({

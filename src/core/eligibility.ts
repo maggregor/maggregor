@@ -7,7 +7,7 @@ import { Pipeline } from './pipeline/pipeline';
 import {
   Stage,
   GroupStage,
-  GroupStageOptions,
+  GroupStageDefinition,
   MatchStage,
   MatchStageOptions,
 } from './pipeline/stages';
@@ -41,8 +41,7 @@ export function isEligible(pipeline: Pipeline, mv: MaterializedView): boolean {
 
 function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
   if (stage.type === 'group') {
-    const options: GroupStageOptions = (stage as GroupStage).options;
-    const { groupExpr, accumulators } = options;
+    const { groupExpr, accumulators } = stage as GroupStage;
     const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
     const resolvedHash = toHashExpression(resolved);
     const mvGroupExprHash = toHashExpression(mv.getGroupExpression());

@@ -1,3 +1,7 @@
+{{
+  import { createBasicAccumulator } from '@core/pipeline/accumulators/index'
+}}
+
 start
   = "[" ws stage:stage (ws "," ws stage)* ws "]" { return [stage]; }
 
@@ -14,13 +18,13 @@ limitStage
   = "{" ws "$" type:"limit"i ws ":" ws stage:limitStageContent ws "}" { return {type, ...stage}; }
 
 groupStageContent
-  = "{" ws  "_id" ws  ":" ws  groupId:expressionValue ws accumulators:groupAccumulator* "}" { return {_id: groupId, accumulators: accumulators}; }
+  = "{" ws  "_id" ws  ":" ws  groupExpr:expressionValue ws accumulators:groupAccumulator* "}" { return {groupExpr, accumulators}; }
 
 groupAccumulator
-  = "," ws  outputFieldName:outputField ws  ":" ws "{" ws expression:groupExpression ws "}" ws  { return { outputField: outputFieldName, ...expression }; }
+  = "," ws  outputFieldName:outputField ws  ":" ws "{" ws gr:groupExpression ws "}" ws  { return createBasicAccumulator({outputFieldName, operator: gr.operator, expression: gr.expression}) }
 
 groupExpression
-  = "$" operator:groupOperator ws ":" ws values:(expressionValueArray / expressionValue) { return { operator, values }; }
+  = "$" operator:groupOperator ws ":" ws expression:(expressionValueArray / expressionValue) { return { operator, expression }; }
 
 expressionValueArray
   = "[" ws value:expressionValue ws values:expressionValueSeparated* ws "]" { return [value, ...values]; }
@@ -65,7 +69,7 @@ condition
 
 expressionValue
   = 
-  fieldReference
+  fieldReference 
   / expression
   / string
   / boolean

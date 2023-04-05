@@ -1,6 +1,6 @@
 import { Expression, evaluateExpression } from '../expressions';
 import { BaseAccumulator } from './common';
-import { AccumulatorOperator } from '.';
+import { AccumulatorDefinition, AccumulatorOperator } from '.';
 import { Document } from '../../index';
 
 export abstract class BasicAccumulator extends BaseAccumulator {
@@ -8,10 +8,7 @@ export abstract class BasicAccumulator extends BaseAccumulator {
 }
 
 export class AvgBasicAccumulator extends BasicAccumulator {
-  declare expression: Expression;
-  constructor(expression: Expression) {
-    super('avg' as AccumulatorOperator, expression);
-  }
+  declare operator: 'avg';
 
   public evaluate(docs: Document[]): number {
     return (
@@ -24,10 +21,7 @@ export class AvgBasicAccumulator extends BasicAccumulator {
 }
 
 export class CountBasicAccumulator extends BasicAccumulator {
-  declare expression: Expression;
-  constructor(expression: Expression) {
-    super('count' as AccumulatorOperator, expression);
-  }
+  declare operator: 'count';
 
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
@@ -38,10 +32,8 @@ export class CountBasicAccumulator extends BasicAccumulator {
 }
 
 export class SumBasicAccumulator extends BasicAccumulator {
-  declare expression: Expression;
-  constructor(expression: Expression) {
-    super('sum' as AccumulatorOperator, expression);
-  }
+  declare operator: 'sum';
+
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
       const value = evaluateExpression(this.expression, doc);
@@ -51,10 +43,8 @@ export class SumBasicAccumulator extends BasicAccumulator {
 }
 
 export class MinBasicAccumulator extends BasicAccumulator {
-  declare expression: Expression;
-  constructor(expression: Expression) {
-    super('min' as AccumulatorOperator, expression);
-  }
+  declare operator: 'min';
+
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
       const value = evaluateExpression(this.expression, doc);
@@ -64,10 +54,8 @@ export class MinBasicAccumulator extends BasicAccumulator {
 }
 
 export class MaxBasicAccumulator extends BaseAccumulator {
-  declare expression: Expression;
-  constructor(expression: Expression) {
-    super('max' as AccumulatorOperator, expression);
-  }
+  declare operator: 'max';
+
   public evaluate(docs: Document[]): number {
     return docs.reduce((acc, doc) => {
       const value = evaluateExpression(this.expression, doc);

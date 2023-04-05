@@ -35,11 +35,8 @@ abstract class AbstractCachedAccumulator
 }
 
 export class SumCachedAccumulator extends AbstractCachedAccumulator {
+  declare operator: 'sum';
   declare __cachedValue: number | undefined;
-
-  constructor(e?: Expression) {
-    super('sum', e);
-  }
 
   add(val: number): void {
     this.__cachedValue
@@ -53,12 +50,9 @@ export class SumCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class AvgCachedAccumulator extends AbstractCachedAccumulator {
+  declare operator: 'avg';
   declare __cachedValue: number | undefined;
   private __count = 0;
-
-  constructor(e?: Expression) {
-    super('avg', e);
-  }
 
   add(val: number): void {
     this.__cachedValue
@@ -78,12 +72,9 @@ export class AvgCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class MinCachedAccumulator extends AbstractCachedAccumulator {
+  declare operator: 'min';
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
-
-  constructor(e?: Expression) {
-    super('min' as AccumulatorOperator, e);
-  }
 
   add(val: number): void {
     if (this.__cachedValue === undefined || val < this.__cachedValue) {
@@ -113,12 +104,9 @@ export class MinCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class MaxCachedAccumulator extends AbstractCachedAccumulator {
+  declare operator: 'max';
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
-
-  constructor(e?: Expression) {
-    super('max', e);
-  }
 
   add(val: number): void {
     if (this.__cachedValue === undefined || val > this.__cachedValue) {
@@ -148,11 +136,8 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class CountCachedAccumulator extends AbstractCachedAccumulator {
-  declare __cachedValue: number;
-  constructor(e?: Expression) {
-    super('count' as AccumulatorOperator, e);
-    this.__cachedValue = 0;
-  }
+  declare operator: 'count';
+  protected __cachedValue: number = 0;
 
   add(val: boolean): void {
     val && this.__cachedValue++;

@@ -1,3 +1,4 @@
+import { createBasicAccumulator } from '@core/pipeline/accumulators/index';
 import { MaterializedView } from '@core/materialized-view';
 import {
   AvgBasicAccumulator,
@@ -22,12 +23,28 @@ describe('Pipeline creation and execution', () => {
     const pipeline = createPipeline([
       new GroupStage({
         groupExpr: { field: 'genre' },
-        accumulators: {
-          avgScore: new AvgBasicAccumulator({ field: 'score' }),
-          sumScore: new SumBasicAccumulator({ field: 'score' }),
-          minScore: new MinBasicAccumulator({ field: 'score' }),
-          maxScore: new MaxBasicAccumulator({ field: 'score' }),
-        },
+        accumulators: [
+          createBasicAccumulator({
+            outputFieldName: 'avgScore',
+            operator: 'avg',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'sumScore',
+            operator: 'sum',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'minScore',
+            operator: 'min',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'maxScore',
+            operator: 'max',
+            expression: { field: 'score' },
+          }),
+        ],
       }),
     ]);
     const result = executePipeline(pipeline, sampleData);
@@ -87,12 +104,29 @@ describe('Pipeline with two stages: match and group', () => {
       }),
       new GroupStage({
         groupExpr: { field: 'genre' },
-        accumulators: {
-          avgScore: new AvgBasicAccumulator({ field: 'score' }),
-          sumScore: new SumBasicAccumulator({ field: 'score' }),
-          minScore: new MinBasicAccumulator({ field: 'score' }),
-          maxScore: new MaxBasicAccumulator({ field: 'score' }),
-        },
+
+        accumulators: [
+          createBasicAccumulator({
+            outputFieldName: 'avgScore',
+            operator: 'avg',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'sumScore',
+            operator: 'sum',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'minScore',
+            operator: 'min',
+            expression: { field: 'score' },
+          }),
+          createBasicAccumulator({
+            outputFieldName: 'maxScore',
+            operator: 'max',
+            expression: { field: 'score' },
+          }),
+        ],
       }),
     ]);
     const result = executePipeline(pipeline, sampleData);
@@ -118,12 +152,29 @@ it('group and match with two conditions', () => {
     }),
     new GroupStage({
       groupExpr: { field: 'genre' },
-      accumulators: {
-        avgScore: new AvgBasicAccumulator({ field: 'score' }),
-        sumScore: new SumBasicAccumulator({ field: 'score' }),
-        minScore: new MinBasicAccumulator({ field: 'score' }),
-        maxScore: new MaxBasicAccumulator({ field: 'score' }),
-      },
+
+      accumulators: [
+        createBasicAccumulator({
+          outputFieldName: 'avgScore',
+          operator: 'avg',
+          expression: { field: 'score' },
+        }),
+        createBasicAccumulator({
+          outputFieldName: 'sumScore',
+          operator: 'sum',
+          expression: { field: 'score' },
+        }),
+        createBasicAccumulator({
+          outputFieldName: 'minScore',
+          operator: 'min',
+          expression: { field: 'score' },
+        }),
+        createBasicAccumulator({
+          outputFieldName: 'maxScore',
+          operator: 'max',
+          expression: { field: 'score' },
+        }),
+      ],
     }),
   ]);
   const result = executePipeline(pipeline, sampleData);
@@ -142,22 +193,28 @@ it('advanced group stage', () => {
   const pipeline = createPipeline([
     new GroupStage({
       groupExpr: { field: 'genre' },
-      accumulators: {
-        avgScore: new AvgBasicAccumulator({ field: 'score' }),
-        avgScoreOnComplexExpression: new AvgBasicAccumulator({
-          operator: '$add',
-          value: [
-            {
-              operator: '$multiply',
-              value: [{ field: 'score' }, { value: 2 }],
-            },
-            {
-              operator: '$multiply',
-              value: [{ field: 'score' }, { value: 3 }],
-            },
-          ],
+      accumulators: [
+        createBasicAccumulator({
+          outputFieldName: 'avgScore',
+          operator: 'avg',
+          expression: { field: 'score' },
         }),
-      },
+        createBasicAccumulator({
+          outputFieldName: 'sumScore',
+          operator: 'sum',
+          expression: { field: 'score' },
+        }),
+        createBasicAccumulator({
+          outputFieldName: 'minScore',
+          operator: 'min',
+          expression: { field: 'score' },
+        }),
+        createBasicAccumulator({
+          outputFieldName: 'maxScore',
+          operator: 'max',
+          expression: { field: 'score' },
+        }),
+      ],
     }),
   ]);
   const result = executePipeline(pipeline, sampleData);
@@ -184,15 +241,21 @@ it('with match stage and MV', () => {
     }),
     new GroupStage({
       groupExpr: { field: 'genre' },
-      accumulators: {
-        avgScore: new AvgBasicAccumulator({ field: 'score' }),
-      },
+
+      accumulators: [
+        createBasicAccumulator({
+          outputFieldName: 'avgScore',
+          operator: 'avg',
+          expression: { field: 'score' },
+        }),
+      ],
     }),
   ]);
   const mv = new MaterializedView({
     groupBy: { field: 'genre' },
     accumulatorDefs: [
       {
+        outputFieldName: 'avgScore',
         operator: 'avg',
         expression: { field: 'score' },
       },

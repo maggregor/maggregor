@@ -13,7 +13,7 @@ describe('GroupStage', () => {
   it('should group data by genre', () => {
     const groupStage = new GroupStage({
       groupExpr: { field: 'genre' },
-      accumulators: {},
+      accumulators: [],
     });
     const result = groupStage.execute(sampleData);
     expect(result).toEqual([{ _id: 'action' }, { _id: 'drama' }]);
