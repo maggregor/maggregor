@@ -6,7 +6,7 @@ let mongoUri: string;
 let mongoDbName: string;
 
 beforeAll(async () => {
-  mongod = new MongoMemoryServer();
+  mongod = await MongoMemoryServer.create();
   mongoUri = mongod.getUri();
 });
 

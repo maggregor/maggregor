@@ -8,6 +8,6 @@ export default defineConfig({
     include: ['**/tests/e2e/**/*.test.ts'],
     hookTimeout: 10000,
     testTimeout: 30000,
-    setupFiles: [...defaultConfig.test.setupFiles, './tests/e2e/setup.ts'],
+    setupFiles: ['./tests/e2e/setup.ts'],
   },
 });
