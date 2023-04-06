@@ -1,12 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MongoDBTcpProxyService } from './proxy.service';
+import { MongoDBTcpProxyService } from '@server/modules/mongodb-proxy/proxy.service';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
-import { RequestService } from '../request/request.service';
-import { describe, expect, beforeAll, afterAll, test } from 'vitest';
+import { RequestService } from '@server/modules/request/request.service';
 import { ConfigService } from '@nestjs/config';
 
-describe('TcpProxyService', () => {
+describe('MongoDBTcpProxyService: with mongodb-memory-server without interception', () => {
   let service: MongoDBTcpProxyService;
   let mongodbClient: MongoClient;
   let mongodbServer: MongoMemoryServer;

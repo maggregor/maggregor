@@ -1,9 +1,9 @@
-import { AggregateInterceptor } from './aggregate.interceptor';
-import { MongoDBMessage, encodeMessage } from '../protocol';
+import { AggregateInterceptor } from '@server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
+import {
+  MongoDBMessage,
+  encodeMessage,
+} from '@server/modules/mongodb-proxy/protocol';
 import * as net from 'net';
-import { describe, test, beforeEach } from 'vitest';
-
-// TODO: Add tests
 
 describe('AggregateInterceptor', () => {
   let interceptor: AggregateInterceptor;
