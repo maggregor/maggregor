@@ -54,7 +54,7 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     }
   } else if (stage.type === 'match') {
     const options: MatchStageOptions = (stage as MatchStage).options;
-    const { filterExprs } = options;
+    const { conditions: filterExprs } = options;
     // No filter expression means that all documents are eligible
     if (filterExprs.length === 0) return true;
     else if (filterExprs.length > 1) return false;

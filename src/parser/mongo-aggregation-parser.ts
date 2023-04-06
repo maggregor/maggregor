@@ -263,7 +263,7 @@ function peg$parse(input: string, options?: ParseOptions) {
   const peg$c42 = peg$literalExpectation("push", true);
   const peg$c43 = "sum";
   const peg$c44 = peg$literalExpectation("sum", true);
-  const peg$c45 = function(conditions: any): any { return {conditions}; };
+  const peg$c45 = function(conditionEnums: any): any { return { conditions: conditionEnums.flat() }; };
   const peg$c46 = "and";
   const peg$c47 = peg$literalExpectation("and", true);
   const peg$c48 = "or";
@@ -273,7 +273,7 @@ function peg$parse(input: string, options?: ParseOptions) {
   const peg$c52 = function(operator: any, conditions: any): any { return { operator, conditions }; };
   const peg$c53 = function(condition: any, conditions: any): any { return [condition, ...conditions]; };
   const peg$c54 = function(condition: any): any { return condition; };
-  const peg$c55 = function(fieldName: any, condition: any): any { return { fieldName, condition }; };
+  const peg$c55 = function(field: any, value: any): any { return { operator: 'eq', value: [{ field }, { value }]}; };
   const peg$c56 = function(limitValue: any): any { return { limit: limitValue }; };
   const peg$c57 = "eq";
   const peg$c58 = peg$literalExpectation("eq", true);

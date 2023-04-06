@@ -69,18 +69,14 @@ export class GroupStage {
   }
 }
 
-export type MatchStageOptions = {
-  filterExprs: Expression[];
-};
-
 export class MatchStage implements Stage {
   type: StageType;
   next?: Stage | undefined;
-  options: MatchStageOptions;
+  conditions: Expression[];
 
-  constructor(options: MatchStageOptions) {
+  constructor(conditions: Expression[]) {
     this.type = 'match' as StageType;
-    this.options = options;
+    this.conditions = conditions;
   }
 
   /**
@@ -91,8 +87,7 @@ export class MatchStage implements Stage {
    * @returns The document if it matches, otherwise undefined
    */
   execute(docs: Document[]): Document[] {
-    const { filterExprs } = this.options;
-    const filters = resolveAllExpressionFields(filterExprs, docs);
+    const filters = resolveAllExpressionFields(this.conditions, docs);
     return docs.filter((i) => filters.every((e) => evaluateExpression(e, i)));
   }
 }

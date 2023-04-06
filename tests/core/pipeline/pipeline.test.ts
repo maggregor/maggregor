@@ -69,7 +69,7 @@ describe('Pipeline creation and execution', () => {
   it('returns the expected result', () => {
     const pipeline = createPipeline([
       new MatchStage({
-        filterExprs: [
+        conditions: [
           { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       }),
@@ -98,7 +98,7 @@ describe('Pipeline with two stages: match and group', () => {
   it('returns the expected result', () => {
     const pipeline = createPipeline([
       new MatchStage({
-        filterExprs: [
+        conditions: [
           { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       }),
@@ -145,7 +145,7 @@ describe('Pipeline with two stages: match and group', () => {
 it('group and match with two conditions', () => {
   const pipeline = createPipeline([
     new MatchStage({
-      filterExprs: [
+      conditions: [
         { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       ],
@@ -228,7 +228,7 @@ it('advanced group stage', () => {
 it('with match stage and MV', () => {
   const pipeline = createPipeline([
     new MatchStage({
-      filterExprs: [
+      conditions: [
         { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
       ],
     }),

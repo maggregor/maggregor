@@ -100,7 +100,7 @@ describe('isEligible', () => {
     const pipeline = {
       stages: [
         new MatchStage({
-          filterExprs: [{ field: 'name' }],
+          conditions: [{ field: 'name' }],
         }),
       ],
     };
@@ -110,7 +110,7 @@ describe('isEligible', () => {
   test('should return false if groupExpr is not equal to materialized view groupBy', () => {
     const pipeline = createPipeline([
       new MatchStage({
-        filterExprs: [
+        conditions: [
           { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
         ],
       }),
@@ -217,7 +217,7 @@ describe('isEligible', () => {
     const pipeline = {
       stages: [
         new MatchStage({
-          filterExprs: [{ field: 'name' }],
+          conditions: [{ field: 'name' }],
         }),
       ],
     };
@@ -227,7 +227,7 @@ describe('isEligible', () => {
   test('should not be eligible - groupExpr must be equal to materialized view groupBy', () => {
     const pipeline = createPipeline([
       new MatchStage({
-        filterExprs: [
+        conditions: [
           { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
         ],
       }),
@@ -320,7 +320,7 @@ describe('isEligible', () => {
 
     test('Simple match stage', () => {
       const matchStage = new MatchStage({
-        filterExprs: [
+        conditions: [
           { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       });
@@ -335,7 +335,7 @@ describe('isEligible', () => {
     test('notEligible: the groupExpr must be equals to materialized view groupBy', () => {
       const pipeline = createPipeline([
         new MatchStage({
-          filterExprs: [
+          conditions: [
             { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
           ],
         }),

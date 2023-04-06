@@ -43,7 +43,7 @@ groupOperator
   = "addToSet"i / "avg"i / "first"i / "last"i / "max"i / "min"i / "push"i / "sum"i
 
 matchStageContent
-  =  conditions:matchConditionEnumeration*  { return {conditions}; }
+  =  conditionEnums:matchConditionEnumeration*  { return { conditions: conditionEnums.flat() }; }
 
 logicalOperatorCondition
   = "{" ws "$" operator:("and"i / "or"i / "not"i) ws ":" ws "[" ws conditions:matchConditionEnumeration* ws "]" ws "}" { return { operator, conditions }; }
@@ -57,7 +57,7 @@ matchConditionSeparated
   / ws "," ws condition:logicalOperatorCondition ws { return condition; }
 
 matchCondition
-  = "{" ws fieldName:identifier ws  ":" ws condition:(logicalOperatorCondition / comparisonOperator / simpleValue) ws "}" { return { fieldName, condition }; }
+  = "{" ws field:identifier ws  ":" ws value:(logicalOperatorCondition / comparisonOperator / simpleValue) ws "}" { return { operator: 'eq', value: [{ field }, { value }]}; }
 
 limitStageContent
   = ws limitValue:positiveInteger ws { return { limit: limitValue }; }
