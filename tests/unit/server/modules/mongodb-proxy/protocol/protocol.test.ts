@@ -1,6 +1,9 @@
-import { MongoDBMessage, decodeMessage, encodeMessage } from './protocol';
+import {
+  MongoDBMessage,
+  decodeMessage,
+  encodeMessage,
+} from '@server/modules/mongodb-proxy/protocol/protocol';
 import { deserialize } from 'bson';
-import { describe, expect, test } from 'vitest';
 
 const OP_MSG_1: MongoDBMessage = {
   header: {

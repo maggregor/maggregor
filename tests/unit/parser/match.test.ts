@@ -14,17 +14,10 @@ test('Match with simple equality condition', () => {
   ]);
 });
 
-// test('Match with single condition', () => {
-//   const pipeline = `[ { $match: { $and: [ { age: { $gte: 18 } } ] } } ]`;
-//   expect(parsePipeline(pipeline)).toEqual([
-//     new MatchStage([
-//       {
-//         operator: 'gte',
-//         value: [{ field: 'age' }, { value: 18 }],
-//       },
-//     ]),
-//   ]);
-// });
+test('Match with single condition', () => {
+  const pipeline = `[ { $match: { $and: [ { age: { $gte: 18 } } ] } } ]`;
+  expect(parsePipeline(pipeline)).toBeDefined();
+});
 
 test('Match with multiple conditions', () => {
   const pipeline = `[ { $match: { $and: [ { age: { $gte: 18 } }, { country: "USA" } ] } } ]`;

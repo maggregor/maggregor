@@ -1,16 +1,12 @@
-import { defineConfig } from 'vitest/config';
+import { UserConfig, defineConfig } from 'vitest/config';
 import AutoImport from 'unplugin-auto-import/vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  test: {
-    include: ['src/**/*.spec.ts', 'tests/**/*.test.ts'],
-    hookTimeout: 10000,
-  },
   plugins: [
     AutoImport({
       imports: ['vitest'],
-      dts: true, // generate TypeScript declaration
+      dts: true,
     }),
   ],
   resolve: {
@@ -21,4 +17,4 @@ export default defineConfig({
       '@core': resolve(__dirname, 'src/core'),
     },
   },
-});
+}) as UserConfig;
