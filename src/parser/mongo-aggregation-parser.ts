@@ -9,7 +9,7 @@
 
 import { createBasicAccumulator } from '@core/pipeline/accumulators/index';
 import { Stage } from '@core/pipeline/stages';
-import { ExpressionOperator } from '@core/pipeline/stages/expressions';
+import { ExpressionOperator } from '@core/pipeline/expressions';
 
 
 
