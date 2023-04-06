@@ -68,11 +68,9 @@ describe('Pipeline creation and execution', () => {
 
   it('returns the expected result', () => {
     const pipeline = createPipeline([
-      new MatchStage({
-        conditions: [
-          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-        ],
-      }),
+      new MatchStage([
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      ]),
     ]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
@@ -97,11 +95,9 @@ describe('Pipeline with limit stage', () => {
 describe('Pipeline with two stages: match and group', () => {
   it('returns the expected result', () => {
     const pipeline = createPipeline([
-      new MatchStage({
-        conditions: [
-          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-        ],
-      }),
+      new MatchStage([
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      ]),
       new GroupStage({
         groupExpr: { field: 'genre' },
 
@@ -144,12 +140,10 @@ describe('Pipeline with two stages: match and group', () => {
 
 it('group and match with two conditions', () => {
   const pipeline = createPipeline([
-    new MatchStage({
-      conditions: [
-        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-      ],
-    }),
+    new MatchStage([
+      { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+    ]),
     new GroupStage({
       groupExpr: { field: 'genre' },
 
@@ -227,11 +221,9 @@ it('advanced group stage', () => {
 
 it('with match stage and MV', () => {
   const pipeline = createPipeline([
-    new MatchStage({
-      conditions: [
-        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-      ],
-    }),
+    new MatchStage([
+      { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+    ]),
     new GroupStage({
       groupExpr: { field: 'genre' },
 

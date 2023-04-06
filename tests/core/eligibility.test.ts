@@ -98,22 +98,16 @@ describe('isEligible', () => {
       ],
     });
     const pipeline = {
-      stages: [
-        new MatchStage({
-          conditions: [{ field: 'name' }],
-        }),
-      ],
+      stages: [new MatchStage([{ field: 'name' }])],
     };
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
   test('should return false if groupExpr is not equal to materialized view groupBy', () => {
     const pipeline = createPipeline([
-      new MatchStage({
-        conditions: [
-          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-        ],
-      }),
+      new MatchStage([
+        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+      ]),
       new GroupStage({
         groupExpr: { field: 'genre' },
         accumulators: [
@@ -215,22 +209,16 @@ describe('isEligible', () => {
       ],
     });
     const pipeline = {
-      stages: [
-        new MatchStage({
-          conditions: [{ field: 'name' }],
-        }),
-      ],
+      stages: [new MatchStage([{ field: 'name' }])],
     };
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
   test('should not be eligible - groupExpr must be equal to materialized view groupBy', () => {
     const pipeline = createPipeline([
-      new MatchStage({
-        conditions: [
-          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-        ],
-      }),
+      new MatchStage([
+        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+      ]),
       new GroupStage({
         groupExpr: { field: 'genre' },
         accumulators: [
@@ -319,11 +307,9 @@ describe('isEligible', () => {
     });
 
     test('Simple match stage', () => {
-      const matchStage = new MatchStage({
-        conditions: [
-          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-        ],
-      });
+      const matchStage = new MatchStage([
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      ]);
       const result = matchStage.execute(sampleData);
       expect(result).toEqual([
         { genre: 'action', score: 10 },
@@ -334,11 +320,9 @@ describe('isEligible', () => {
 
     test('notEligible: the groupExpr must be equals to materialized view groupBy', () => {
       const pipeline = createPipeline([
-        new MatchStage({
-          conditions: [
-            { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-          ],
-        }),
+        new MatchStage([
+          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+        ]),
         new GroupStage({
           groupExpr: { field: 'genre' },
           accumulators: [

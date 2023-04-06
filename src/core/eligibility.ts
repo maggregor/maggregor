@@ -53,14 +53,13 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
         return false;
     }
   } else if (stage.type === 'match') {
-    const options: MatchStageOptions = (stage as MatchStage).options;
-    const { conditions: filterExprs } = options;
+    const conditions = (stage as MatchStage).conditions;
     // No filter expression means that all documents are eligible
-    if (filterExprs.length === 0) return true;
-    else if (filterExprs.length > 1) return false;
+    if (conditions.length === 0) return true;
+    else if (conditions.length > 1) return false;
     // Limitation: we currently only check the first filter expression.
     // The check is done on the _id field and not on the other fields.
-    const filterExpr = filterExprs[0];
+    const filterExpr = conditions[0];
     // The filter expression must be equal to the materialized view's group expression
     // @ts-ignore -  Change by good deepEqual
     if (!deepEqual(filterExpr, mv.getGroupExpression())) return false;
