@@ -4,13 +4,7 @@ import {
   toHashExpression,
 } from './pipeline/expressions';
 import { Pipeline } from './pipeline/pipeline';
-import {
-  Stage,
-  GroupStage,
-  GroupStageDefinition,
-  MatchStage,
-  MatchStageOptions,
-} from './pipeline/stages';
+import { Stage, GroupStage, MatchStage } from './pipeline/stages';
 import { deepEqual } from './pipeline/accumulators/common';
 
 /**
