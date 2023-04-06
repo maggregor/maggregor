@@ -111,7 +111,7 @@ describe('isEligible', () => {
     const pipeline = createPipeline([
       new MatchStage({
         filterExprs: [
-          { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
         ],
       }),
       new GroupStage({
@@ -125,7 +125,7 @@ describe('isEligible', () => {
       }),
     ]);
     const mv = new MaterializedView({
-      groupBy: { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+      groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
           operator: 'avg',
@@ -228,7 +228,7 @@ describe('isEligible', () => {
     const pipeline = createPipeline([
       new MatchStage({
         filterExprs: [
-          { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
         ],
       }),
       new GroupStage({
@@ -242,7 +242,7 @@ describe('isEligible', () => {
       }),
     ]);
     const mv = new MaterializedView({
-      groupBy: { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+      groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
           operator: 'avg',
@@ -262,7 +262,7 @@ describe('isEligible', () => {
     const acc2: AccumulatorDefinition = {
       operator: 'sum',
       expression: {
-        operator: '$add',
+        operator: 'add',
         value: [{ field: 'score' }, { value: 10 }],
       },
     };
@@ -321,7 +321,7 @@ describe('isEligible', () => {
     test('Simple match stage', () => {
       const matchStage = new MatchStage({
         filterExprs: [
-          { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       });
       const result = matchStage.execute(sampleData);
@@ -336,7 +336,7 @@ describe('isEligible', () => {
       const pipeline = createPipeline([
         new MatchStage({
           filterExprs: [
-            { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+            { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
           ],
         }),
         new GroupStage({
@@ -351,7 +351,7 @@ describe('isEligible', () => {
       ]);
       const mv = new MaterializedView({
         groupBy: {
-          operator: '$gt',
+          operator: 'gt',
           value: [{ field: 'score' }, { value: 10 }],
         },
         accumulatorDefs: [

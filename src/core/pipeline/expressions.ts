@@ -13,23 +13,24 @@ export interface Expression {
 export type ExpressionResult = any;
 export type ExpressionValue = number | string | boolean | Expression;
 export type ExpressionOperator =
-  | '$add'
-  | '$subtract'
-  | '$multiply'
-  | '$divide'
-  | '$toUpper'
-  | '$toLower'
-  | '$eq'
-  | '$ne'
-  | '$gt'
-  | '$gte'
-  | '$lt'
-  | '$lte'
-  | '$and'
-  | '$or'
-  | '$not'
-  | '$concat'
-  | '$mod';
+  | 'add'
+  | 'subtract'
+  | 'multiply'
+  | 'divide'
+  | 'toUpper'
+  | 'toLower'
+  | 'eq'
+  | 'ne'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'and'
+  | 'or'
+  | 'not'
+  | 'concat'
+  | 'mod'
+  | 'cond';
 
 /**
  * Evaluate an expression on a document
@@ -72,121 +73,123 @@ export function evaluateExpression(
     throw new Error(`Invalid expression: ${JSON.stringify(expression)}`);
   }
 
-  if (expression.operator === '$add') {
+  if (expression.operator === 'add') {
     const args = (expression.value as Expression[]).map((arg) =>
       evaluateExpression(arg, doc),
     );
     return args.reduce((acc, val) => acc + val, 0);
   }
 
-  if (expression.operator === '$multiply') {
+  if (expression.operator === 'multiply') {
     const args = (expression.value as Expression[]).map((arg) =>
       evaluateExpression(arg, doc),
     );
     return args.reduce((acc, val) => acc * val, 1);
   }
 
-  if (expression.operator === '$divide') {
+  if (expression.operator === 'divide') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue / rightValue;
   }
 
-  if (expression.operator === '$toUpper') {
+  if (expression.operator === 'toUpper') {
     const value = evaluateExpression(expression.value as Expression, doc);
     return typeof value === 'string' ? value.toUpperCase() : value;
   }
 
-  if (expression.operator === '$eq') {
+  if (expression.operator === 'eq') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue === rightValue;
   }
 
-  if (expression.operator === '$ne') {
+  if (expression.operator === 'ne') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue !== rightValue;
   }
 
-  if (expression.operator === '$gt') {
+  if (expression.operator === 'gt') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue > rightValue;
   }
 
-  if (expression.operator === '$gte') {
+  if (expression.operator === 'gte') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue >= rightValue;
   }
 
-  if (expression.operator === '$lt') {
+  if (expression.operator === 'lt') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue < rightValue;
   }
 
-  if (expression.operator === '$lte') {
+  if (expression.operator === 'lte') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue <= rightValue;
   }
 
-  if (expression.operator === '$concat') {
+  if (expression.operator === 'concat') {
     const args = (expression.value as Expression[]).map((arg) =>
       evaluateExpression(arg, doc),
     );
     return args.reduce((acc, val) => acc + val, '');
   }
 
-  if (expression.operator === '$mod') {
+  if (expression.operator === 'mod') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue % rightValue;
   }
 
-  if (expression.operator === '$and') {
+  if (expression.operator === 'and') {
     const args = (expression.value as Expression[]).map((arg) =>
       evaluateExpression(arg, doc),
     );
     return args.reduce((acc, val) => acc && val, true);
   }
 
-  if (expression.operator === '$or') {
+  if (expression.operator === 'or') {
     const args = (expression.value as Expression[]).map((arg) =>
       evaluateExpression(arg, doc),
     );
     return args.reduce((acc, val) => acc || val, false);
   }
 
-  if (expression.operator === '$not') {
+  if (expression.operator === 'not') {
     return !evaluateExpression(expression.value as Expression, doc);
   }
 
-  if (expression.operator === '$toLower') {
+  if (expression.operator === 'toLower') {
     const value = evaluateExpression(expression.value as Expression, doc);
     return typeof value === 'string' ? value.toLowerCase() : value;
   }
 
-  if (expression.operator === '$subtract') {
+  if (expression.operator === 'subtract') {
     const [leftValue, rightValue] = (expression.value as Expression[]).map(
       (arg) => evaluateExpression(arg, doc),
     );
     return leftValue - rightValue;
   }
 
-  if (expression.operator === '$toUpper') {
-    const value = evaluateExpression(expression.value as Expression, doc);
-    return typeof value === 'string' ? value.toUpperCase() : value;
+  if (expression.operator === 'cond') {
+    const [condition, ifTrue, ifFalse] = (expression.value as Expression[]).map(
+      (arg) => evaluateExpression(arg, doc),
+    );
+    return condition ? ifTrue : ifFalse;
   }
 
   throw new Error(`Unknown expression operator: ${expression.operator}`);

@@ -11,7 +11,7 @@ describe('MaterializedView', () => {
     const acc2: AccumulatorDefinition = {
       operator: 'sum',
       expression: {
-        operator: '$add',
+        operator: 'add',
         value: [{ field: 'score' }, { value: 10 }],
       },
     };

@@ -32,7 +32,7 @@ describe('MatchStage', () => {
   it("should filter data by genre 'action'", async () => {
     const matchStage = new MatchStage({
       filterExprs: [
-        { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
       ],
     });
     const result = matchStage.execute(sampleData);

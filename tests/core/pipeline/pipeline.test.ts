@@ -70,7 +70,7 @@ describe('Pipeline creation and execution', () => {
     const pipeline = createPipeline([
       new MatchStage({
         filterExprs: [
-          { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       }),
     ]);
@@ -99,7 +99,7 @@ describe('Pipeline with two stages: match and group', () => {
     const pipeline = createPipeline([
       new MatchStage({
         filterExprs: [
-          { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
         ],
       }),
       new GroupStage({
@@ -146,8 +146,8 @@ it('group and match with two conditions', () => {
   const pipeline = createPipeline([
     new MatchStage({
       filterExprs: [
-        { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
-        { operator: '$gt', value: [{ field: 'score' }, { value: 10 }] },
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       ],
     }),
     new GroupStage({
@@ -203,7 +203,7 @@ it('advanced group stage', () => {
           outputFieldName: 'avgScoreOnComplexExpression',
           operator: 'avg',
           expression: {
-            operator: '$multiply',
+            operator: 'multiply',
             value: [{ field: 'score' }, { value: 5 }],
           },
         }),
@@ -229,7 +229,7 @@ it('with match stage and MV', () => {
   const pipeline = createPipeline([
     new MatchStage({
       filterExprs: [
-        { operator: '$eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
       ],
     }),
     new GroupStage({

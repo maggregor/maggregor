@@ -1,9 +1,16 @@
 {{
-  import { createBasicAccumulator } from '@core/pipeline/accumulators/index'
+
+import { createBasicAccumulator } from '@core/pipeline/accumulators/index';
+import { Stage } from '@core/pipeline/stages';
+import { ExpressionOperator } from '@core/pipeline/stages/expression';
+
 }}
 
 start
-  = "[" ws stage:stage (ws "," ws stage)* ws "]" { return [stage]; }
+  = p:pipeline
+
+pipeline
+  = "[" ws stage:stage (ws "," ws stage)* ws "]" { return [stage] as Stage[]; }
 
 stage
   = groupStage / matchStage / limitStage
@@ -74,7 +81,7 @@ expressionValue
   / string
   / boolean
   / null
-  / number
+  / n:number { return { value: n } }
   / expressionValueArray
 
 expression

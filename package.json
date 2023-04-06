@@ -5,7 +5,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "NODE_ENV=development nest start",
-    "parser:generate": "peggy src/parser/grammar.peggy --plugin ./node_modules/ts-pegjs/src/tspegjs.js -o src/parser/mongo-aggregation-parser.ts",
+    "parser:generate": "peggy src/parser/grammar.peggy --extra-options-file src/parser/pegconfig.json --plugin ./node_modules/ts-pegjs/src/tspegjs.js -o src/parser/mongo-aggregation-parser.ts",
     "build": "nest build",
     "test": "vitest"
   },

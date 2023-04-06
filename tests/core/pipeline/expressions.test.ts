@@ -10,7 +10,7 @@ import { Document } from '@core/index';
 describe('Expressions', () => {
   it('Simple $add expression', () => {
     const expression: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(3);
@@ -18,7 +18,7 @@ describe('Expressions', () => {
 
   it('Simple $subtract expression', () => {
     const expression: Expression = {
-      operator: '$subtract',
+      operator: 'subtract',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(-1);
@@ -26,7 +26,7 @@ describe('Expressions', () => {
 
   it('Simple $multiply expression', () => {
     const expression: Expression = {
-      operator: '$multiply',
+      operator: 'multiply',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(2);
@@ -34,7 +34,7 @@ describe('Expressions', () => {
 
   it('Simple $divide expression', () => {
     const expression: Expression = {
-      operator: '$divide',
+      operator: 'divide',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(0.5);
@@ -42,7 +42,7 @@ describe('Expressions', () => {
 
   it('Simple $mod expression', () => {
     const expression: Expression = {
-      operator: '$mod',
+      operator: 'mod',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(1);
@@ -50,7 +50,7 @@ describe('Expressions', () => {
 
   it('Simple $eq expression', () => {
     const expression: Expression = {
-      operator: '$eq',
+      operator: 'eq',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(false);
@@ -58,7 +58,7 @@ describe('Expressions', () => {
 
   it('Simple $ne expression', () => {
     const expression: Expression = {
-      operator: '$ne',
+      operator: 'ne',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(true);
@@ -66,7 +66,7 @@ describe('Expressions', () => {
 
   it('Simple $gt expression', () => {
     const expression: Expression = {
-      operator: '$gt',
+      operator: 'gt',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(false);
@@ -74,7 +74,7 @@ describe('Expressions', () => {
 
   it('Simple $gte expression', () => {
     const expression: Expression = {
-      operator: '$gte',
+      operator: 'gte',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(false);
@@ -82,7 +82,7 @@ describe('Expressions', () => {
 
   it('Simple $lt expression', () => {
     const expression: Expression = {
-      operator: '$lt',
+      operator: 'lt',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(true);
@@ -90,7 +90,7 @@ describe('Expressions', () => {
 
   it('Simple $lte expression', () => {
     const expression: Expression = {
-      operator: '$lte',
+      operator: 'lte',
       value: [{ value: 1 }, { value: 2 }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(true);
@@ -98,7 +98,7 @@ describe('Expressions', () => {
 
   it('Simple $and expression', () => {
     const expression: Expression = {
-      operator: '$and',
+      operator: 'and',
       value: [{ value: true }, { value: false }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(false);
@@ -106,7 +106,7 @@ describe('Expressions', () => {
 
   it('Simple $or expression', () => {
     const expression: Expression = {
-      operator: '$or',
+      operator: 'or',
       value: [{ value: true }, { value: false }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(true);
@@ -116,7 +116,7 @@ describe('Expressions', () => {
     expect(
       evaluateExpression(
         {
-          operator: '$not',
+          operator: 'not',
           value: true,
         },
         {} as Document,
@@ -125,7 +125,7 @@ describe('Expressions', () => {
     expect(
       evaluateExpression(
         {
-          operator: '$not',
+          operator: 'not',
           value: false,
         },
         {} as Document,
@@ -135,7 +135,7 @@ describe('Expressions', () => {
 
   it('Simple $concat expression', () => {
     const expression: Expression = {
-      operator: '$concat',
+      operator: 'concat',
       value: [{ value: 'Hello' }, { value: 'World' }],
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(
@@ -145,7 +145,7 @@ describe('Expressions', () => {
 
   it('Simple $toLower expression', () => {
     const expression: Expression = {
-      operator: '$toLower',
+      operator: 'toLower',
       value: 'HelloWorld',
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(
@@ -155,7 +155,7 @@ describe('Expressions', () => {
 
   it('Simple $toLower expression on field', () => {
     const expression: Expression = {
-      operator: '$toLower',
+      operator: 'toLower',
       value: {
         field: 'foo',
       },
@@ -167,7 +167,7 @@ describe('Expressions', () => {
 
   it('Simple $toUpper expression', () => {
     const expression: Expression = {
-      operator: '$toUpper',
+      operator: 'toUpper',
       value: 'HelloWorld',
     };
     expect(evaluateExpression(expression, {} as Document)).toEqual(
@@ -177,7 +177,7 @@ describe('Expressions', () => {
 
   it('Simple $toUpper expression on field', () => {
     const expression: Expression = {
-      operator: '$toUpper',
+      operator: 'toUpper',
       value: {
         field: 'foo',
       },
@@ -191,11 +191,11 @@ describe('Expressions', () => {
 describe('toHashExpression', () => {
   it('returns the same hash for equivalent expressions', () => {
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ value: 1 }, { value: 2 }],
     };
     const expression2: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ value: 1 }, { value: 2 }],
     };
     // expr1 = expr1
@@ -214,11 +214,11 @@ describe('toHashExpression', () => {
 
   it('returns different hashes for different expressions', () => {
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ value: 1 }, { value: 2 }],
     };
     const expression2: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ value: 1 }, { value: 3 }],
     };
     // expr1 != expr2
@@ -234,13 +234,13 @@ describe('replaceExpressionByHash', () => {
       field: 'action',
     });
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ field: 'action' }, { value: 2 }],
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
     expect(newExpr).toEqual({
-      operator: '$add',
+      operator: 'add',
       value: [{ field: hash }, { value: 2 }],
     });
   });
@@ -250,19 +250,19 @@ describe('replaceExpressionByHash', () => {
       field: 'action',
     });
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: 'action' },
-        { operator: '$add', value: [{ field: 'action' }, { value: 2 }] },
+        { operator: 'add', value: [{ field: 'action' }, { value: 2 }] },
       ],
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
     expect(newExpr).toEqual({
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: hash },
-        { operator: '$add', value: [{ field: hash }, { value: 2 }] },
+        { operator: 'add', value: [{ field: hash }, { value: 2 }] },
       ],
     });
   });
@@ -274,21 +274,21 @@ describe('replaceExpressionByHash with in two nested expression', () => {
       field: 'action',
     });
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: 'action' },
-        { operator: '$add', value: [{ field: 'action' }, { value: 2 }] },
-        { operator: '$add', value: [{ field: 'action' }, { value: 2 }] },
+        { operator: 'add', value: [{ field: 'action' }, { value: 2 }] },
+        { operator: 'add', value: [{ field: 'action' }, { value: 2 }] },
       ],
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
     // { field: "action" } is replaced by { field: hash }
     expect(newExpr).toEqual({
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: hash },
-        { operator: '$add', value: [{ field: hash }, { value: 2 }] },
-        { operator: '$add', value: [{ field: hash }, { value: 2 }] },
+        { operator: 'add', value: [{ field: hash }, { value: 2 }] },
+        { operator: 'add', value: [{ field: hash }, { value: 2 }] },
       ],
     });
   });
@@ -297,11 +297,11 @@ describe('replaceExpressionByHash with in two nested expression', () => {
 describe('replaceExpressionByHash hash of operation expression', () => {
   it('should replace operation expression by hash', () => {
     const hash = toHashExpression({
-      operator: '$add',
+      operator: 'add',
       value: [{ field: 'action' }, { value: 2 }],
     });
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [{ field: 'action' }, { value: 2 }],
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
@@ -315,17 +315,17 @@ describe('replaceExpressionByHash hash of operation expression', () => {
 describe('replaceExpressionByHash hash of operation expression with nested expression', () => {
   it('should replace nested operation expression by hash', () => {
     const hash = toHashExpression({
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: 'action' },
-        { operator: '$add', value: [{ field: 'action' }, { value: 2 }] },
+        { operator: 'add', value: [{ field: 'action' }, { value: 2 }] },
       ],
     });
     const expression1: Expression = {
-      operator: '$add',
+      operator: 'add',
       value: [
         { field: 'action' },
-        { operator: '$add', value: [{ field: 'action' }, { value: 2 }] },
+        { operator: 'add', value: [{ field: 'action' }, { value: 2 }] },
       ],
     };
     const newExpr = replaceExpressionByHash(expression1, hash);
@@ -340,7 +340,7 @@ describe('resolveAllExpressionFields', () => {
   it('should resolve all expression fields', () => {
     const exp1: Expression = { field: 'action' };
     const exp2: Expression = {
-      operator: '$concat',
+      operator: 'concat',
       value: [{ field: 'action' }, { value: '!!!' }],
     };
     const hash1 = toHashExpression(exp1);

@@ -1,5 +1,5 @@
-import { Stage } from "./stages";
-import { Document } from "../index";
+import { Stage } from './stages';
+import { Document } from '../index';
 
 export interface Pipeline {
   stages: Stage[];
@@ -7,7 +7,7 @@ export interface Pipeline {
 
 export function executePipeline(
   pipeline: Pipeline,
-  data: Document[]
+  data: Document[],
 ): Document[] {
   let result = [...data];
   let currentStage: Stage | undefined = pipeline.stages[0];
