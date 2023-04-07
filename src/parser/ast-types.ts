@@ -1,8 +1,5 @@
-import { ASTVisitor } from './ast-visitor';
-
 export interface ASTNode {
   type: string;
-  accept(visitor: ASTVisitor): void;
 }
 
 export class ASTStageList implements ASTNode {
@@ -11,10 +8,6 @@ export class ASTStageList implements ASTNode {
 
   constructor(stages: ASTStage[]) {
     this.stages = stages;
-  }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitStageList(this);
   }
 }
 
@@ -29,10 +22,6 @@ export class ASTStageGroup implements ASTNode {
     this.id = id;
     this.properties = properties;
   }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitStageGroup(this);
-  }
 }
 
 type AggregationOperator = 'sum' | 'avg' | 'min' | 'max';
@@ -45,10 +34,6 @@ export abstract class ASTAggregationExpression implements ASTNode {
   constructor(operator: AggregationOperator, field: ASTReferenceField) {
     this.operator = operator;
     this.field = field;
-  }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitAggregationExpression(this);
   }
 }
 
@@ -85,10 +70,6 @@ export class ASTReferenceField implements ASTNode {
   constructor(name: string) {
     this.name = name;
   }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitReferenceField(this);
-  }
 }
 
 export class ASTOutputFieldName implements ASTNode {
@@ -97,10 +78,6 @@ export class ASTOutputFieldName implements ASTNode {
 
   constructor(name: string) {
     this.name = name;
-  }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitOutputFieldName(this);
   }
 }
 export class ASTProperty implements ASTNode {
@@ -111,9 +88,5 @@ export class ASTProperty implements ASTNode {
   constructor(field: ASTOutputFieldName, operation: ASTOperation) {
     this.field = field;
     this.operation = operation;
-  }
-
-  accept(visitor: ASTVisitor): void {
-    return visitor.visitProperty(this);
   }
 }
