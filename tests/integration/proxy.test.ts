@@ -35,7 +35,7 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
     service.start();
     mongodbClient = await MongoClient.connect(
-      `mongodb://${service.getHost()}:${service.getPort()}/`,
+      `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
     );
   });
 

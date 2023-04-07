@@ -112,7 +112,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
   start() {
     this.server.listen(this.options.listenPort, this.options.listenHost, () => {
       this.emit('listening');
-      const port = this.getPort();
+      const port = this.getProxyPort();
       const targetHost = this.options.targetHost;
       const targetPort = this.options.targetPort;
       this.logger.log(`Maggregor's MongoDB proxy is listening on port ${port}`);
@@ -131,15 +131,29 @@ export class MongoDBTcpProxyService extends EventEmitter {
   /**
    * Gets the port number the proxy is listening on
    */
-  getPort() {
+  getProxyPort() {
     return this.options.listenPort;
   }
 
   /**
    * Gets the host the proxy is listening on
    */
-  getHost() {
+  getProxyHost() {
     return this.options.listenHost;
+  }
+
+  /**
+   * Gets the target host the proxy is proxying requests to
+   */
+  getTargetHost() {
+    return this.options.targetHost;
+  }
+
+  /**
+   * Gets the target port the proxy is proxying requests to
+   */
+  getTargetPort() {
+    return this.options.targetPort;
   }
 }
 
