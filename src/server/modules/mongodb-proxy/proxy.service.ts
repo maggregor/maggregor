@@ -70,15 +70,10 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
-    @Inject(ConfigService) private readonly configService: ConfigService,
+    @Inject(ConfigService) private readonly config: ConfigService,
   ) {
     super();
-    this.options = {
-      targetHost: this.configService.get('MONGODB_HOST') || '127.0.0.1',
-      targetPort: this.configService.get('MONGODB_PORT') || 27017,
-      listenHost: this.configService.get('MAGGREGOR_PROXY_HOST') || '127.0.0.1',
-      listenPort: this.configService.get('MAGGREGOR_PROXY_PORT') || 4000,
-    };
+    this.loadConfig(config);
     this.init();
     this.start();
   }
@@ -112,7 +107,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
   start() {
     this.server.listen(this.options.listenPort, this.options.listenHost, () => {
       this.emit('listening');
-      const port = this.getPort();
+      const port = this.getProxyPort();
       const targetHost = this.options.targetHost;
       const targetPort = this.options.targetPort;
       this.logger.log(`Maggregor's MongoDB proxy is listening on port ${port}`);
@@ -131,15 +126,47 @@ export class MongoDBTcpProxyService extends EventEmitter {
   /**
    * Gets the port number the proxy is listening on
    */
-  getPort() {
+  getProxyPort() {
     return this.options.listenPort;
   }
 
   /**
    * Gets the host the proxy is listening on
    */
-  getHost() {
+  getProxyHost() {
     return this.options.listenHost;
+  }
+
+  /**
+   * Gets the target host the proxy is proxying requests to
+   */
+  getTargetHost() {
+    return this.options.targetHost;
+  }
+
+  /**
+   * Gets the target port the proxy is proxying requests to
+   */
+  getTargetPort() {
+    return this.options.targetPort;
+  }
+
+  /**
+   * Loads the proxy configuration from the environment variables
+   */
+  private loadConfig(config: ConfigService) {
+    const listenHost = config.get('MAGGREGOR_PROXY_HOST') || 'localhost';
+    const listenPort = config.get('MAGGREGOR_PROXY_PORT') || 4000;
+    const uri = config.get('MONGODB_TARGET_URI') || 'mongodb://localhost:27017';
+    const mongodbConnection = parseMongoDBConnectionString(uri);
+    const targetHost = mongodbConnection.host;
+    const targetPort = mongodbConnection.port || 27017;
+    this.options = {
+      targetPort,
+      targetHost,
+      listenHost,
+      listenPort,
+    };
   }
 }
 
@@ -151,6 +178,30 @@ function handleError(err: Error) {
     return;
   }
   console.error(err);
+}
+
+interface MongoDBConnectionInfo {
+  host: string;
+  port: number;
+  database: string;
+  username?: string;
+  password?: string;
+}
+
+function parseMongoDBConnectionString(
+  connectionString: string,
+): MongoDBConnectionInfo {
+  const url = new URL(connectionString);
+
+  const [, username, password] = url.username.split(':');
+
+  return {
+    host: url.hostname,
+    port: parseInt(url.port),
+    database: url.pathname.slice(1),
+    username,
+    password,
+  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
