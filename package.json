@@ -10,10 +10,10 @@
     "test:unit": "vitest run --config ./vitest.unit.config.ts",
     "test:unit:watch": "vitest --config ./vitest.unit.config.ts",
     "test:unit:coverage": "vitest run --config ./vitest.unit.config.ts --coverage",
-    "test:integration": "vitest --config ./vitest.integration.config.ts",
-    "test:integration:watch": "vitest run --config ./vitest.integration.config.ts --watch",
-    "test:e2e": "vitest --config ./vitest.e2e.config.ts",
-    "test:e2e:watch": "vitest run --config ./vitest.e2e.config.ts --watch",
+    "test:integration": "vitest run --config ./vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config ./vitest.integration.config.ts --watch",
+    "test:e2e": "vitest run --config ./vitest.e2e.config.ts",
+    "test:e2e:watch": "vitest --config ./vitest.e2e.config.ts --watch",
     "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e"
   },
   "dependencies": {

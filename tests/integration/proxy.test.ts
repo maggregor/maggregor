@@ -24,8 +24,8 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
           provide: ConfigService,
           useValue: {
             get: (key: string) => {
-              if (key === 'MONGODB_PORT') {
-                return mongodbServer.getUri().split(':')[2].replace('/', '');
+              if (key === 'MONGODB_TARGET_URI') {
+                return mongodbServer.getUri();
               }
             },
           },
