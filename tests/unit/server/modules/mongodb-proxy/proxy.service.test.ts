@@ -4,16 +4,16 @@ import { createProxyServiceTest } from '../../utils';
 test('should be correctly configured', async () => {
   const opts = {
     env: {
-      MAGGREGOR_PROXY_HOST: '127.0.0.1',
-      MAGGREGOR_PROXY_PORT: 4634,
+      PROXY_HOST: '127.0.0.1',
+      PROXY_PORT: 4634,
       MONGODB_TARGET_URI: 'mongodb://localhost:27017',
     },
   };
   const service = await createProxyServiceTest(opts);
   expect(service).toBeDefined();
   expect(service).toBeInstanceOf(MongoDBTcpProxyService);
-  expect(service.getProxyHost()).toBe(opts.env.MAGGREGOR_PROXY_HOST);
-  expect(service.getProxyPort()).toBe(opts.env.MAGGREGOR_PROXY_PORT);
+  expect(service.getProxyHost()).toBe(opts.env.PROXY_HOST);
+  expect(service.getProxyPort()).toBe(opts.env.PROXY_PORT);
   expect(service.getTargetHost()).toBe('localhost');
   expect(service.getTargetPort()).toBe(27017);
 });

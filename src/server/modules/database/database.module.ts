@@ -1,16 +1,19 @@
+import { ConfigService } from '@nestjs/config';
 // database.module.ts
-import { Module } from '@nestjs/common';
+import { Inject, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async () => {
-        if (process.env.NODE_ENV === 'development') {
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        const mongodbUri = config.get<string>('MONGODB_BACKEND_URI');
+        if (!mongodbUri) {
           const mongoServer = await MongoMemoryServer.create();
           const mongoUri = mongoServer.getUri();
           return {
@@ -18,7 +21,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
           };
         } else {
           return {
-            uri: process.env.MONGO_URI,
+            uri: mongodbUri,
             useNewUrlParser: true,
             useUnifiedTopology: true,
             useCreateIndex: true,

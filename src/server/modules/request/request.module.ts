@@ -8,7 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule,
     DatabaseModule,
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],

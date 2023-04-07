@@ -155,8 +155,8 @@ export class MongoDBTcpProxyService extends EventEmitter {
    * Loads the proxy configuration from the environment variables
    */
   private loadConfig(config: ConfigService) {
-    const listenHost = config.get('MAGGREGOR_PROXY_HOST') || 'localhost';
-    const listenPort = config.get('MAGGREGOR_PROXY_PORT') || 4000;
+    const listenHost = config.get('PROXY_HOST') || 'localhost';
+    const listenPort = config.get('PROXY_PORT') || 4000;
     const uri = config.get('MONGODB_TARGET_URI') || 'mongodb://localhost:27017';
     const mongodbConnection = parseMongoDBConnectionString(uri);
     const targetHost = mongodbConnection.host;
