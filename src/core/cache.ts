@@ -58,7 +58,6 @@ export class InMemoryCache {
         size += sizeof(this.cache[key].result);
       }
     }
-    console.log('Current cache size:', size);
     return size;
   }
 
