@@ -6,6 +6,7 @@
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:preview": "node dist/src/main",
     "parser:generate": "peggy src/parser/grammar.peggy --extra-options-file src/parser/pegconfig.json --plugin ./node_modules/ts-pegjs/src/tspegjs.js -o src/parser/mongo-aggregation-parser.ts",
     "build": "nest build",
     "test:unit": "vitest run --config ./vitest.unit.config.ts",

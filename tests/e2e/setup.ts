@@ -3,7 +3,7 @@ import { beforeAll, afterAll } from 'vitest';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
 import { MaggregorProcess } from './setup-maggregor';
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 config({ path: '.env.test' });
 
@@ -30,7 +30,7 @@ beforeAll(async () => {
   expect(await clientInDirect.db().admin().listDatabases()).toEqual(
     await clientWithProxy.db().admin().listDatabases(),
   );
-  await loadData(clientInDirect);
+  await loadTestData(clientInDirect);
   global.__MONGO_CLIENT_MAGGREGOR__ = clientWithProxy;
   global.__MONGO_CLIENT_DIRECT__ = clientInDirect;
 });
@@ -42,23 +42,35 @@ afterAll(async () => {
   maggregor.stop();
 });
 
-async function loadData(client: MongoClient) {
+async function loadTestData(client: MongoClient) {
   const db = client.db(global.__TEST_DB__);
   const collection = db.collection(global.__TEST_COLLECTION__);
-  const testData = [];
+  const batchSize = 1000;
+  const totalDocs = 100000;
 
-  // Generate test data
-  for (let i = 0; i < 10000; i++) {
-    const doc = {
-      _id: i,
-      name: `User ${i}`,
-      email: `user${i}@example.com`,
-      age: i % 100,
-      city: i % 10 === 0 ? 'New York' : 'Los Angeles',
-    };
-    testData.push(doc);
+  for (let i = 0; i < totalDocs; i += batchSize) {
+    const testData = [];
+    for (let j = i; j < i + batchSize; j++) {
+      const doc = {
+        name: `User ${j}`,
+        email: `user${j}@example.com`,
+        age: j % 100,
+        city: j % 10 === 0 ? 'New York' : 'Los Angeles',
+        address: {
+          street: `123 Main St.`,
+          city: `Los Angeles`,
+          state: `CA`,
+          zip: j % 10000,
+        },
+      };
+      if (j % 3 === 0) {
+        delete doc.address;
+      }
+      if (j % 5 === 0) {
+        delete doc.age;
+      }
+      testData.push(doc);
+    }
+    await collection.insertMany(testData);
   }
-
-  // Insert test data into collection
-  await collection.insertMany(testData);
 }

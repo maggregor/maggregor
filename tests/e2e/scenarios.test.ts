@@ -1,13 +1,14 @@
 import scenarios from './scenarios';
-import { deepEqual } from 'assert';
+import { deepStrictEqual } from 'assert';
 
-test('MongoDB e2e test', async (t) => {
-  const clientExpected = global.__MONGO_CLIENT_DIRECT__;
-  const clientActual = global.__MONGO_CLIENT_MAGGREGOR__;
-
-  for (const scenario of scenarios) {
-    const result = await scenario.request(clientActual);
-    const expected = await scenario.request(clientExpected);
-    deepEqual(result, expected);
-  }
+describe('MongoDB e2e tests', () => {
+  test.concurrent.each(scenarios)('Scenario %#: %s', async (scenario) => {
+    const clientExpected = global.__MONGO_CLIENT_DIRECT__;
+    const clientActual = global.__MONGO_CLIENT_MAGGREGOR__;
+    const p1 = scenario.request(clientActual);
+    const p2 = scenario.request(clientExpected);
+    const [result, expected] = await Promise.all([p1, p2]);
+    expect(result.length).toBe(expected.length);
+    deepStrictEqual(result, expected);
+  });
 });
