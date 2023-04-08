@@ -34,6 +34,7 @@
     "mongoose": "^7.0.3",
     "nuxt-lodash": "^2.4.1",
     "nuxt-vitest": "^0.6.9",
+    "object-sizeof": "^2.6.1",
     "peggy": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
