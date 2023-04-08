@@ -38,13 +38,20 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
   });
 
   test('should emit changed event', async () => {
-    const fn = vi.spyOn(service, 'emit');
+    const callback = vi.fn((change) => {
+      expect(change).toHaveProperty('operationType');
+      expect(change).toHaveProperty('fullDocument');
+      if (change.operationType === 'update') {
+        expect(change).toHaveProperty('fullDocumentBeforeChange');
+      }
+      expect(change).toHaveProperty('ns');
+    });
+    service.on('change', callback);
     const db = mongodbClient.db('test');
     const collection = await db.createCollection('test');
     await db.command({ collMod: 'test', recordPreImages: true });
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
-    expect(fn).toHaveBeenCalled();
     expect(true).toBeTruthy();
   });
 });

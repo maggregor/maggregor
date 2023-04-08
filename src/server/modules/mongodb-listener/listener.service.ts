@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter } from 'events';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MongoDBListenerService extends EventEmitter {
