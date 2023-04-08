@@ -11,7 +11,6 @@ global.__TEST_DB__ = 'mydb';
 global.__TEST_COLLECTION__ = 'mycoll';
 
 let mongodbServer: MongoMemoryServer;
-let mongodbClient: MongoClient;
 let maggregor: MaggregorProcess = new MaggregorProcess();
 beforeAll(async () => {
   if (!process.env.MONGODB_TARGET_URI) {
@@ -22,14 +21,23 @@ beforeAll(async () => {
   const host = process.env.PROXY_HOST;
   const port = parseInt(process.env.PROXY_PORT);
   await waitPort({ host, port });
-  mongodbClient = await MongoClient.connect(`mongodb://${host}:${port}`);
-  expect(await mongodbClient.db().admin().listDatabases()).toBeDefined();
-  await loadData(mongodbClient);
-  global.__MONGO_CLIENT__ = mongodbClient;
+  const clientWithProxy = await MongoClient.connect(
+    `mongodb://${host}:${port}`,
+  );
+  const clientInDirect = await MongoClient.connect(
+    process.env.MONGODB_TARGET_URI,
+  );
+  expect(await clientInDirect.db().admin().listDatabases()).toEqual(
+    await clientWithProxy.db().admin().listDatabases(),
+  );
+  await loadData(clientInDirect);
+  global.__MONGO_CLIENT_MAGGREGOR__ = clientWithProxy;
+  global.__MONGO_CLIENT_DIRECT__ = clientInDirect;
 });
 
 afterAll(async () => {
-  await mongodbClient?.close();
+  await global.__MONGO_CLIENT_MAGGREGOR__?.close();
+  await global.__MONGO_CLIENT_DIRECT__?.close();
   await mongodbServer?.stop();
   maggregor.stop();
 });
