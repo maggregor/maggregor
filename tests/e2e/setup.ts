@@ -46,7 +46,7 @@ async function loadTestData(client: MongoClient) {
   const db = client.db(global.__TEST_DB__);
   const collection = db.collection(global.__TEST_COLLECTION__);
   const batchSize = 1000;
-  const totalDocs = 100000;
+  const totalDocs = 10000000;
 
   for (let i = 0; i < totalDocs; i += batchSize) {
     const testData = [];
