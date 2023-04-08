@@ -6,14 +6,23 @@ export type RequestDocument = HydratedDocument<Request>;
 
 @Schema()
 export class Request implements RequestInterface {
-  @Prop({ type: String, required: true })
-  name: string;
-  @Prop({ type: String, required: true })
-  description: string;
-  @Prop({ type: String, required: true })
-  category: string;
-  @Prop({ type: Date })
-  createdAt?: Date;
+  @Prop()
+  request: string;
+
+  @Prop()
+  id: string;
+
+  @Prop()
+  collectionName: string;
+
+  @Prop()
+  dbName: string;
+
+  @Prop()
+  startAt: Date;
+
+  @Prop()
+  endAt?: Date;
 }
 
 export const RequestSchema = SchemaFactory.createForClass(Request);

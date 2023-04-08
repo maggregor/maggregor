@@ -1,6 +1,8 @@
 export interface RequestInterface {
-  name: string;
-  description: string;
-  category: string;
-  createdAt?: Date;
+  request: string;
+  id: string;
+  startAt: Date;
+  endAt?: Date;
+  collectionName: string;
+  dbName: string;
 }

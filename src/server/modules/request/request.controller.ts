@@ -8,6 +8,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { RequestService } from './request.service';
+import { Request } from './request.schema';
 
 @Controller('request')
 export class RequestController {
