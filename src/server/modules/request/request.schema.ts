@@ -6,22 +6,22 @@ export type RequestDocument = HydratedDocument<Request>;
 
 @Schema()
 export class Request implements RequestInterface {
-  @Prop()
+  @Prop({ type: String, required: true })
   request: string;
 
-  @Prop()
+  @Prop({ type: String, required: true })
   id: string;
 
-  @Prop()
+  @Prop({ type: String, required: true })
   collectionName: string;
 
-  @Prop()
+  @Prop({ type: String, required: true })
   dbName: string;
 
-  @Prop()
+  @Prop({ type: Date, required: true })
   startAt: Date;
 
-  @Prop()
+  @Prop({ type: Date, required: false })
   endAt?: Date;
 }
 

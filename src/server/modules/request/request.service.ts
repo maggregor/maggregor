@@ -8,13 +8,13 @@ import { MessageResultConfig } from '../mongodb-proxy/protocol/protocol';
 import { InterceptedReply } from '../mongodb-proxy/interceptors/reply-interceptor';
 import { parse } from '@parser/mongo-aggregation-parser';
 import { Request } from './request.schema';
-
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   private cache: InMemoryCache = new InMemoryCache(512);
 
   constructor(
-    @InjectModel(Request.name) private readonly requestModel: Model<Request>,
+    @InjectModel(Request.name)
+    private readonly requestModel: Model<Request>,
   ) {}
 
   async create(request: Request): Promise<Request> {
