@@ -1,3 +1,4 @@
+import { ListenerModule } from './mongodb-listener/listener.module';
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from './database/database.module';
 import { RequestModule } from './request/request.module';
@@ -35,6 +36,7 @@ import * as Joi from 'joi';
     DatabaseModule,
     RequestModule,
     ProxyModule,
+    ListenerModule,
   ],
 })
 export class AppModule {}
