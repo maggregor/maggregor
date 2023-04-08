@@ -1,8 +1,8 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet, MongoMemoryServer } from 'mongodb-memory-server';
 import { beforeAll, afterAll } from 'vitest';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
-import { MaggregorProcess } from '../setup-maggregor';
+import { MaggregorProcess } from './setup-maggregor';
 import { MongoClient } from 'mongodb';
 
 config({ path: '.env.test' });
@@ -10,11 +10,13 @@ config({ path: '.env.test' });
 global.__TEST_DB__ = 'mydb';
 global.__TEST_COLLECTION__ = 'mycoll';
 
-let mongodbServer: MongoMemoryServer;
+let mongodbServer: MongoMemoryReplSet;
 let maggregor: MaggregorProcess = new MaggregorProcess();
 beforeAll(async () => {
   if (!process.env.MONGODB_TARGET_URI) {
-    mongodbServer = await MongoMemoryServer.create();
+    mongodbServer = await MongoMemoryReplSet.create({
+      replSet: { count: 1, storageEngine: 'wiredTiger' },
+    });
     process.env.MONGODB_TARGET_URI = mongodbServer.getUri();
   }
   maggregor.start();
