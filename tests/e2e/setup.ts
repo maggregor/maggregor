@@ -2,7 +2,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { beforeAll, afterAll } from 'vitest';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
-import { MaggregorProcess } from '../setup-maggregor';
+import { MaggregorProcess } from './setup-maggregor';
 import { MongoClient } from 'mongodb';
 
 config({ path: '.env.test' });
