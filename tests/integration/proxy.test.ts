@@ -19,8 +19,7 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
           provide: RequestService,
           useValue: {
             onAggregateQueryFromClient: () => {
-              console.log('received');
-              return { test: 'test' };
+              return null;
             },
           },
         },
