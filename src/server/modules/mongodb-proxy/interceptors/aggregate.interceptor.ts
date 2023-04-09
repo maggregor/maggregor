@@ -55,7 +55,7 @@ export class AggregateInterceptor extends Transform {
           if (result) {
             const resultBuffer = encodeResults(result);
             this.socket.write(resultBuffer);
-            break;
+            return;
           }
         }
       }

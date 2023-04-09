@@ -3,9 +3,30 @@ import {
   MongoDBMessage,
   MsgResult,
   encodeMessage,
+  encodeResults,
 } from '@server/modules/mongodb-proxy/protocol';
-import * as net from 'net';
 import { PassThrough } from 'stream';
+const EXAMPLE_MSG: MongoDBMessage = {
+  header: {
+    requestID: 12345,
+    responseTo: 0,
+    opCode: 2013,
+  },
+  contents: {
+    flagBits: 0,
+    sections: [
+      {
+        kind: 0,
+        payload: {
+          aggregate: 'testCollection',
+          pipeline: [],
+          cursor: {},
+          $db: 'testDB',
+        },
+      },
+    ],
+  },
+};
 
 describe('AggregateInterceptor', () => {
   let interceptor: AggregateInterceptor;
@@ -15,7 +36,7 @@ describe('AggregateInterceptor', () => {
   });
 
   test('Hook is called', async () => {
-    const hook = vi.fn().mockReturnValue({
+    const result = {
       db: 'testDB',
       collection: 'testCollection',
       results: [
@@ -25,42 +46,62 @@ describe('AggregateInterceptor', () => {
         },
       ],
       responseTo: 0,
-    } as MsgResult);
+    } as MsgResult;
+    const hook = vi.fn().mockReturnValue(result);
     interceptor.registerHook(hook);
-    const testMessage: MongoDBMessage = {
-      header: {
-        requestID: 12345,
-        responseTo: 0,
-        opCode: 2013,
-      },
-      contents: {
-        flagBits: 0,
-        sections: [
-          {
-            kind: 0,
-            payload: {
-              aggregate: 'testCollection',
-              pipeline: [],
-              cursor: {},
-              $db: 'testDB',
-            },
-          },
-        ],
-      },
-    };
+    const buffer = encodeMessage(EXAMPLE_MSG);
+    interceptor.write(buffer);
+    expect(hook).toHaveBeenCalledTimes(1);
+  });
 
-    const buffer = encodeMessage(testMessage);
-
+  test('The buffer go trough if no hook is registered', async () => {
+    const buffer = encodeMessage(EXAMPLE_MSG);
     interceptor.pipe(
       new PassThrough({
-        transform(chunk, encoding, callback) {
+        transform(chunk: any, encoding: any, callback: any) {
           expect(chunk).toEqual(buffer);
-          this.push(chunk);
-          callback();
         },
       }),
     );
     interceptor.write(buffer);
-    expect(hook).toHaveBeenCalledTimes(1);
+  });
+
+  test('The buffer go trough if no hook returns a result', async () => {
+    const hook = vi.fn().mockReturnValue(null);
+    interceptor.registerHook(hook);
+    const buffer = encodeMessage(EXAMPLE_MSG);
+    interceptor.pipe(
+      new PassThrough({
+        transform(chunk: any, encoding: any, callback: any) {
+          expect(chunk).toEqual(buffer);
+        },
+      }),
+    );
+    interceptor.write(buffer);
+  });
+
+  test('The buffer replaced by the result if a hook returns a result', async () => {
+    const result = {
+      db: 'testDB',
+      collection: 'testCollection',
+      results: [
+        {
+          _id: 'test',
+          count: 10,
+        },
+      ],
+      responseTo: 0,
+    } as MsgResult;
+    const hook = vi.fn().mockReturnValue(result);
+    interceptor.registerHook(hook);
+    const buffer = encodeMessage(EXAMPLE_MSG);
+    interceptor.pipe(
+      new PassThrough({
+        transform(chunk: any, encoding: any, callback: any) {
+          expect(chunk).toEqual(encodeResults(result));
+        },
+      }),
+    );
+    interceptor.write(buffer);
   });
 });

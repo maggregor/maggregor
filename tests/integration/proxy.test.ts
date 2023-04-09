@@ -17,7 +17,12 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
         MongoDBTcpProxyService,
         {
           provide: RequestService,
-          useValue: {},
+          useValue: {
+            onAggregateQueryFromClient: () => {
+              console.log('received');
+              return { test: 'test' };
+            },
+          },
         },
         {
           // TODO: Improve the way to mock the ConfigService
@@ -59,4 +64,6 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     expect(docs[0]._id).toBe('USA');
     expect(docs[0].sumAge).toBe(40);
   });
+
+  test('Simple aggregate query with group and match', async () => {});
 });
