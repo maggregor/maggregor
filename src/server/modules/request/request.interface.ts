@@ -5,4 +5,5 @@ export interface RequestInterface {
   endAt?: Date;
   collectionName: string;
   dbName: string;
+  source?: 'cache' | 'delegate' | 'intercept';
 }

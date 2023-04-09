@@ -21,8 +21,11 @@ export class Request implements RequestInterface {
   @Prop({ type: Date, required: true })
   startAt: Date;
 
-  @Prop({ type: Date, required: false })
+  @Prop({ type: Date })
   endAt?: Date;
+
+  @Prop({ type: String })
+  source?: 'cache' | 'delegate' | 'intercept';
 }
 
 export const RequestSchema = SchemaFactory.createForClass(Request);

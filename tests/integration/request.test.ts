@@ -123,10 +123,7 @@ describe('RequestService (integration)', () => {
       };
       const created = await service.create(request);
       created.request = 'testUpdated';
-      const updated = await service.updateOneByRequestID(
-        created.requestID,
-        created,
-      );
+      const updated = await service.updateOne(created);
       expectRequest(updated, {
         ...request,
         request: 'testUpdated',
@@ -183,6 +180,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
+      // Request from client to server
       let resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
@@ -193,18 +191,20 @@ describe('RequestService (integration)', () => {
       expect(req.collectionName).toStrictEqual(aggregateReq.collectionName);
       expect(req.dbName).toStrictEqual(aggregateReq.dbName);
       expect(resultMsg).toBe(null);
+      // Result from server to client
       await service.onResultFromServer(aggregateResult);
-      resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
-      expect(resultMsg).toBeDefined();
-      expect(resultMsg).toStrictEqual(aggregateResult.data);
       const updatedReq = (await service.findAll()).at(0);
       expect(updatedReq).toBeDefined();
+      expect((await service.findAll()).length).toEqual(1);
       expect(updatedReq.request).toStrictEqual(aggregateReq.pipeline);
       expect(updatedReq.requestID).toEqual(aggregateReq.requestID);
       expect(updatedReq.startAt).toBeDefined();
-      expect(updatedReq.endAt).toBeDefined();
+      // Same request from client to server
       resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
       expect(resultMsg).toBeDefined();
+      expect(resultMsg).toStrictEqual(aggregateResult.data);
+      expect((await service.findAll()).length).toEqual(2);
+      expect((await service.findAll()).at(1).source).toStrictEqual('cache');
     });
   });
 });

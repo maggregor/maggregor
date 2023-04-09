@@ -29,12 +29,11 @@ export class RequestService implements MongoDBProxyListener {
     return this.requestModel.findOne({ requestID });
   }
 
-  async updateOneByRequestID(
-    requestID: number,
-    request: Request,
-  ): Promise<Request> {
-    await this.requestModel.updateOne({ requestID }, request);
-    return this.findOneByRequestId(requestID);
+  async updateOne(request: Request): Promise<Request> {
+    // @ts-ignore
+    await this.requestModel.updateOne({ _id: request._id }, request);
+    // @ts-ignore
+    return this.requestModel.findOne(request._id);
   }
 
   async deleteByRequestID(requestID: number): Promise<Request> {
@@ -53,13 +52,14 @@ export class RequestService implements MongoDBProxyListener {
       startAt: new Date(),
     });
     if (this.hasCachedResults(req)) {
-      // ANSWER THE REQUEST WITH THE CACHE
+      req.endAt = new Date();
+      req.source = 'cache';
+      await this.updateOne(req);
       return this.getCachedResults(req);
     }
-    Logger.log(
-      `=> Request ${req.requestID}: Pipeline (${stageCount} stage(s))`,
-    );
-    // Return null so let the request go through
+    Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
+    req.source = 'delegate';
+    await this.updateOne(req);
     return null;
   }
 
@@ -68,7 +68,7 @@ export class RequestService implements MongoDBProxyListener {
     const requestID = msg.responseTo;
     const req = await this.findOneByRequestId(requestID);
     req.endAt = new Date();
-    this.updateOneByRequestID(requestID, req);
+    await this.updateOne(req);
     this.cacheResults(req, msg.data);
     return;
   }
