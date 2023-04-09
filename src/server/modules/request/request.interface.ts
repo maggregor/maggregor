@@ -1,6 +1,6 @@
 export interface RequestInterface {
-  request: string;
-  id: string;
+  request: any;
+  requestID: number;
   startAt: Date;
   endAt?: Date;
   collectionName: string;

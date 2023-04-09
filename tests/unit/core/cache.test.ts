@@ -26,6 +26,16 @@ describe('InMemoryCache', () => {
     expect(cachedResult).to.be.null;
   });
 
+  it('should return true for items that exist in the cache', () => {
+    const query = 'myquery';
+    const collection = 'users';
+    const db = 'mydb';
+    const result = [{ id: 1, name: 'John Doe' }];
+    expect(cache.has(query, collection, db)).to.be.false;
+    cache.set(query, collection, db, result);
+    expect(cache.has(query, collection, db)).to.be.true;
+  });
+
   it('should evict least frequently used items when the cache will exceed its max size', () => {
     const collection = 'users';
     const db = 'mydb';

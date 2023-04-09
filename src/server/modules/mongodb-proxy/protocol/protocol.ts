@@ -123,14 +123,14 @@ function encodeMessage(message: MongoDBMessage): Buffer {
   }
 }
 
-export type MessageResultConfig = {
+export type MsgResult = {
   db: string;
   collection: string;
   results: any[];
   responseTo: number;
 };
 
-function encodeResults(config: MessageResultConfig): Buffer {
+function encodeResults(config: MsgResult): Buffer {
   const sections: MongoDBSection[] = [
     {
       kind: 1,

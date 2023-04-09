@@ -3,9 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
-import { InterceptedAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
-import { MessageResultConfig } from '../mongodb-proxy/protocol/protocol';
-import { InterceptedReply } from '../mongodb-proxy/interceptors/reply-interceptor';
+import { MsgAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
+import { MsgResult as MsgResult } from '../mongodb-proxy/protocol/protocol';
+import { InterceptedReply as MsgReply } from '../mongodb-proxy/interceptors/reply-interceptor';
 import { parse } from '@parser/mongo-aggregation-parser';
 import { Request } from './request.schema';
 @Injectable()
@@ -25,58 +25,64 @@ export class RequestService implements MongoDBProxyListener {
     return this.requestModel.find();
   }
 
-  async findOne(id: string): Promise<Request> {
-    return this.requestModel.findOne({ _id: id });
+  async findOneByRequestId(requestID: number): Promise<Request> {
+    return this.requestModel.findOne({ requestID });
   }
 
-  async update(id: string, request: Request): Promise<Request> {
-    await this.requestModel.updateOne({ _id: id }, request);
-    return this.findOne(id);
+  async updateOneByRequestID(
+    requestID: number,
+    request: Request,
+  ): Promise<Request> {
+    await this.requestModel.updateOne({ requestID }, request);
+    return this.findOneByRequestId(requestID);
   }
 
-  async delete(id: string): Promise<Request> {
-    return this.requestModel.findByIdAndDelete(id);
+  async deleteByRequestID(requestID: number): Promise<Request> {
+    return this.requestModel.findOneAndDelete({ requestID });
   }
 
   // Event: on aggregate query from client
-  async onAggregateQueryFromClient(
-    intercepted: InterceptedAggregate,
-  ): Promise<MessageResultConfig> {
-    const pipeline = intercepted.pipeline;
-    const parsedPipeline = parsePipeline(pipeline);
-    const reqId = intercepted.requestID;
+  async onAggregateQueryFromClient(msg: MsgAggregate): Promise<MsgResult> {
+    const parsedPipeline = parsePipeline(msg.pipeline);
     const stageCount = parsedPipeline.length;
-    const db = intercepted.dbName;
-    const collection = intercepted.collectionName;
-    const pipelineString = JSON.stringify(parsedPipeline);
-    if (this.cache.get(pipelineString, collection, db)) {
+    const req: Request = await this.create({
+      request: msg.pipeline,
+      requestID: msg.requestID,
+      collectionName: msg.collectionName,
+      dbName: msg.dbName,
+      startAt: new Date(),
+    });
+    if (this.hasCachedResults(req)) {
       // ANSWER THE REQUEST WITH THE CACHE
-      return null;
+      return this.getCachedResults(req);
     }
-    Logger.log(`=> Request ${reqId}: Pipeline (${stageCount} stage(s))`);
+    Logger.log(
+      `=> Request ${req.requestID}: Pipeline (${stageCount} stage(s))`,
+    );
     // Return null so let the request go through
     return null;
   }
 
   // Event: on result from server
-  async onResultFromServer(intercepted: InterceptedReply): Promise<void> {
-    const id = intercepted.responseTo.toString();
-    const find = await this.findOne(id);
-    this.update(id, {
-      ...find,
-      endAt: new Date(),
-    });
-    // Cache the result
-    this.cache.set(
-      find.request,
-      find.collectionName,
-      find.dbName,
-      intercepted.data,
-    );
-    const resId = intercepted.responseTo;
-    const documentCount = intercepted.data.length;
-    Logger.log(`<= Response ${resId}: ${documentCount} documents`);
+  async onResultFromServer(msg: MsgReply): Promise<void> {
+    const requestID = msg.responseTo;
+    const req = await this.findOneByRequestId(requestID);
+    req.endAt = new Date();
+    this.updateOneByRequestID(requestID, req);
+    this.cacheResults(req, msg.data);
     return;
+  }
+
+  private hasCachedResults(req: Request): boolean {
+    return this.cache.has(req.request, req.collectionName, req.dbName);
+  }
+
+  private getCachedResults(req: Request): any {
+    return this.cache.get(req.request, req.collectionName, req.dbName);
+  }
+
+  private cacheResults(req: Request, results: any): void {
+    this.cache.set(req.request, req.collectionName, req.dbName, results);
   }
 }
 

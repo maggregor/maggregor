@@ -17,6 +17,11 @@ export class InMemoryCache {
     this.cache = {};
   }
 
+  has(query: string, collection: string, db: string): boolean {
+    const key = `${query}-${collection}-${db}`;
+    return key in this.cache;
+  }
+
   get(query: string, collection: string, db: string): any | null {
     const key = `${query}-${collection}-${db}`;
     if (key in this.cache) {
