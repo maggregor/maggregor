@@ -83,12 +83,14 @@ export class MongoDBTcpProxyService extends EventEmitter {
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new AggregateInterceptor(socket);
-      aggregateInterceptor.registerHook(
-        this.requestService.onAggregateQueryFromClient,
+      aggregateInterceptor.registerHook((hook) =>
+        this.requestService.onAggregateQueryFromClient(hook),
       );
       // Setup result interceptor (proxy -> client)
       const resultInterceptor = new ReplyInterceptor();
-      resultInterceptor.registerHook(this.requestService.onResultFromServer);
+      resultInterceptor.registerHook((hook) =>
+        this.requestService.onResultFromServer(hook),
+      );
       // Setup bidirectional data flow between client, interceptors and proxy
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
       proxySocket.pipe(resultInterceptor).pipe(socket);
@@ -108,9 +110,10 @@ export class MongoDBTcpProxyService extends EventEmitter {
     this.server.listen(this.options.listenPort, this.options.listenHost, () => {
       this.emit('listening');
       const port = this.getProxyPort();
+      const host = this.getProxyHost();
       const targetHost = this.options.targetHost;
       const targetPort = this.options.targetPort;
-      this.logger.log(`Maggregor's MongoDB proxy is listening on port ${port}`);
+      this.logger.log(`Maggregor's proxy is listening on port ${host}:${port}`);
       this.logger.log(`Target MongoDB server: ${targetHost}:${targetPort}`);
     });
   }

@@ -19,11 +19,11 @@ export class MongoDBListenerService extends EventEmitter {
       this.configService.get('MONGODB_TARGET_URI'),
     );
     const db = this.client.db();
-    db.watch([], {
-      fullDocument: 'updateLookup',
-      fullDocumentBeforeChange: 'required',
-    }).on('change', (change) => {
-      this.emit('change', change);
-    });
+    // db.watch([], {
+    //   fullDocument: 'updateLookup',
+    //   fullDocumentBeforeChange: 'required',
+    // }).on('change', (change) => {
+    //   this.emit('change', change);
+    // });
   }
 }

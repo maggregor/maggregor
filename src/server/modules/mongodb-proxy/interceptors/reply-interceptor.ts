@@ -30,8 +30,14 @@ export class ReplyInterceptor extends PassThrough {
     callback: (err?: Error) => void,
   ): Promise<void> {
     const buffer = Buffer.from(chunk);
+    console.log('Taille du buffer', buffer.length);
+    console.log('Contenu du buffer', buffer.toString('hex'));
+    // this.push(chunk);
+    // callback();
+    // return;
     try {
       const msg = decodeMessage(buffer);
+      console.log('<=', JSON.stringify(msg));
       const requestID = msg.header.requestID;
       const responseTo = msg.header.responseTo;
       if (

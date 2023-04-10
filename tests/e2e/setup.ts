@@ -19,10 +19,12 @@ beforeAll(async () => {
     });
     process.env.MONGODB_TARGET_URI = mongodbServer.getUri();
   }
+  console.log(mongodbServer?.getUri());
   maggregor.start();
   const host = process.env.PROXY_HOST;
   const port = parseInt(process.env.PROXY_PORT);
   await waitPort({ host, port });
+  console.log('with proxy: ' + `mongodb://${host}:${port}`);
   const clientWithProxy = await MongoClient.connect(
     `mongodb://${host}:${port}`,
   );

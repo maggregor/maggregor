@@ -55,7 +55,12 @@ export class RequestService implements MongoDBProxyListener {
       req.endAt = new Date();
       req.source = 'cache';
       await this.updateOne(req);
-      return this.getCachedResults(req);
+      return {
+        db: msg.dbName,
+        collection: msg.collectionName,
+        results: this.getCachedResults(req),
+        responseTo: msg.requestID,
+      };
     }
     Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
     req.source = 'delegate';

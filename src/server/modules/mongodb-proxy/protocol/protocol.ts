@@ -1,4 +1,5 @@
 import { serialize, deserialize } from 'bson';
+import CRC32C from 'crc-32';
 
 // https://docs.mongodb.com/manual/reference/mongodb-wire-protocol/#op-query
 const OP_REPLY = 1;
@@ -21,7 +22,6 @@ type MongoDBMessage = {
   contents: {
     flagBits: number;
     sections: MongoDBSection[];
-    checksum?: number;
   };
 };
 
@@ -30,7 +30,7 @@ function encodeHeader(
   extraLength = 0,
 ): Buffer {
   const headerBuffer = Buffer.alloc(16);
-  headerBuffer.writeInt32LE(16 + extraLength, 0);
+  headerBuffer.writeInt32LE(extraLength + 16, 0);
   headerBuffer.writeInt32LE(header.requestID, 4);
   headerBuffer.writeInt32LE(header.responseTo, 8);
   headerBuffer.writeInt32LE(header.opCode, 12);
@@ -53,6 +53,7 @@ function encodeOpQuery(message: MongoDBMessage): Buffer {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpQuery(buffer: Buffer): MongoDBMessage {
+  console.log('Le début', decodeHeader(buffer));
   throw new Error('Not implemented');
 }
 
@@ -60,7 +61,9 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
   const sectionsBuffer = Buffer.concat(
     message.contents.sections.map((section) => {
       const kindBuffer = Buffer.from([section.kind]);
-      const payloadBuffer = serialize(section.payload);
+      const payloadBuffer = serialize(section.payload, {
+        ignoreUndefined: false,
+      });
       return Buffer.concat([kindBuffer, payloadBuffer]);
     }),
   );
@@ -73,10 +76,12 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
     flagBitsBuffer.length + sectionsBuffer.length,
   );
 
-  return Buffer.concat([headerBuffer, flagBitsBuffer, sectionsBuffer]);
+  const buffer = Buffer.concat([headerBuffer, flagBitsBuffer, sectionsBuffer]);
+  return buffer;
 }
 
 function decodeOpMsg(buffer: Buffer): MongoDBMessage {
+  console.log('DECODE LENGTH', buffer.length);
   const header = decodeHeader(buffer);
   const flagBits = buffer.readInt32LE(16);
   const sections: MongoDBSection[] = [];
@@ -107,6 +112,7 @@ function encodeOpCompressed(message: MongoDBMessage): Buffer {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpCompressed(buffer: Buffer): MongoDBMessage {
+  console.log('Le début', decodeHeader(buffer));
   throw new Error('Not implemented');
 }
 
@@ -133,19 +139,20 @@ export type MsgResult = {
 function encodeResults(config: MsgResult): Buffer {
   const sections: MongoDBSection[] = [
     {
-      kind: 1,
+      kind: 0,
       payload: {
         cursor: {
+          firstBatch: [],
           id: 0,
           ns: `${config.db}.${config.collection}`,
-          firstBatch: config.results,
         },
+        ok: 1,
       },
     },
   ];
   return encodeMessage({
     header: {
-      requestID: 0, // Not used
+      requestID: 15656, // Not used
       responseTo: config.responseTo,
       opCode: OP_MSG,
     },
@@ -175,7 +182,6 @@ function decodeMessage(buffer: Buffer): MongoDBMessage {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpReply(buffer: Buffer): MongoDBMessage {
   const header = decodeHeader(buffer);
-
   return {
     header,
     contents: null,
