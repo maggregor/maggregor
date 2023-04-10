@@ -202,7 +202,7 @@ describe('RequestService (integration)', () => {
       // Same request from client to server
       resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
       expect(resultMsg).toBeDefined();
-      expect(resultMsg).toStrictEqual(aggregateResult.data);
+      expect(resultMsg.results).toStrictEqual(aggregateResult.data);
       expect((await service.findAll()).length).toEqual(2);
       expect((await service.findAll()).at(1).source).toStrictEqual('cache');
     });

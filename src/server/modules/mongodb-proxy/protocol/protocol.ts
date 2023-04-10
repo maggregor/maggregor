@@ -53,7 +53,6 @@ function encodeOpQuery(message: MongoDBMessage): Buffer {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpQuery(buffer: Buffer): MongoDBMessage {
-  console.log('Le début', decodeHeader(buffer));
   throw new Error('Not implemented');
 }
 
@@ -81,7 +80,6 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
 }
 
 function decodeOpMsg(buffer: Buffer): MongoDBMessage {
-  console.log('DECODE LENGTH', buffer.length);
   const header = decodeHeader(buffer);
   const flagBits = buffer.readInt32LE(16);
   const sections: MongoDBSection[] = [];
@@ -112,7 +110,6 @@ function encodeOpCompressed(message: MongoDBMessage): Buffer {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function decodeOpCompressed(buffer: Buffer): MongoDBMessage {
-  console.log('Le début', decodeHeader(buffer));
   throw new Error('Not implemented');
 }
 

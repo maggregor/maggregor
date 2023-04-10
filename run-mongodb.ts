@@ -5,21 +5,13 @@ const dbName = 'test';
 const collectionName = 'test';
 
 MongoMemoryServer.create({
-  //   replSet: { count: 1, storageEngine: 'wiredTiger' },
-  //   instanceOpts: [{ port: 27017 }],
   instance: {
     port: 27017,
   },
 }).then(async (server) => {
   const uri = server.getUri();
-  console.log(uri);
   const client = MongoClient.connect(uri);
-  const db = (await client).db('test');
-  const collection = db.collection('test');
-  console.log('Start loading data...');
-  // Generate 1000000 documents and insert every 1000 documents
   await loadTestData(await client);
-  console.log('Done');
 });
 
 async function loadTestData(client: MongoClient) {
