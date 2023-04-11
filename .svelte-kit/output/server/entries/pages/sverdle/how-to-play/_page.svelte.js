@@ -6,31 +6,31 @@ const css = {
 };
 const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   $$result.css.add(css);
-  return `${$$result.head += `<!-- HEAD_svelte-1fqqyy5_START -->${$$result.title = `<title>How to play Sverdle</title>`, ""}<meta name="${"description"}" content="${"How to play Sverdle"}"><!-- HEAD_svelte-1fqqyy5_END -->`, ""}
+  return `${$$result.head += `<!-- HEAD_svelte-1fqqyy5_START -->${$$result.title = `<title>How to play Sverdle</title>`, ""}<meta name="description" content="How to play Sverdle"><!-- HEAD_svelte-1fqqyy5_END -->`, ""}
 
-<div class="${"text-column"}"><h1>How to play Sverdle</h1>
+<div class="text-column"><h1>How to play Sverdle</h1>
 
-	<p>Sverdle is a clone of <a href="${"https://www.nytimes.com/games/wordle/index.html"}">Wordle</a>, the
+	<p>Sverdle is a clone of <a href="https://www.nytimes.com/games/wordle/index.html">Wordle</a>, the
 		word guessing game. To play, enter a five-letter English word. For example:
 	</p>
 
-	<div class="${"example svelte-1x5nq1n"}"><span class="${"close svelte-1x5nq1n"}">r</span>
-		<span class="${"missing svelte-1x5nq1n"}">i</span>
-		<span class="${"close svelte-1x5nq1n"}">t</span>
-		<span class="${"missing svelte-1x5nq1n"}">z</span>
-		<span class="${"exact svelte-1x5nq1n"}">y</span></div>
+	<div class="example svelte-1x5nq1n"><span class="close svelte-1x5nq1n">r</span>
+		<span class="missing svelte-1x5nq1n">i</span>
+		<span class="close svelte-1x5nq1n">t</span>
+		<span class="missing svelte-1x5nq1n">z</span>
+		<span class="exact svelte-1x5nq1n">y</span></div>
 
-	<p class="${"svelte-1x5nq1n"}">The <span class="${"exact svelte-1x5nq1n"}">y</span> is in the right place. <span class="${"close svelte-1x5nq1n"}">r</span> and
-		<span class="${"close svelte-1x5nq1n"}">t</span>
+	<p class="svelte-1x5nq1n">The <span class="exact svelte-1x5nq1n">y</span> is in the right place. <span class="close svelte-1x5nq1n">r</span> and
+		<span class="close svelte-1x5nq1n">t</span>
 		are the right letters, but in the wrong place. The other letters are wrong, and can be discarded.
 		Let&#39;s make another guess:
 	</p>
 
-	<div class="${"example svelte-1x5nq1n"}"><span class="${"exact svelte-1x5nq1n"}">p</span>
-		<span class="${"exact svelte-1x5nq1n"}">a</span>
-		<span class="${"exact svelte-1x5nq1n"}">r</span>
-		<span class="${"exact svelte-1x5nq1n"}">t</span>
-		<span class="${"exact svelte-1x5nq1n"}">y</span></div>
+	<div class="example svelte-1x5nq1n"><span class="exact svelte-1x5nq1n">p</span>
+		<span class="exact svelte-1x5nq1n">a</span>
+		<span class="exact svelte-1x5nq1n">r</span>
+		<span class="exact svelte-1x5nq1n">t</span>
+		<span class="exact svelte-1x5nq1n">y</span></div>
 
 	<p>This time we guessed right! You have <strong>six</strong> guesses to get the word.</p>
 

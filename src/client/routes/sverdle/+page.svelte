@@ -100,6 +100,10 @@
 		};
 	}}
 >
+<h1 class="text-3xl font-bold underline">
+		Hello TailwindCSS
+	</h1>
+
 	<a class="how-to-play" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="grid" class:playing={!won} class:bad-guess={form?.badGuess}>
@@ -192,7 +196,7 @@
 	/>
 {/if}
 
-<style>
+<style lang="postcss">
 	form {
 		width: 100%;
 		height: 100%;

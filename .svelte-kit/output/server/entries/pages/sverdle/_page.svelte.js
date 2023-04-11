@@ -1,5 +1,5 @@
 import { c as create_ssr_component, a as subscribe, d as each, e as escape, b as add_attribute, f as null_to_empty } from "../../../chunks/index3.js";
-import "../../../chunks/utils.js";
+import "devalue";
 import { r as readable } from "../../../chunks/index2.js";
 const get_initial_motion_preference = () => {
   return false;
@@ -51,11 +51,14 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   $$unsubscribe_reduced_motion();
   return `
 
-${$$result.head += `<!-- HEAD_svelte-18lvto8_START -->${$$result.title = `<title>Sverdle</title>`, ""}<meta name="${"description"}" content="${"A Wordle clone written in SvelteKit"}"><!-- HEAD_svelte-18lvto8_END -->`, ""}
+${$$result.head += `<!-- HEAD_svelte-18lvto8_START -->${$$result.title = `<title>Sverdle</title>`, ""}<meta name="description" content="A Wordle clone written in SvelteKit"><!-- HEAD_svelte-18lvto8_END -->`, ""}
 
-<h1 class="${"visually-hidden"}">Sverdle</h1>
+<h1 class="visually-hidden">Sverdle</h1>
 
-<form method="${"POST"}" action="${"?/enter"}" class="${"svelte-1pg2j5l"}"><a class="${"how-to-play svelte-1pg2j5l"}" href="${"/sverdle/how-to-play"}">How to play</a>
+<form method="POST" action="?/enter" class="svelte-1pg2j5l"><h1 class="text-3xl font-bold underline">Hello TailwindCSS
+	</h1>
+
+	<a class="how-to-play svelte-1pg2j5l" href="/sverdle/how-to-play">How to play</a>
 
 	<div class="${[
     "grid svelte-1pg2j5l",
@@ -63,7 +66,7 @@ ${$$result.head += `<!-- HEAD_svelte-18lvto8_START -->${$$result.title = `<title
   ].join(" ").trim()}">${each(Array(6), (_, row) => {
     let current = row === i;
     return `
-			<h2 class="${"visually-hidden"}">Row ${escape(row + 1)}</h2>
+			<h2 class="visually-hidden">Row ${escape(row + 1)}</h2>
 			<div class="${["row svelte-1pg2j5l", current ? "current" : ""].join(" ").trim()}">${each(Array(5), (_2, column) => {
       let answer = data.answers[row]?.[column], value = data.guesses[row]?.[column] ?? "", selected = current && column === data.guesses[row].length, exact = answer === "x", close = answer === "c", missing = answer === "_";
       return `
@@ -76,29 +79,29 @@ ${$$result.head += `<!-- HEAD_svelte-18lvto8_START -->${$$result.title = `<title
         "letter svelte-1pg2j5l",
         (exact ? "exact" : "") + " " + (close ? "close" : "") + " " + (missing ? "missing" : "") + " " + (selected ? "selected" : "")
       ].join(" ").trim()}">${escape(value)}
-						<span class="${"visually-hidden"}">${exact ? `(correct)` : `${close ? `(present)` : `${missing ? `(absent)` : `empty`}`}`}</span>
-						<input name="${"guess"}" ${!current ? "disabled" : ""} type="${"hidden"}"${add_attribute("value", value, 0)}>
+						<span class="visually-hidden">${exact ? `(correct)` : `${close ? `(present)` : `${missing ? `(absent)` : `empty`}`}`}</span>
+						<input name="guess" ${!current ? "disabled" : ""} type="hidden"${add_attribute("value", value, 0)}>
 					</div>`;
     })}
 			</div>`;
   })}</div>
 
-	<div class="${"controls svelte-1pg2j5l"}">${won || data.answers.length >= 6 ? `${!won && data.answer ? `<p>the answer was &quot;${escape(data.answer)}&quot;</p>` : ``}
-			<button data-key="${"enter"}" class="${"restart selected svelte-1pg2j5l"}" formaction="${"?/restart"}">${escape(won ? "you won :)" : `game over :(`)} play again?
-			</button>` : `<div class="${"keyboard svelte-1pg2j5l"}"><button data-key="${"enter"}" ${!submittable ? "disabled" : ""} class="${["svelte-1pg2j5l", submittable ? "selected" : ""].join(" ").trim()}">enter</button>
+	<div class="controls svelte-1pg2j5l">${won || data.answers.length >= 6 ? `${!won && data.answer ? `<p>the answer was &quot;${escape(data.answer)}&quot;</p>` : ``}
+			<button data-key="enter" class="restart selected svelte-1pg2j5l" formaction="?/restart">${escape(won ? "you won :)" : `game over :(`)} play again?
+			</button>` : `<div class="keyboard svelte-1pg2j5l"><button data-key="enter" ${!submittable ? "disabled" : ""} class="${["svelte-1pg2j5l", submittable ? "selected" : ""].join(" ").trim()}">enter</button>
 
-				<button data-key="${"backspace"}" formaction="${"?/update"}" name="${"key"}" value="${"backspace"}" class="${"svelte-1pg2j5l"}">back
+				<button data-key="backspace" formaction="?/update" name="key" value="backspace" class="svelte-1pg2j5l">back
 				</button>
 
 				${each(["qwertyuiop", "asdfghjkl", "zxcvbnm"], (row) => {
-    return `<div class="${"row svelte-1pg2j5l"}">${each(row, (letter) => {
-      return `<button${add_attribute("data-key", letter, 0)} class="${escape(null_to_empty(classnames[letter]), true) + " svelte-1pg2j5l"}" ${data.guesses[i].length === 5 ? "disabled" : ""} formaction="${"?/update"}" name="${"key"}"${add_attribute("value", letter, 0)} aria-label="${escape(letter, true) + " " + escape(description[letter] || "", true)}">${escape(letter)}
+    return `<div class="row svelte-1pg2j5l">${each(row, (letter) => {
+      return `<button${add_attribute("data-key", letter, 0)} class="${escape(null_to_empty(classnames[letter]), true) + " svelte-1pg2j5l"}" ${data.guesses[i].length === 5 ? "disabled" : ""} formaction="?/update" name="key"${add_attribute("value", letter, 0)} aria-label="${escape(letter, true) + " " + escape(description[letter] || "", true)}">${escape(letter)}
 							</button>`;
     })}
 					</div>`;
   })}</div>`}</div></form>
 
-${won ? `<div style="${"position: absolute; left: 50%; top: 30%"}"></div>` : ``}`;
+${won ? `<div style="position: absolute; left: 50%; top: 30%"></div>` : ``}`;
 });
 export {
   Page as default

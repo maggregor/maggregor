@@ -65,7 +65,6 @@ function setContext(key, context) {
 function getContext(key) {
   return get_current_component().$$.context.get(key);
 }
-Promise.resolve();
 const ATTR_REGEX = /[&"]/g;
 const CONTENT_REGEX = /[&<]/g;
 function escape(value, is_attr = false) {
