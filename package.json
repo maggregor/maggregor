@@ -3,12 +3,18 @@
   "version": "1.0.0",
   "description": "",
   "license": "UNLICENSED",
+  "type": "module",
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "start:preview": "node dist/src/main",
+    "start:ui": "vite dev",
     "parser:generate": "peggy src/parser/grammar.peggy --extra-options-file src/parser/pegconfig.json --plugin ./node_modules/ts-pegjs/src/tspegjs.js -o src/parser/mongo-aggregation-parser.ts",
+    "preview": "node dist/src/main",
+    "preview:ui": "vite preview",
     "build": "nest build",
+    "build:ui": "vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --ignore \"tests\"",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test:unit": "vitest run --config ./vitest.unit.config.ts",
     "test:unit:watch": "vitest --config ./vitest.unit.config.ts",
     "test:unit:coverage": "vitest run --config ./vitest.unit.config.ts --coverage",
@@ -70,6 +76,15 @@
     "unplugin-auto-import": "^0.15.2",
     "vitest": "^0.29.8",
     "vitest-mock-extended": "^1.1.3",
-    "wait-port": "^1.0.4"
+    "wait-port": "^1.0.4",
+    "@fontsource/fira-mono": "^4.5.10",
+    "@neoconfetti/svelte": "^1.0.0",
+    "@sveltejs/adapter-auto": "^2.0.0",
+    "@sveltejs/kit": "^1.5.0",
+    "@types/cookie": "^0.5.1",
+    "svelte": "^3.54.0",
+    "svelte-check": "^3.0.1",
+    "tslib": "^2.4.1",
+    "vite": "^4.2.0"
   }
 }
