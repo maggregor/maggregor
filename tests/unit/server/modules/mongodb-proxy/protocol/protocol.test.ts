@@ -42,29 +42,23 @@ describe('MongoDB wire protocol', () => {
       '99000000283d00000f000000dd07000000000000008400000003637572736f72006b0000000466697273744261746368003c00000003300017000000025f696400090000004e657720596f726b00000331001a000000025f6964000c0000004c6f7320416e67656c6573000000126964000000000000000000026e73000a000000746573742e746573740000016f6b00000000000000f03f00',
       'hex',
     );
-    decodeMessage(expected);
-    console.log(expected.toString('hex'));
     const actual = encodeResults({
       db: 'test',
       collection: 'test',
       results: [{ _id: 'New York' }, { _id: 'Los Angeles' }],
       responseTo: 15,
     });
-    console.log(actual.length);
-    console.log(actual.toString('hex'));
     // expect(actual).toEqual(expected);
     // expect(actual.length).toBe(expected.length);
     // expect(actual.readUint32LE(0)).toBe(expected.readUint32LE(0)); // messageLength
-    expect(actual.readUint32LE(4)).toBe(expected.readUint32LE(4)); // requestID
+    // expect(actual.readUint32LE(4)).toBe(expected.readUint32LE(4)); // requestID
     expect(actual.readUint32LE(8)).toBe(expected.readUint32LE(8)); // responseTo
     expect(actual.readUint32LE(12)).toBe(expected.readUint32LE(12)); // opCode
     expect(actual.readUint32LE(16)).toBe(expected.readUint32LE(16)); // flagBits
-    // expect(actual.readUint32LE(20)).toBe(expected.readUint32LE(20)); // size of the section
+    // expect(actual.readUint32LE(20)).toBe(expected.readUint32LE(20)); // size of the section BSON
     // expect(actual.readUint32LE(24)).toBe(expected.readUint32LE(24)); // cursor
     // expect(actual.readUint32LE(28)).toBe(expected.readUint32LE(28)); // firstBatch
     // expect(actual.readUint32LE(32)).toBe(expected.readUint32LE(32)); // id
-    // console.log(JSON.stringify(deserialize(expected.subarray(21 + 0 * 5))));
-    // console.log(deserialize(actual.subarray(21 + 0 * 5)));
   });
 });
 

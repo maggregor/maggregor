@@ -1,5 +1,4 @@
 import { serialize, deserialize } from 'bson';
-import CRC32C from 'crc-32';
 
 // https://docs.mongodb.com/manual/reference/mongodb-wire-protocol/#op-query
 const OP_REPLY = 1;
@@ -60,9 +59,7 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
   const sectionsBuffer = Buffer.concat(
     message.contents.sections.map((section) => {
       const kindBuffer = Buffer.from([section.kind]);
-      const payloadBuffer = serialize(section.payload, {
-        ignoreUndefined: false,
-      });
+      const payloadBuffer = serialize(deserialize(serialize(section.payload)));
       return Buffer.concat([kindBuffer, payloadBuffer]);
     }),
   );
@@ -72,7 +69,7 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
 
   const headerBuffer = encodeHeader(
     message.header,
-    flagBitsBuffer.length + sectionsBuffer.length,
+    flagBitsBuffer.length + sectionsBuffer.length, // TAILLE DANS LE HEADER
   );
 
   const buffer = Buffer.concat([headerBuffer, flagBitsBuffer, sectionsBuffer]);
@@ -94,6 +91,7 @@ function decodeOpMsg(buffer: Buffer): MongoDBMessage {
     sections.push({ kind, payload });
     offset += payload.length;
   }
+
   return {
     header,
     contents: {
@@ -139,7 +137,7 @@ function encodeResults(config: MsgResult): Buffer {
       kind: 0,
       payload: {
         cursor: {
-          firstBatch: [],
+          firstBatch: config.results,
           id: 0,
           ns: `${config.db}.${config.collection}`,
         },
@@ -149,7 +147,7 @@ function encodeResults(config: MsgResult): Buffer {
   ];
   return encodeMessage({
     header: {
-      requestID: 15656, // Not used
+      requestID: 4050,
       responseTo: config.responseTo,
       opCode: OP_MSG,
     },

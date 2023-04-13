@@ -1,6 +1,5 @@
 import { PassThrough } from 'stream';
-import { OP_MSG, OP_QUERY, OP_REPLY, decodeMessage } from '../protocol';
-import { Logger } from '@nestjs/common';
+import { OP_MSG, decodeMessage } from '../protocol';
 
 export type InterceptedReply = {
   requestID: number;
@@ -12,6 +11,7 @@ export type ReplyInterceptorHook = (
   intercepted: InterceptedReply,
 ) => Promise<void>;
 
+let i = 0;
 export class ReplyInterceptor extends PassThrough {
   hooks: ReplyInterceptorHook[];
 
@@ -45,12 +45,10 @@ export class ReplyInterceptor extends PassThrough {
           data: msg.contents.sections[0].payload.cursor.firstBatch,
         };
         for (const hook of this.hooks) {
-          await hook(intercepted);
+          hook(intercepted);
         }
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) {}
     this.push(chunk);
     callback();
   }

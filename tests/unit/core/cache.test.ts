@@ -70,11 +70,12 @@ describe('InMemoryCache', () => {
   });
 
   it("should invalidate a specific collection in the cache when 'invalidateCollection' is called", () => {
-    const query = 'myquery';
+    const query = JSON.stringify([{ $match: { name: 'John Doe' } }]);
     const collection = 'users';
     const db = 'mydb';
     const result = [{ id: 1, name: 'John Doe' }];
     cache.set(query, collection, db, result);
+    expect(cache.has(query, collection, db)).to.be.true;
     cache.invalidateCollection(collection, db);
     expect(cache.get(query, collection, db)).to.be.null;
   });

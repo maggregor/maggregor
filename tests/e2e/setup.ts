@@ -11,7 +11,7 @@ global.__TEST_DB__ = 'mydb';
 global.__TEST_COLLECTION__ = 'mycoll';
 
 let mongodbServer: MongoMemoryReplSet;
-let maggregor: MaggregorProcess = new MaggregorProcess();
+let mg: MaggregorProcess = new MaggregorProcess();
 beforeAll(async () => {
   if (!process.env.MONGODB_TARGET_URI) {
     mongodbServer = await MongoMemoryReplSet.create({
@@ -19,29 +19,28 @@ beforeAll(async () => {
     });
     process.env.MONGODB_TARGET_URI = mongodbServer.getUri();
   }
-  maggregor.start();
+  mg.start();
   const host = process.env.PROXY_HOST;
   const port = parseInt(process.env.PROXY_PORT || '27017');
   await waitPort({ host, port });
-  const clientWithProxy = await MongoClient.connect(
-    `mongodb://${host}:${port}`,
-  );
-  const clientInDirect = await MongoClient.connect(
-    process.env.MONGODB_TARGET_URI,
-  );
-  expect(await clientInDirect.db().admin().listDatabases()).toEqual(
-    await clientWithProxy.db().admin().listDatabases(),
-  );
-  await loadTestData(clientInDirect);
-  global.__MONGO_CLIENT_MAGGREGOR__ = clientWithProxy;
-  global.__MONGO_CLIENT_DIRECT__ = clientInDirect;
+  const maggreUri = `mongodb://${host}:${port}`;
+  const mongoUri = process.env.MONGODB_TARGET_URI;
+  const maggreClient = await MongoClient.connect(maggreUri);
+  const mongoClient = await MongoClient.connect(mongoUri);
+  // Initial check list databases
+  await loadTestData(mongoClient);
+  await healthCheck(maggreClient, mongoClient);
+  global.__MAGGRE_CLIENT__ = maggreClient;
+  global.__MONGO_CLIENT__ = mongoClient;
+  global.__MAGGRE_URI__ = maggreUri;
+  global.__MONGO_URI__ = mongoUri;
 });
 
 afterAll(async () => {
-  await global.__MONGO_CLIENT_MAGGREGOR__?.close();
-  await global.__MONGO_CLIENT_DIRECT__?.close();
+  await global.__MAGGRE_CLIENT__?.close();
+  await global.__MONGO_CLIENT__?.close();
   await mongodbServer?.stop();
-  maggregor.stop();
+  mg.stop();
 });
 
 async function loadTestData(client: MongoClient) {
@@ -75,4 +74,38 @@ async function loadTestData(client: MongoClient) {
     }
     await collection.insertMany(testData);
   }
+}
+
+async function healthCheck(
+  maggreClient: MongoClient,
+  mongoClient: MongoClient,
+) {
+  const maggreDb = maggreClient.db(global.__TEST_DB__);
+  const mongoDb = mongoClient.db(global.__TEST_DB__);
+
+  const maggreCollections = await maggreDb.listCollections().toArray();
+  const mongoCollections = await mongoDb.listCollections().toArray();
+
+  const promises: Promise<void>[] = [];
+
+  for (let i = 0; i < maggreCollections.length; i++) {
+    const maggreCollection = maggreDb.collection(maggreCollections[i].name);
+    const mongoCollection = mongoDb.collection(mongoCollections[i].name);
+
+    const maggreCountPromise = maggreCollection.countDocuments();
+    const mongoCountPromise = mongoCollection.countDocuments();
+
+    promises.push(
+      new Promise<void>((resolve, reject) => {
+        Promise.all([maggreCountPromise, mongoCountPromise])
+          .then(([maggreCount, mongoCount]) => {
+            expect(maggreCount).toEqual(mongoCount);
+            resolve();
+          })
+          .catch(reject);
+      }),
+    );
+  }
+
+  await Promise.all(promises);
 }
