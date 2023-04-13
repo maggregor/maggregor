@@ -42,8 +42,6 @@ export class RequestService implements MongoDBProxyListener {
 
   // Event: on aggregate query from client
   async onAggregateQueryFromClient(msg: MsgAggregate): Promise<MsgResult> {
-    const parsedPipeline = parsePipeline(msg.pipeline);
-    const stageCount = parsedPipeline.length;
     const req: Request = await this.create({
       request: msg.pipeline,
       requestID: msg.requestID,
@@ -55,6 +53,7 @@ export class RequestService implements MongoDBProxyListener {
       req.endAt = new Date();
       req.source = 'cache';
       await this.updateOne(req);
+      Logger.log(`Request ${req.requestID}: Answered from cache ⚡`);
       return {
         db: msg.dbName,
         collection: msg.collectionName,
@@ -62,6 +61,8 @@ export class RequestService implements MongoDBProxyListener {
         responseTo: msg.requestID,
       };
     }
+    const parsedPipeline = parsePipeline(msg.pipeline);
+    const stageCount = parsedPipeline.length;
     Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
     req.source = 'delegate';
     await this.updateOne(req);
@@ -79,15 +80,28 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   private hasCachedResults(req: Request): boolean {
-    return this.cache.has(req.request, req.collectionName, req.dbName);
+    return this.cache.has(
+      JSON.stringify(req.request),
+      req.collectionName,
+      req.dbName,
+    );
   }
 
   private getCachedResults(req: Request): any {
-    return this.cache.get(req.request, req.collectionName, req.dbName);
+    return this.cache.get(
+      JSON.stringify(req.request),
+      req.collectionName,
+      req.dbName,
+    );
   }
 
   private cacheResults(req: Request, results: any): void {
-    this.cache.set(req.request, req.collectionName, req.dbName, results);
+    this.cache.set(
+      JSON.stringify(req.request),
+      req.collectionName,
+      req.dbName,
+      results,
+    );
   }
 }
 
@@ -95,7 +109,7 @@ function parsePipeline(pipeline: any): any[] {
   try {
     return parse('[' + objectToString(pipeline[0]) + ']');
   } catch (e) {
-    console.log('Parsing error on pipeline: ', e);
+    console.log('Parsing error on pipeline');
     return [];
   }
 }

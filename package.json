@@ -16,7 +16,8 @@
     "test:integration:watch": "vitest --config ./vitest.integration.config.ts --watch",
     "test:e2e": "vitest run --config ./vitest.e2e.config.ts",
     "test:e2e:watch": "vitest --config ./vitest.e2e.config.ts --watch",
-    "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e"
+    "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
+    "debug": "pnpm test:e2e tests/e2e/debug.test.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",
@@ -42,7 +43,7 @@
     "ts-pegjs": "^3.1.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^9.3.0",
+    "@nestjs/cli": "^9.4.0",
     "@nestjs/platform-fastify": "^9.4.0",
     "@nestjs/schematics": "^9.1.0",
     "@nestjs/testing": "^9.4.0",
@@ -50,12 +51,12 @@
     "@types/express": "^4.17.17",
     "@types/node": "18.15.11",
     "@types/supertest": "^2.0.12",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
     "@vitest/coverage-c8": "^0.29.8",
     "dotenv": "^16.0.3",
     "dprint": "0.35.3",
-    "eslint": "^8.37.0",
+    "eslint": "^8.38.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
     "mongodb-memory-server": "^8.12.2",
@@ -66,7 +67,7 @@
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "4.2.0",
-    "typescript": "^5.0.3",
+    "typescript": "^5.0.4",
     "unplugin-auto-import": "^0.15.2",
     "vitest": "^0.29.8",
     "vitest-mock-extended": "^1.1.3",
