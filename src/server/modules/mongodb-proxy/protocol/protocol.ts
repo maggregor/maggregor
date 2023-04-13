@@ -191,6 +191,6 @@ export {
   encodeMessage,
   decodeMessage,
   encodeResults,
-  MongoDBMessage,
-  MongoDBSection,
 };
+
+export type { MongoDBMessage, MongoDBSection };

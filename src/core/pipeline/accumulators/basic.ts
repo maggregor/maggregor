@@ -1,7 +1,7 @@
-import { Expression, evaluateExpression } from '../expressions';
+import { evaluateExpression } from '../expressions';
 import { BaseAccumulator } from './common';
-import { AccumulatorDefinition, AccumulatorOperator } from '.';
-import { Document } from '../../index';
+import type { AccumulatorDefinition } from '.';
+import type { Document } from '@core/index';
 
 export abstract class BasicAccumulator extends BaseAccumulator {
   abstract evaluate(docs: Document[]): number;

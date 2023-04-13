@@ -15,8 +15,7 @@
       "@/*": ["src/*"],
       "@parser/*": ["src/parser/*"],
       "@core/*": ["src/core/*"],
-      "@server/*": ["src/server/*"],
-      "@client/*": ["src/client/*"]
+      "@server/*": ["src/server/*"]
     },
     "incremental": true,
     "skipLibCheck": true,
@@ -27,5 +26,5 @@
     "noFallthroughCasesInSwitch": false,
     "types": ["vitest/globals"]
   },
-  "exclude": ["node_modules", "dist", ".svelte-kit"]
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,10 +1,7 @@
-import { Accumulator } from './accumulators';
-import {
-  Expression,
-  resolveAllExpressionFields,
-  evaluateExpression,
-} from './expressions';
-import { Document } from '..';
+import type { Accumulator } from './accumulators';
+import type { Expression } from './expressions';
+import { resolveAllExpressionFields, evaluateExpression } from './expressions';
+import type { Document } from '..';
 
 export interface Stage {
   type: StageType;

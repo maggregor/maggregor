@@ -1,15 +1,11 @@
-import { CollectionListener } from '@core/index';
-import {
+import type { CollectionListener, Document } from '@core/index';
+import type {
   AccumulatorDefinition,
   CachedAccumulator,
-  createCachedAccumulator,
 } from './pipeline/accumulators';
-import {
-  Expression,
-  evaluateExpression,
-  toHashExpression,
-} from './pipeline/expressions';
-import { Document } from '@core/index';
+import { createCachedAccumulator } from './pipeline/accumulators';
+import { evaluateExpression, toHashExpression } from './pipeline/expressions';
+import type { Expression } from './pipeline/expressions';
 export interface MaterializedViewDefinition {
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];

@@ -1,6 +1,7 @@
+import type net from 'net';
+import type { MsgResult } from '../protocol';
+import { decodeMessage, encodeResults } from '../protocol';
 import { Transform } from 'stream';
-import net from 'net';
-import { MsgResult, decodeMessage, encodeResults } from '../protocol';
 
 export type MsgAggregate = {
   requestID: number;

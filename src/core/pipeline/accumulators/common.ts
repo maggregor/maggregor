@@ -1,5 +1,9 @@
-import { Accumulator, AccumulatorDefinition, AccumulatorOperator } from '.';
-import { Expression } from '../expressions';
+import type {
+  Accumulator,
+  AccumulatorDefinition,
+  AccumulatorOperator,
+} from '.';
+import type { Expression } from '../expressions';
 import crypto from 'crypto';
 
 export abstract class BaseAccumulator implements Accumulator {

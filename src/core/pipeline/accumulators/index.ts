@@ -1,5 +1,5 @@
-import { CollectionListener } from '@core/index';
-import { Expression } from '../expressions';
+import type { CollectionListener } from '@core/index';
+import type { Expression } from '../expressions';
 import {
   BasicAccumulator,
   SumBasicAccumulator,

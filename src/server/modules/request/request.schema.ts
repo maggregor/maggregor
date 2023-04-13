@@ -1,6 +1,6 @@
+import type { HydratedDocument } from 'mongoose';
+import type { RequestInterface } from './request.interface';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
-import { RequestInterface } from './request.interface';
 
 export type RequestDocument = HydratedDocument<Request>;
 

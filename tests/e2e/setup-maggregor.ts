@@ -6,7 +6,7 @@ export class MaggregorProcess {
     if (process.env.PNPM_HOME === undefined) {
       throw new Error('process.env.PNPM_HOME is undefined');
     }
-    this.process = spawn(`${process.env.PNPM_HOME}/pnpm`, ['start:preview'], {
+    this.process = spawn(`${process.env.PNPM_HOME}/pnpm`, ['preview'], {
       detached: true,
       // stdio: 'ignore',
       env: {

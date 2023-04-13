@@ -1,5 +1,5 @@
 import { MaterializedView } from '@core/materialized-view';
-import { AccumulatorDefinition } from '@core/pipeline/accumulators';
+import type { AccumulatorDefinition } from '@core/pipeline/accumulators';
 import { toHashExpression } from '@core/pipeline/expressions';
 
 describe('MaterializedView', () => {

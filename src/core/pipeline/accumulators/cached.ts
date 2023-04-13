@@ -1,12 +1,7 @@
-import {
-  CachedAccumulator,
-  Value,
-  AccumulatorOperator,
-  AccumulatorDefinition,
-} from '.';
-import { evaluateExpression, Expression } from '../expressions';
+import type { CachedAccumulator, Value, AccumulatorDefinition } from '.';
+import { evaluateExpression } from '../expressions';
 import { BaseAccumulator } from './common';
-import { Document } from '../../index';
+import type { Document } from '@core/index';
 
 abstract class AbstractCachedAccumulator
   extends BaseAccumulator

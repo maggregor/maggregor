@@ -10,7 +10,6 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-.svelte-kit
 
 # OS
 .DS_Store
@@ -27,6 +26,7 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
+.svelte-kit
 
 # IDE - VSCode
 .vscode/*

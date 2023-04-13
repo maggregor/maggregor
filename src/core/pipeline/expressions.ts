@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Document, DocumentFieldValue } from '@core/index';
+import type { Document, DocumentFieldValue } from '@core/index';
 
 /**
  * An expression
@@ -298,6 +298,7 @@ function countExpressionInTree(e: Expression): number {
   }
 
   if (Array.isArray(e.value)) {
+    // @ts-ignore - Fix this
     return e.value.reduce(
       // @ts-ignore - Fix this
       (acc, val) => acc + countExpressionInTree(val as Expression),
