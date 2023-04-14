@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  # Main MongoDB instance on which we want to plug maggregor cache and materialized views
+  mongodb-target:
+    image: mongo
+    restart: always
+    container_name: mongodb-target
+    ports:
+      - 27017:27017
+
+  # MongoDB instance used by maggregor to store metadata about the materialized views
+  mongodb-metadata:
+    image: mongo
+    restart: always
+    container_name: mongodb-metadata
+    ports:
+      - 27018:27017
+
+  # maggregor instance
+  maggregor:
+    build: .
+    restart: always
+    container_name: maggregor
+    ports:
+      - 4000:4000
+      - 3000:3000
+    environment:
+      - MONGODB_TARGET_URI=mongodb://mongodb-target:27017
+      - MONGODB_METADATA_URI=mongodb://mongodb-metadata:27017

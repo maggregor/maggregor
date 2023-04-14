@@ -109,7 +109,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
    * Starts the TcpProxy instance and begins listening for incoming connections.
    */
   start() {
-    this.server.listen(this.options.listenPort, this.options.listenHost, () => {
+    this.server.listen(this.options.listenPort, () => {
       this.emit('listening');
       const port = this.getProxyPort();
       const host = this.getProxyHost();
