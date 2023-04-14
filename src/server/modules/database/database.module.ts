@@ -24,8 +24,6 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
             uri: mongodbUri,
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            useCreateIndex: true,
-            useFindAndModify: false,
           };
         }
       },
