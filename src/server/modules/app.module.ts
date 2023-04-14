@@ -15,13 +15,13 @@ import * as Joi from 'joi';
           .valid('development', 'production', 'test')
           .default('development'),
         PROXY_PORT: Joi.number().default(4000),
-        PROXY_HOST: Joi.string().default('localhost'),
+        HOST: Joi.string().default('localhost'),
         HTTP_PORT: Joi.number().default(3000),
         HTTP_HOST: Joi.string().default('localhost'),
         MONGODB_TARGET_URI: Joi.string()
           .empty('')
           .default('mongodb://localhost:27017'),
-        MONGODB_BACKEND_URI: Joi.string().empty('').optional(),
+        MONGODB_METADATA_URI: Joi.string().empty('').optional(),
       }),
       validationOptions: {
         abortEarly: true,

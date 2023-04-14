@@ -1,14 +1,10 @@
 import { UserConfig, defineConfig } from 'vitest/config';
-import AutoImport from 'unplugin-auto-import/vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [
-    AutoImport({
-      imports: ['vitest'],
-      dts: true,
-    }),
-  ],
+  test: {
+    globals: true,
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

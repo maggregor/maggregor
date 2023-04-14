@@ -21,7 +21,7 @@ beforeAll(async () => {
     process.env.MONGODB_TARGET_URI = mongodbServer.getUri();
   }
   mg.start();
-  const host = process.env.PROXY_HOST;
+  const host = process.env.HOST;
   const port = parseInt(process.env.PROXY_PORT || '27017');
   await waitPort({ host, port });
   const maggreUri = `mongodb://${host}:${port}`;

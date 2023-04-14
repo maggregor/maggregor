@@ -12,7 +12,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        const mongodbUri = config.get<string>('MONGODB_BACKEND_URI');
+        const mongodbUri = config.get<string>('MONGODB_METADATA_URI');
         if (!mongodbUri) {
           const mongoServer = await MongoMemoryServer.create();
           const mongoUri = mongoServer.getUri();
