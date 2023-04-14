@@ -1,10 +1,8 @@
-import { defineConfig } from 'vitest/config';
-import defaultConfig from './vitest.config';
+import { mergeConfig } from 'vitest/config';
+import commonConfig from './vitest.config';
 
-export default defineConfig({
-  ...defaultConfig,
+export default mergeConfig(commonConfig, {
   test: {
-    ...defaultConfig.test,
     include: ['**/tests/unit/**/*.test.ts'],
     hookTimeout: 2000,
     testTimeout: 5000,
