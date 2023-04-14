@@ -1,10 +1,9 @@
-import { MongoMemoryReplSet, MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { beforeAll, afterAll } from 'vitest';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
 import { MaggregorProcess } from './setup-maggregor';
 import { MongoClient } from 'mongodb';
-import { log } from 'console';
 
 config({ path: '.env.test' });
 
@@ -22,7 +21,7 @@ beforeAll(async () => {
   }
   mg.start();
   const host = process.env.HOST;
-  const port = parseInt(process.env.PROXY_PORT || '27017');
+  const port = parseInt(process.env.PROXY_PORT);
   await waitPort({ host, port });
   const maggreUri = `mongodb://${host}:${port}`;
   const mongoUri = process.env.MONGODB_TARGET_URI;

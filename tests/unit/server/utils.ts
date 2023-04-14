@@ -1,3 +1,4 @@
+import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { RequestService } from '@/server/modules/request/request.service';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +12,7 @@ export type TestServiceProxyOptions = {
 
 export async function createProxyServiceTest(opts: TestServiceProxyOptions) {
   const app: TestingModule = await Test.createTestingModule({
+    imports: [LoggerModule],
     providers: [
       MongoDBTcpProxyService,
       {

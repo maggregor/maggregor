@@ -1,10 +1,8 @@
 import { ConfigService } from '@nestjs/config';
-// database.module.ts
-import { Inject, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { MongoMemoryServer } from 'mongodb-memory-server';
-
 @Module({
   imports: [
     ConfigModule,

@@ -4,6 +4,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { RequestService } from '@server/modules/request/request.service';
 import { ConfigService } from '@nestjs/config';
+import { LoggerModule } from '@/server/modules/logger/logger.module';
 
 describe('MongoDBTcpProxyService: with mongodb-memory-server without interception', () => {
   let service: MongoDBTcpProxyService;
@@ -13,6 +14,7 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
   beforeAll(async () => {
     mongodbServer = await MongoMemoryServer.create();
     const app: TestingModule = await Test.createTestingModule({
+      imports: [LoggerModule],
       providers: [
         MongoDBTcpProxyService,
         {
