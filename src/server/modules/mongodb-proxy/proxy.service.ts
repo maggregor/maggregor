@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import {
@@ -13,6 +13,7 @@ import {
   ReplyInterceptorHook,
 } from './interceptors/reply-interceptor';
 import { RequestService } from '../request/request.service';
+import { LoggerService } from '../logger/logger.service';
 
 /**
  * Options for the TcpProxy instance
@@ -66,16 +67,17 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
-  private readonly logger = new Logger(MongoDBTcpProxyService.name);
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
     @Inject(ConfigService) private readonly config: ConfigService,
+    @Inject(LoggerService) private readonly logger: LoggerService,
   ) {
     super();
     this.loadConfig(config);
     this.init();
     this.start();
+    this.logger.setContext('ProxyService');
   }
 
   init() {
@@ -111,10 +113,9 @@ export class MongoDBTcpProxyService extends EventEmitter {
       this.emit('listening');
       const port = this.getProxyPort();
       const host = this.getProxyHost();
-      const targetHost = this.options.targetHost;
-      const targetPort = this.options.targetPort;
-      this.logger.log(`Maggregor's proxy is listening on port ${host}:${port}`);
-      this.logger.log(`Target MongoDB server: ${targetHost}:${targetPort}`);
+      this.logger.success(
+        `Maggregor proxy is now running at: mongodb://${host}:${port}/`,
+      );
     });
   }
 

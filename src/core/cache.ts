@@ -6,6 +6,7 @@ interface CacheItem {
   query: string;
   collection: string;
   db: string;
+  timestamp: number;
 }
 
 export class InMemoryCache {
@@ -36,6 +37,7 @@ export class InMemoryCache {
   set(query: string, collection: string, db: string, result: any): void {
     const key = `${query}-${collection}-${db}`;
     const item_size = sizeof(result);
+    const now = Date.now();
     if (this.currentSize() + item_size > this.max_size) {
       // Sort items in cache by frequency count
       const items = Object.keys(this.cache).map((key) => this.cache[key]);
@@ -52,7 +54,18 @@ export class InMemoryCache {
       query,
       collection,
       db,
+      timestamp: now,
     };
+    // Invalidate items older than 10 minutes
+    const ten_minutes_ago = now - 10 * 60 * 1000;
+    for (const key in this.cache) {
+      if (
+        this.cache.hasOwnProperty(key) &&
+        this.cache[key].timestamp < ten_minutes_ago
+      ) {
+        delete this.cache[key];
+      }
+    }
   }
 
   private currentSize(): number {

@@ -3,6 +3,7 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { ConfigService } from '@nestjs/config';
 import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
+import { LoggerModule } from '@/server/modules/logger/logger.module';
 
 describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
   let service: MongoDBListenerService;
@@ -14,6 +15,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
       replSet: { count: 1, storageEngine: 'wiredTiger' },
     });
     const app: TestingModule = await Test.createTestingModule({
+      imports: [LoggerModule],
       providers: [
         MongoDBListenerService,
         {

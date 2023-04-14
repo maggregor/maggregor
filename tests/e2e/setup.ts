@@ -1,10 +1,9 @@
-import { MongoMemoryReplSet, MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { beforeAll, afterAll } from 'vitest';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
 import { MaggregorProcess } from './setup-maggregor';
 import { MongoClient } from 'mongodb';
-import { log } from 'console';
 
 config({ path: '.env.test' });
 
