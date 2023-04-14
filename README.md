@@ -5,18 +5,18 @@
 
 [![MaggregorCache Tests](https://github.com/estebgonza/maggregordb/actions/workflows/tests.yaml/badge.svg)](#)
 
-## Quick start
+# Quick start
 
-### Docker-compose
+## Docker-compose
 
-#### Prerequisites
+### Prerequisites
 
 Before you begin, make sure you have the following software installed on your machine:
 
 - [Docker](https://docs.docker.com/get-docker/): Install Docker on your machine.
 - [Docker Compose](https://docs.docker.com/compose/install/): Install Docker Compose on your machine.
 
-#### Getting Started
+### Getting Started
 
 To get started, follow these steps:
 
@@ -29,7 +29,7 @@ To get started, follow these steps:
 docker-compose up
 ```
 
-#### Configuration
+### Configuration
 
 The docker-compose.yml file defines three services: mongodb-target, mongodb-metadata, and maggregor. Each service is configured with its own settings, such as image name, container name, ports, and environment variables.
 
@@ -42,41 +42,10 @@ The docker-compose.yml file defines three services: mongodb-target, mongodb-meta
 
 You can configure the application by modifying the docker-compose.yml file according to your requirements. For example, you can change the port mappings or update the environment variables to connect to your own MongoDB instances.
 
-## Directory Structure
+# Directory Structure
 
-| Direcotry    | Description                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `src/core`   | The core database package (cached aggregations)                                                                             |
-| `src/parser` | A MongoDB aggregation query parser [ts-mongo-aggregation-parser](https://github.com/estebgonza/ts-mongo-aggregation-parser) |
-| `src/server` | Proxy the MongoDB Wire Protocol and intercepts Aggregation Pipeline queries                                                 |
-
-## Documentation
-
-### Operators, Stages and Expressions
-
-These are replicated paradigms from MongoDB and are used to evaluate an incoming aggregation pipeline from a MongoDB client.
-
-### BasicAccumulator
-
-`BasicAccumulator` implements basic logic for an accumulator operation.
-The supported operations are: `$min`, `$max`, `$count`, `$sum`, `$avg`.
-
-### CachedAccumulator
-
-`CachedAccumulator` implements logic to cache and update the result of an accumulator operation based on changes in documents.
-The supported operations are: `$min`, `$max`, `$count`, `$sum`, `$avg`.
-In Maggregor they are a part of MaterializedViews, they are used to keep up to date the result of an classic accumulator operation.
-
-### Materialized Views
-
-Materialized views are a way to cache the result of an aggregation pipeline.
-They use `CachedAccumulator` to compute the changed documents and update the cache.
-
-You can check the tests to see how to use them: [materialized-view.test.ts](packages/core/tests/materialized-view.test.ts)
-
-### Expression operators
-
-The expression operators are used to evaluate the value of a property in a pipeline stage.
-The following operator expressions are currently supported: `$add`, `$subtract`, `$multiply`, `$divide`, `$toUpper`, `$toLower`, `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$and`, `$or`, `$not`, `$concat`, `$mod`.
-
-Here the full expression operators supported by MongoDB: [expression operators](https://www.mongodb.com/docs/manual/reference/operator/aggregation/#aggregation-pipeline-operators).
+| Directory | Description                                                                                                   |
+| -------------------- | -------------------------------------------------------------------------------------------------  |
+| `src/core`   | The core database package (cached aggregations)                                                            |
+| `src/parser` | A MongoDB aggregation query parser                                                                         |
+| `src/server` | Proxy the MongoDB Wire Protocol and intercepts Aggregation Pipeline queries                                |
