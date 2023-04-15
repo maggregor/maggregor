@@ -84,18 +84,9 @@ devDependencies:
   '@sachinraja/eslint-config':
     specifier: 0.2.0
     version: 0.2.0(eslint@8.38.0)(typescript@5.0.4)
-  '@semantic-release/commit-analyzer':
-    specifier: ^9.0.2
-    version: 9.0.2(semantic-release@21.0.1)
   '@semantic-release/git':
     specifier: ^10.0.1
     version: 10.0.1(semantic-release@21.0.1)
-  '@semantic-release/npm':
-    specifier: ^10.0.3
-    version: 10.0.3(semantic-release@21.0.1)
-  '@semantic-release/release-notes-generator':
-    specifier: ^10.0.3
-    version: 10.0.3(semantic-release@21.0.1)
   '@types/express':
     specifier: ^4.17.17
     version: 4.17.17
