@@ -9,38 +9,34 @@ on:
       - main
 
 jobs:
-  install:
+  install-pnpm:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Install pnpm
+        run: curl -L https://unpkg.com/@pnpm/self-installer | node
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.x
-          cache: "pnpm"
-
-      - name: Install libssl1.1 for MongoDB Memory Server (tests)
-        run: sudo apt install libssl-dev && echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list && sudo apt-get update && sudo apt-get install libssl1.1
-
-  build:
-    needs: install
+  install-dependencies:
+    needs: install-pnpm
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+  build:
+    needs: install-dependencies
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Build project
         run: pnpm build
 
   test-unit:
-    needs: build
+    needs: install-dependencies
     runs-on: ubuntu-latest
 
     steps:
@@ -48,7 +44,7 @@ jobs:
         run: pnpm test:unit
 
   test-integration:
-    needs: build
+    needs: install-dependencies
     runs-on: ubuntu-latest
 
     steps:
@@ -56,7 +52,7 @@ jobs:
         run: pnpm test:integration
 
   test-e2e:
-    needs: build
+    needs: install-dependencies
     runs-on: ubuntu-latest
 
     steps:
