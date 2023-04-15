@@ -1,8 +1,9 @@
 {
   "branches": [
     "main",
-    "next"
+    "22-release-v01-add-semantic-release"
   ],
+  "dryRun": true,
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
