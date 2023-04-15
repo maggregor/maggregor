@@ -2,22 +2,30 @@ name: Release
 on:
   workflow_dispatch:
 jobs:
-  release:
-    name: Release
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
         with:
-          fetch-depth: 0
-      - name: Setup Node.js
+          version: 8
+
+      - name: Use Node.js 19
         uses: actions/setup-node@v3
         with:
-          node-version: "lts/*"
+          node-version: 19.x
+          cache: "pnpm"
+
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
