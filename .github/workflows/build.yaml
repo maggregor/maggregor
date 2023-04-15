@@ -1,4 +1,4 @@
-name: Tests
+name: Build
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  install:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,17 +28,37 @@ jobs:
       - name: Install libssl1.1 for MongoDB Memory Server (tests)
         run: sudo apt install libssl-dev && echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list && sudo apt-get update && sudo apt-get install libssl1.1
 
+  build:
+    needs: install
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build project
         run: pnpm build
 
+  test-unit:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Run unit tests
         run: pnpm test:unit
 
+  test-integration:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Run integration tests
         run: pnpm test:integration
 
+  test-e2e:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Run e2e tests
         run: pnpm test:e2e
