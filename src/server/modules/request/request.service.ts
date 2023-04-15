@@ -72,7 +72,11 @@ export class RequestService implements MongoDBProxyListener {
   // Event: on result from server
   async onResultFromServer(msg: MsgReply): Promise<void> {
     const requestID = msg.responseTo;
+    console.log('onResultFromServer', requestID);
     const req = await this.findOneByRequestId(requestID);
+    if (!req) {
+      return;
+    }
     req.endAt = new Date();
     await this.updateOne(req);
     this.cacheResults(req, msg.data);

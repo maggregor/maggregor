@@ -1,8 +1,8 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 
-const dbName = 'test';
-const collectionName = 'test';
+const dbName = 'mydb';
+const collectionName = 'mycoll';
 
 MongoMemoryServer.create({
   instance: {
@@ -44,5 +44,6 @@ async function loadTestData(client: MongoClient) {
       testData.push(doc);
     }
     await collection.insertMany(testData);
+    process.stdout.write(`\r${i + batchSize}/${totalDocs}`);
   }
 }
