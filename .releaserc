@@ -3,15 +3,20 @@
     "main",
     "22-release-v01-add-semantic-release"
   ],
-  "dryRun": true,
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": [
-          "dist/**/*.{js,css}",
+          "dist/**/*.{js,css,ts}",
           "docs",
           "package.json"
         ],
