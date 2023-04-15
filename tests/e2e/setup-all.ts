@@ -22,10 +22,10 @@ beforeAll(async () => {
     process.env.MONGODB_TARGET_URI = mongodb.getUri();
   }
   const { host, port } = await maggregor.start();
-  console.log('Maggregor started on', host, port);
+  console.debug('Maggregor started on', host, port);
   const maggreUri = `mongodb://${host}:${port}`;
   const mongoUri = process.env.MONGODB_TARGET_URI || mongodb.getUri();
-  console.log('MongoDB URI:', mongoUri);
+  console.debug('MongoDB URI:', mongoUri);
   const maggreClient = await MongoClient.connect(maggreUri, {
     directConnection: true,
   });

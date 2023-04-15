@@ -19,7 +19,7 @@ export async function loadTestData(
     totalDocs: 10000,
     ...options,
   };
-  console.log(`Loading test data (${opts.totalDocs} docs)...`);
+  console.debug(`Loading test data (${opts.totalDocs} docs)...`);
   const db = client.db(opts.db);
   const collection = db.collection(opts.collection);
   for (let i = 0; i < opts.totalDocs; i += opts.batchSize) {
@@ -48,7 +48,7 @@ export async function loadTestData(
     await collection.insertMany(testData);
     process.stdout.write(`\r${i + opts.batchSize}/${opts.totalDocs}`);
   }
-  console.log('\nTest data loaded');
+  console.debug('\nTest data loaded');
 }
 
 export async function startMongoServer() {
@@ -65,7 +65,7 @@ export async function healthCheck(
   db?: string,
 ) {
   db = db || global.__TEST_DB__;
-  console.log('Running health check on db:', db);
+  console.debug('Running health check on db:', db);
 
   const maggreDb = maggreClient.db(db);
   const mongoDb = mongoClient.db(db);
@@ -101,5 +101,5 @@ export async function healthCheck(
   }
 
   await Promise.all(promises);
-  console.log('Health check passed');
+  console.debug('Health check passed');
 }

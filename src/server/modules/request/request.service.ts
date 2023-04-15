@@ -72,7 +72,6 @@ export class RequestService implements MongoDBProxyListener {
   // Event: on result from server
   async onResultFromServer(msg: MsgReply): Promise<void> {
     const requestID = msg.responseTo;
-    console.log('onResultFromServer', requestID);
     const req = await this.findOneByRequestId(requestID);
     if (!req) {
       return;
@@ -113,7 +112,7 @@ function parsePipeline(pipeline: any): any[] {
   try {
     return parse('[' + objectToString(pipeline[0]) + ']');
   } catch (e) {
-    console.log('Parsing error on pipeline');
+    console.debug('Parsing error on pipeline');
     return [];
   }
 }

@@ -71,19 +71,19 @@ const run = async () => {
       },
     })
     .on('cycle', (e: Event) => {
-      console.log(String(e.target));
+      console.debug(String(e.target));
     })
     .on('complete', function () {
-      console.log('Fastest is ' + this.filter('fastest').map('name'));
+      console.debug('Fastest is ' + this.filter('fastest').map('name'));
     })
     .run({ async: false });
 };
 
 const stopAll = async () => {
-  console.log('Close...');
+  console.debug('Close...');
   maggregor.stop();
   mongodb.stop();
-  console.log('Closed');
+  console.debug('Closed');
 };
 
 process.on('exit', () => stopAll());
