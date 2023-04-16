@@ -32,6 +32,7 @@ jobs:
           pnpm lint
           pnpm build
   unit:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -57,6 +58,7 @@ jobs:
         run: pnpm test:unit
 
   integration:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -83,6 +85,7 @@ jobs:
         run: pnpm test:integration
 
   e2e:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
