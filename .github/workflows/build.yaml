@@ -32,112 +32,14 @@ jobs:
           pnpm lint
           pnpm build
 
-      - name: Create node_modules.zip
-        run: zip -r node_modules.zip node_modules/
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-artifacts
-          path: |
-            dist/
-            node_modules.zip
-
-  unit:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.x
-          cache: "pnpm"
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build-artifacts
-
-      - name: Extract node_modules.zip
-        run: unzip node_modules.zip
-
-      - name: Install & Lint
+      - name: Unit Tests
         run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
+          pnpm test:unit
 
-      - name: Run unit tests
-        run: pnpm test:unit
-
-  integration:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.x
-          cache: "pnpm"
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build-artifacts
-
-      - name: Extract node_modules.zip
-        run: unzip node_modules.zip
-
-      - name: Install & Lint
+      - name: Integration Tests
         run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
+          pnpm test:integration
 
-      - name: Run integration tests
-        run: pnpm test:integration
-
-  e2e:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.x
-          cache: "pnpm"
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: build-artifacts
-
-      - name: Extract node_modules.zip
-        run: unzip node_modules.zip
-
-      - name: Install & Lint
+      - name: E2E Tests
         run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-
-      - name: Run e2e tests
-        run: pnpm test:e2e
+          pnpm test:e2e
