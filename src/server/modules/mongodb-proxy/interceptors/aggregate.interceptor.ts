@@ -54,7 +54,7 @@ export class AggregateInterceptor extends Transform {
         for (const hook of this.hooks) {
           result = await hook(intercepted);
           if (result) {
-            let resultBuffer = encodeResults(result);
+            const resultBuffer = encodeResults(result);
             this.socket.write(resultBuffer);
             callback();
             return;

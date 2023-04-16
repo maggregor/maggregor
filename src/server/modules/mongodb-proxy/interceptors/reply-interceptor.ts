@@ -11,7 +11,6 @@ export type ReplyInterceptorHook = (
   intercepted: InterceptedReply,
 ) => Promise<void>;
 
-let i = 0;
 export class ReplyInterceptor extends PassThrough {
   hooks: ReplyInterceptorHook[];
 

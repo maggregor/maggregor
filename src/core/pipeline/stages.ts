@@ -57,7 +57,8 @@ export class GroupStage {
         if (allDocKeys.includes(acc.getHash())) {
           group[acc.outputFieldName] = docs[0][acc.getHash()];
         } else {
-          // @ts-ignore
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - TODO: Fix this
           group[acc.outputFieldName] = acc.evaluate(docs);
         }
       });

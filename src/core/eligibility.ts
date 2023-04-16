@@ -55,6 +55,7 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     // The check is done on the _id field and not on the other fields.
     const filterExpr = conditions[0];
     // The filter expression must be equal to the materialized view's group expression
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore -  Change by good deepEqual
     if (!deepEqual(filterExpr, mv.getGroupExpression())) return false;
   }

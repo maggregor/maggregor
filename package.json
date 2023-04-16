@@ -20,7 +20,14 @@
     "test:e2e": "vitest run --config ./vitest.e2e.config.ts",
     "test:e2e:watch": "vitest --config ./vitest.e2e.config.ts",
     "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
-    "debug": "pnpm test:e2e tests/e2e/debug.test.ts"
+    "debug": "pnpm test:e2e tests/e2e/debug.test.ts",
+    "lint": "eslint --ext .ts --ignore-path .gitignore .",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "**/*.{js,jsx,ts,tsx,vue}": [
+      "pnpm lint --fix"
+    ]
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",
@@ -64,6 +71,8 @@
     "eslint": "^8.38.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.1",
     "mongodb-memory-server": "^8.12.2",
     "npm-run-all": "4.1.5",
     "prettier": "^2.8.7",
