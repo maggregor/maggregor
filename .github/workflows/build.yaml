@@ -25,7 +25,7 @@ jobs:
           node-version: 19.x
           cache: "pnpm"
 
-      - name: Install & Build & Lint
+      - name: Install, Lint & Build
         run: |
           pnpm install --frozen-lockfile
           pnpm lint

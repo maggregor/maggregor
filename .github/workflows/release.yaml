@@ -1,8 +1,10 @@
 name: Release
+
 on:
   workflow_dispatch:
+
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,11 +20,11 @@ jobs:
           node-version: 19.x
           cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build project
-        run: pnpm build
+      - name: Install, Lint & Build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm build
 
       - name: Release
         env:
