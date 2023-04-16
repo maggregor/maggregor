@@ -30,9 +30,11 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async updateOne(request: Request): Promise<Request> {
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     await this.requestModel.updateOne({ _id: request._id }, request);
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     return this.requestModel.findOne(request._id);
   }
 
@@ -109,7 +111,7 @@ function parsePipeline(pipeline: any): any[] {
   try {
     return parse('[' + objectToString(pipeline[0]) + ']');
   } catch (e) {
-    console.log('Parsing error on pipeline');
+    console.error('Parsing error on pipeline');
     return [];
   }
 }

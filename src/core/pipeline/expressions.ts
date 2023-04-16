@@ -9,7 +9,6 @@ export interface Expression {
   operator?: ExpressionOperator;
   value?: ExpressionValue | ExpressionValue[];
 }
-// deno-lint-ignore no-explicit-any
 export type ExpressionResult = any;
 export type ExpressionValue = number | string | boolean | Expression;
 export type ExpressionOperator =
@@ -246,7 +245,8 @@ export function replaceExpressionByHash(
 
   if (Array.isArray(expression.value)) {
     const args = expression.value.map((arg) =>
-      // @ts-ignore - Fix this
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - TODO: Fix this
       replaceExpressionByHash(arg, hash),
     );
     return {
@@ -298,9 +298,11 @@ function countExpressionInTree(e: Expression): number {
   }
 
   if (Array.isArray(e.value)) {
-    // @ts-ignore - Fix this
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: Fix this
     return e.value.reduce(
-      // @ts-ignore - Fix this
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - TODO: Fix this
       (acc, val) => acc + countExpressionInTree(val as Expression),
       1,
     );

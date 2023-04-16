@@ -42,7 +42,7 @@ export abstract class BaseAccumulator implements Accumulator {
 }
 
 // TODO: Probably costly to do this every time
-export function hash(o: Object): string {
+export function hash(o: object): string {
   const sorted = {};
   Object.keys(o)
     .sort()

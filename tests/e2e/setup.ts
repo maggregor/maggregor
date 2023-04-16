@@ -11,7 +11,7 @@ global.__TEST_DB__ = 'mydb';
 global.__TEST_COLLECTION__ = 'mycoll';
 
 let mongodbServer: MongoMemoryReplSet;
-let mg: MaggregorProcess = new MaggregorProcess();
+const mg: MaggregorProcess = new MaggregorProcess();
 beforeAll(async () => {
   if (!process.env.MONGODB_TARGET_URI) {
     mongodbServer = await MongoMemoryReplSet.create({

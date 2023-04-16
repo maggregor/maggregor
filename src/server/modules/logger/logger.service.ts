@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import { ConsoleLogger, Injectable, Scope } from '@nestjs/common';
 import chalk from 'chalk';
 

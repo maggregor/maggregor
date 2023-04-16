@@ -36,7 +36,8 @@ describe('RequestService (integration)', () => {
 
   const expectRequest = (result: Request, request: Request) => {
     expect(result).toBeDefined();
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: Fix this
     expect(result._id).toBeDefined();
     expect(result.request).toStrictEqual(request.request);
     expect(result.requestID).toStrictEqual(request.requestID);
@@ -148,7 +149,8 @@ describe('RequestService (integration)', () => {
         dbName: 'testDatabase',
       };
       const created = await service.create(request);
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - TODO: Fix this
       const removed = await service.deleteByRequestID(created.requestID);
       expectRequest(removed, request);
       const result = await service.findAll();
