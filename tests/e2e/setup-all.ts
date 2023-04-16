@@ -13,7 +13,7 @@ global.__TEST_DB__ = 'mydb';
 global.__TEST_COLLECTION__ = 'mycoll';
 
 let mongodb: MongoMemoryReplSet;
-let maggregor: MaggregorProcess = new MaggregorProcess();
+let maggregor: MaggregorProcess;
 
 beforeAll(async () => {
   if (!targetMongo) {
@@ -21,7 +21,8 @@ beforeAll(async () => {
     mongodb = await startMongoServer();
     process.env.MONGODB_TARGET_URI = mongodb.getUri();
   }
-  const { host, port } = await maggregor.start();
+  maggregor = await new MaggregorProcess().start();
+  const { host, port } = maggregor.processParams;
   console.debug('Maggregor started on', host, port);
   const maggreUri = `mongodb://${host}:${port}`;
   const mongoUri = process.env.MONGODB_TARGET_URI || mongodb.getUri();

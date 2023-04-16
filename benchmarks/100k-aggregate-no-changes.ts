@@ -12,79 +12,85 @@ const suite = new Benchmark.Suite();
 let maggregor: MaggregorProcess;
 let mongodb: MongoMemoryReplSet;
 
-const aggregate = [
-  {
-    $group: {
-      _id: '$city',
-      count: { $sum: 1 },
-    },
-  },
-];
+const runAggregate = (client: MongoClient) => {
+  return client
+    .db('mydb')
+    .collection('mycoll')
+    .aggregate([
+      {
+        $group: {
+          _id: '$city',
+          count: { $sum: 1 },
+        },
+      },
+    ])
+    .toArray();
+};
 
 const run = async () => {
-  maggregor = new MaggregorProcess();
   mongodb = await startMongoServer();
+  // Will be used by Maggregor
   process.env.MONGODB_TARGET_URI = mongodb.getUri();
-  const { host, port } = await maggregor.start();
+  maggregor = await new MaggregorProcess().start();
+  const { host, port } = maggregor.processParams;
   const maggreUri = `mongodb://${host}:${port}`;
   const mongoUri = mongodb.getUri();
-  const monClient = await MongoClient.connect(mongoUri, {
+  const mongoClient = await MongoClient.connect(mongoUri, {
     maxPoolSize: 1,
   });
-  const magClient = await MongoClient.connect(
-    `mongodb://127.0.0.1:4100/?directConnection=true`,
-    {
-      maxPoolSize: 1,
-    },
-  );
+  const maggreClient = await MongoClient.connect(maggreUri, {
+    directConnection: true,
+    maxPoolSize: 1,
+  });
 
-  await loadTestData(monClient, {
+  await loadTestData(mongoClient, {
     db: 'mydb',
     collection: 'mycoll',
     totalDocs: 100000,
     batchSize: 2000,
   });
-  await healthCheck(magClient, monClient, 'mydb');
+  await healthCheck(maggreClient, mongoClient, 'mydb');
 
-  // Defer the execution of the add methods
-  await suite
+  // Register scenarios
+  suite
     .add('Maggregor + MongoDB', {
       defer: true,
       fn: async (deferred: { resolve: () => void }) => {
-        await magClient
-          .db('mydb')
-          .collection('mycoll')
-          .aggregate(aggregate)
-          .toArray();
+        await runAggregate(maggreClient);
         deferred.resolve();
       },
     })
     .add('MongoDB', {
       defer: true,
       fn: async (deferred: { resolve: () => void }) => {
-        await monClient
-          .db('mydb')
-          .collection('mycoll')
-          .aggregate(aggregate)
-          .toArray();
+        await runAggregate(mongoClient);
         deferred.resolve();
       },
-    })
+    });
+
+  // Listen to events
+  suite
     .on('cycle', (e: Event) => {
       console.debug(String(e.target));
     })
     .on('complete', function () {
       console.debug('Fastest is ' + this.filter('fastest').map('name'));
+      afterAll();
     })
-    .run({ async: false });
+    .on('error', (e: Error) => {
+      console.error(e);
+      afterAll();
+    });
+
+  // Run async
+  suite.run({ async: true });
 };
 
-const stopAll = async () => {
-  console.debug('Close...');
+const afterAll = async () => {
   maggregor.stop();
-  mongodb.stop();
-  console.debug('Closed');
+  await mongodb.stop();
+  process.exit();
 };
 
-process.on('exit', () => stopAll());
+process.on('exit', () => afterAll());
 run();
