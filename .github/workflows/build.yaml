@@ -32,13 +32,16 @@ jobs:
           pnpm lint
           pnpm build
 
+      - name: Create node_modules.zip
+        run: zip -r node_modules.zip node_modules/
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: build-artifacts
           path: |
             dist/
-            node_modules/
+            node_modules.zip
 
   unit:
     needs: build
@@ -61,6 +64,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-artifacts
+
+      - name: Extract node_modules.zip
+        run: unzip node_modules.zip
 
       - name: Install & Lint
         run: |
@@ -92,6 +98,9 @@ jobs:
         with:
           name: build-artifacts
 
+      - name: Extract node_modules.zip
+        run: unzip node_modules.zip
+
       - name: Install & Lint
         run: |
           pnpm install --frozen-lockfile
@@ -121,6 +130,9 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: build-artifacts
+
+      - name: Extract node_modules.zip
+        run: unzip node_modules.zip
 
       - name: Install & Lint
         run: |
