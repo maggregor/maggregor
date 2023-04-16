@@ -5,11 +5,11 @@ import chalk from 'chalk';
 
 config({ path: '.env.test' });
 
-type MProcessParams = { port: number; host: string };
+type MProcessParams = { port?: number; targetUri?: string };
 
 const defaultParams: MProcessParams = {
-  host: 'localhost',
   port: parseInt(process.env.PROXY_PORT),
+  targetUri: process.env.MONGODB_TARGET_URI,
 };
 
 export class MaggregorProcess {
@@ -18,6 +18,8 @@ export class MaggregorProcess {
 
   constructor(params: MProcessParams = defaultParams) {
     this.params = { ...defaultParams, ...params };
+    process.env.MONGODB_TARGET_URI = this.params.targetUri;
+    process.env.PROXY_PORT = this.params.port.toString();
   }
 
   async start() {
@@ -38,13 +40,13 @@ export class MaggregorProcess {
       },
     });
     this.debug('Waiting for server to be ready...');
-    await waitPort({ ...this.params, output: 'silent' });
+    await waitPort({ port: this.params.port, output: 'silent' });
     this.debug('Server started & ready');
     return this;
   }
 
-  get processParams() {
-    return this.params;
+  getUri() {
+    return `mongodb://localhost:${this.params.port}`;
   }
 
   stop() {
@@ -65,4 +67,8 @@ export class MaggregorProcess {
     const { port } = this.params;
     return (await waitPort({ port, timeout, output: 'silent' })).open;
   }
+}
+
+export function startMaggregor(params: MProcessParams = defaultParams) {
+  return new MaggregorProcess(params).start();
 }

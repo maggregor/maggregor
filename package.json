@@ -20,7 +20,8 @@
     "test:e2e": "vitest run --config ./vitest.e2e.config.ts",
     "test:e2e:watch": "vitest --config ./vitest.e2e.config.ts",
     "test:all": "pnpm run test:unit && pnpm run test:integration && pnpm run test:e2e",
-    "debug": "pnpm test:e2e tests/e2e/debug.test.ts"
+    "debug": "pnpm test:e2e tests/e2e/debug.test.ts",
+    "benchmark": "ts-node benchmarks/index.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",

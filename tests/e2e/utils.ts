@@ -19,7 +19,6 @@ export async function loadTestData(
     totalDocs: 10000,
     ...options,
   };
-  console.debug(`Loading test data (${opts.totalDocs} docs)...`);
   const db = client.db(opts.db);
   const collection = db.collection(opts.collection);
   for (let i = 0; i < opts.totalDocs; i += opts.batchSize) {
@@ -46,9 +45,9 @@ export async function loadTestData(
       testData.push(doc);
     }
     await collection.insertMany(testData);
-    process.stdout.write(`\r${i + opts.batchSize}/${opts.totalDocs}`);
+    process.stdout.write(`\rDocs: ${i + opts.batchSize}/${opts.totalDocs}... `);
   }
-  console.debug('\nTest data loaded');
+  process.stdout.write(`done\n`);
 }
 
 export async function startMongoServer() {
