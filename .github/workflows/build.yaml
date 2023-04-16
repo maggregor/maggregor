@@ -13,23 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
-        with:
-          node-version: 19.x
-          cache: "pnpm"
-
-      - name: Install, Lint & Build
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm lint
-          pnpm build
+      - uses: ./.github/workflows/composite-action-setup
 
       - name: Unit Tests
         run: |
