@@ -15,8 +15,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./.github/workflows/composite-build
-
       - name: Unit Tests
         run: |
           pnpm test:unit
