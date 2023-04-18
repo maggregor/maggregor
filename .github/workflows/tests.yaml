@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/workflows/composite-action-setup
+      - uses: ./.github/workflows/composites/setup.yaml
 
       - name: Unit Tests
         run: |
