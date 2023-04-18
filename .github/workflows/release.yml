@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/workflows/composites/setup.yaml
+      - uses: ./.github/workflows/composite-setup
 
       - name: Release
         env:
