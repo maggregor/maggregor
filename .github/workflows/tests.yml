@@ -1,0 +1,29 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite-setup
+
+      - name: Unit Tests
+        run: |
+          pnpm test:unit
+
+      - name: Integration Tests
+        run: |
+          pnpm test:integration
+
+      - name: E2E Tests
+        run: |
+          pnpm test:e2e
