@@ -3,3 +3,11 @@ coverage:
 
   round: down
   precision: 2
+
+ignore:
+  - */tests/.*
+  - */scripts/.*
+  
+
+comment:
+  layout: diff, files
