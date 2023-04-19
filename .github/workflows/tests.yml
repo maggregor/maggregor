@@ -18,7 +18,7 @@ jobs:
 
       - name: Unit Tests
         run: |
-          pnpm test:unit
+          pnpm test:unit:coverage
 
       - name: Integration Tests
         run: |
