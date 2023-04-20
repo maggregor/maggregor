@@ -18,7 +18,7 @@ jobs:
 
       - name: Unit Tests
         run: |
-          pnpm test:unit
+          pnpm test:unit:coverage
 
       - name: Integration Tests
         run: |
@@ -27,3 +27,6 @@ jobs:
       - name: E2E Tests
         run: |
           pnpm test:e2e
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
