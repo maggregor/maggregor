@@ -18,7 +18,8 @@ export class MaggregorProcess {
 
   constructor(params: MProcessParams = defaultParams) {
     this.params = { ...defaultParams, ...params };
-    process.env.MONGODB_TARGET_URI = this.params.targetUri;
+    process.env.MONGODB_TARGET_URI =
+      this.params.targetUri || process.env.MONGODB_TARGET_URI;
     process.env.PROXY_PORT = this.params.port.toString();
   }
 
