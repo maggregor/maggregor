@@ -31,9 +31,10 @@ export class MaggregorProcess {
     if (process.env.PNPM_HOME === undefined) {
       throw new Error('process.env.PNPM_HOME is undefined');
     }
+    console.log('Target for Maggregor:', process.env.MONGODB_TARGET_URI);
     this.process = spawn(`${process.env.PNPM_HOME}/pnpm`, ['preview'], {
-      detached: true,
-      // stdio: 'ignore',
+      detached: false,
+      stdio: 'inherit',
       env: {
         ...process.env,
         NODE_ENV: 'test',

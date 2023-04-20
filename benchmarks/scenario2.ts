@@ -5,7 +5,7 @@ const scenario: MaggregorBenchmarkScenario = {
   name: '500k-find',
   description: '500k documents, no changes',
   data: {
-    start: 500000,
+    start: 50000,
   },
   run: async (client: MongoClient, db: string, collection: string) => {
     await client

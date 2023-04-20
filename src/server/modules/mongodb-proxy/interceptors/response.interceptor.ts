@@ -1,17 +1,16 @@
 import { PassThrough } from 'stream';
 import { OP_MSG, decodeMessage } from '../protocol';
 
-export type InterceptedReply = {
+export type InterceptedResponse = {
   requestID: number;
   responseTo: number;
   data: any;
 };
 
 export type ReplyInterceptorHook = (
-  intercepted: InterceptedReply,
+  intercepted: InterceptedResponse,
 ) => Promise<void>;
 
-let i = 0;
 export class ReplyInterceptor extends PassThrough {
   hooks: ReplyInterceptorHook[];
 
@@ -26,7 +25,7 @@ export class ReplyInterceptor extends PassThrough {
 
   async _transform(
     chunk: Uint8Array,
-    encoding: unknown,
+    _encoding: unknown,
     callback: (err?: Error) => void,
   ): Promise<void> {
     const buffer = Buffer.from(chunk);
@@ -39,7 +38,7 @@ export class ReplyInterceptor extends PassThrough {
         msg.contents.sections.length > 0 &&
         msg.contents.sections[0].payload.hasOwnProperty('cursor')
       ) {
-        const intercepted: InterceptedReply = {
+        const intercepted: InterceptedResponse = {
           requestID,
           responseTo,
           data: msg.contents.sections[0].payload.cursor.firstBatch,

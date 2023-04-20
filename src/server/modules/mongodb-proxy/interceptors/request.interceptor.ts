@@ -3,20 +3,20 @@ import type { MsgResult } from '../protocol';
 import { decodeMessage, encodeResults } from '../protocol';
 import { Transform } from 'stream';
 
-export type MsgAggregate = {
+export type MsgRequest = {
   requestID: number;
   dbName: string;
   collectionName: string;
   pipeline: any[];
 };
 
-export type AggregateInterceptorHook = (
-  intercepted: MsgAggregate,
+export type RequestInterceptorHook = (
+  intercepted: MsgRequest,
 ) => Promise<MsgResult>;
 
-export class AggregateInterceptor extends Transform {
+export class RequestInterceptor extends Transform {
   socket: net.Socket;
-  hooks: AggregateInterceptorHook[];
+  hooks: RequestInterceptorHook[];
 
   constructor(socket: net.Socket) {
     super();
@@ -24,7 +24,7 @@ export class AggregateInterceptor extends Transform {
     this.hooks = [];
   }
 
-  registerHook(hook: AggregateInterceptorHook): void {
+  registerHook(hook: RequestInterceptorHook): void {
     hook && this.hooks.push(hook);
   }
 
@@ -42,7 +42,7 @@ export class AggregateInterceptor extends Transform {
       const collectionName = payload.aggregate;
       const dbName = payload.$db;
       if (pipeline) {
-        const intercepted: MsgAggregate = {
+        const intercepted: MsgRequest = {
           requestID,
           dbName,
           collectionName,
