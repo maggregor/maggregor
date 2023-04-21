@@ -38,7 +38,7 @@ jobs:
           # Push benchmark results to gh-pages branch
           auto-push: true
 
-      - name: Store benchmark result
+      - name: Store benchmark result 2
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: "Find on 10k items"
