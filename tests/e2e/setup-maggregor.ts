@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import waitPort from 'wait-port';
 import { config } from 'dotenv';
 import chalk from 'chalk';
+import logger from '../__utils__/logger';
 
 config({ path: '.env.test' });
 
@@ -32,10 +33,10 @@ export class MaggregorProcess {
     if (process.env.PNPM_HOME === undefined) {
       throw new Error('process.env.PNPM_HOME is undefined');
     }
-    console.log('Target for Maggregor:', process.env.MONGODB_TARGET_URI);
     this.process = spawn(`${process.env.PNPM_HOME}/pnpm`, ['preview'], {
-      detached: false,
-      stdio: 'inherit',
+      // Must to be detached=true to kill the process tree
+      detached: true,
+      stdio: 'ignore',
       env: {
         ...process.env,
         NODE_ENV: 'test',
@@ -57,11 +58,11 @@ export class MaggregorProcess {
   }
 
   debug(msg: string) {
-    console.debug(chalk.gray(`MAGGREGOR > ${msg}`));
+    logger.debug(chalk.gray(`[Maggregor] ${msg}`));
   }
 
   warn(msg: string) {
-    console.warn(chalk.yellow(`MAGGREGOR > ${msg}`));
+    logger.warn(chalk.yellow(`[Maggregor] ${msg}`));
   }
 
   async processAlreadyStarted(): Promise<boolean> {

@@ -4,6 +4,7 @@ import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess, startMaggregor } from '../tests/e2e/setup-maggregor';
 import { loadTestData, startMongoServer } from '../tests/e2e/utils';
+import logger from '../tests/__utils__/logger';
 
 const COLLECTION = 'mycoll';
 const DATABASE = 'mydb';
@@ -16,14 +17,14 @@ export async function runBenchmarks(scenarios: MaggregorBenchmarkScenario[]) {
   maggregor = await startMaggregor({ targetUri: mongodb.getUri() });
   for (const s of scenarios) {
     await new Promise<void>(async (resolve) => {
-      console.log(`> Prepare benchmark: ${s.name} (${s.description})`);
+      logger.debug(`Prepare benchmark: ${s.name} (${s.description})`);
       await setup(s);
       const suite = await createBenchmarkSuite(s);
-      console.log(`> Starting benchmark: ${s.name}`);
-      suite.run({ async: true });
+      logger.debug(`Starting benchmark: ${s.name}`);
+      suite.run({ async: false });
       suite.on('complete', () => {
         resolve();
-        console.log(`> Finished benchmark: ${s.name}`);
+        logger.debug(`Finished benchmark: ${s.name}`);
       });
     });
   }
@@ -51,24 +52,32 @@ async function createBenchmarkSuite(
     },
   });
   suite.on('cycle', (e: Event) => {
-    console.debug(String(e.target));
+    logger.info(String(e.target));
   });
   suite.on('complete', function (this: Benchmark.Suite) {
     const results = this.filter('fastest');
+    const first = this['0'];
+    const second = this['1'];
+    const diffPercent = (1 - first.hz / second.hz) * 100;
     if (results.length > 1) {
-      console.log('No clear winner found');
-      return;
+      logger.warn('The both ways are equally fast.');
+    } else if (diffPercent < 10) {
+      logger.warn(
+        `The difference is not significant: ${
+          first.name
+        } is ${diffPercent.toFixed(2)}% faster than ${second.name}.`,
+      );
+    } else {
+      logger.debug("The fastest is '" + results.map('name') + "'.");
     }
-    console.log('Fastest is ' + results.map('name'));
   });
   return suite;
 }
 
 async function setup(scenario: MaggregorBenchmarkScenario) {
   const client = await createClient(mongodb.getUri());
-  console.log(`Cleaning collection ${COLLECTION}`);
+  logger.debug(`Cleaning collection ${COLLECTION}`);
   await cleanCollection();
-  console.log(`Loading ${scenario.data.start} documents`);
   await loadTestData(client, {
     collection: COLLECTION,
     db: DATABASE,

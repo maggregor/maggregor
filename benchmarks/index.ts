@@ -2,6 +2,22 @@ import { MongoClient } from 'mongodb';
 import { runBenchmarks } from './runner';
 import scenario1 from './scenario1';
 import scenario2 from './scenario2';
+import logger from '../tests/__utils__/logger';
+import yargs from 'yargs';
+import winston from 'winston';
+
+const argv = yargs
+  .option('ci', {
+    description: 'Execute in CI mode',
+    type: 'boolean',
+    default: false,
+  })
+  .option('name', {
+    alias: 'n',
+    description: 'Name of the benchmark to run',
+  })
+  .help()
+  .alias('help', 'h').argv;
 
 export type DataContext = {
   start: number;
@@ -22,15 +38,20 @@ export const allBenchmarks: MaggregorBenchmarkScenario[] = [
   scenario2,
 ];
 
-const filter = process.argv[2];
-const toRun = allBenchmarks.filter((b) => (filter ? b.name === filter : true));
-
-if (toRun.length === 0) {
-  console.log('No benchmarks found');
-  process.exit(1);
+if (argv.ci) {
+  logger.level = 'info';
+  logger.format = winston.format.combine(
+    winston.format.printf((info) => info.message),
+  );
 }
 
-const names = toRun.map((b) => b.name).join(', ');
-console.log(`${toRun.length} benchmark(s) found: ${names}.`);
+const toRun = argv.name
+  ? allBenchmarks.filter((s) => s.name === argv.name)
+  : allBenchmarks;
+
+if (toRun.length === 0) {
+  logger.error('No benchmarks found');
+  process.exit(1);
+}
 
 runBenchmarks(toRun);
