@@ -4,6 +4,13 @@ on:
   pull_request:
     branches:
       - main
+
+permissions:
+  # deployments permission to deploy GitHub pages website
+  deployments: write
+  # contents permission to update benchmark contents in gh-pages branch
+  contents: write
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
@@ -25,6 +32,7 @@ jobs:
           # Enable alert commit comment
           comment-on-alert: true
           output-file-path: "benchmarks/.results/10k-aggregate.txt"
-
           # Enable Job Summary for PRs
           summary-always: true
+          # Push benchmark results to gh-pages branch
+          auto-push: true
