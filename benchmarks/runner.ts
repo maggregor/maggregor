@@ -16,7 +16,7 @@ let maggregor: MaggregorProcess;
 
 export async function runBenchmarks(
   scenarios: MaggregorBenchmarkScenario[],
-  output: boolean,
+  flush: boolean,
 ) {
   mongodb = await startMongoServer();
   maggregor = await startMaggregor({ targetUri: mongodb.getUri() });
@@ -31,9 +31,11 @@ export async function runBenchmarks(
         logger.info(String(event.target));
       });
       suite.on('complete', function (this: Benchmark.Suite) {
-        flushResults(s.name, this);
-        resolve();
+        if (flush) {
+          flushResults(s.name, this);
+        }
         logger.debug(`Finished benchmark: ${s.name}`);
+        resolve();
       });
     });
   }

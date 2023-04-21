@@ -6,10 +6,10 @@ import logger from '../tests/__utils__/logger';
 import yargs from 'yargs';
 
 const argv = yargs
-  .option('output', {
-    alias: 'o',
+  .option('flush', {
+    alias: 'f',
     type: 'boolean',
-    description: 'Enable output results to file',
+    description: 'Enable results flushing to disk',
     default: false,
   })
   .option('name', {
@@ -47,4 +47,4 @@ if (toRun.length === 0) {
   process.exit(1);
 }
 
-runBenchmarks(toRun, argv.output);
+runBenchmarks(toRun, argv.flush);
