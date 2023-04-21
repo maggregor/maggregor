@@ -25,7 +25,7 @@ jobs:
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Aggregate on 10k items"
+          name: "Benchmark"
           tool: "benchmarkjs"
           fail-on-alert: true
           # GitHub API token to make a commit comment
@@ -41,7 +41,7 @@ jobs:
       - name: Store benchmark result 2
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Find on 10k items"
+          name: "Benchmark"
           tool: "benchmarkjs"
           fail-on-alert: true
           # GitHub API token to make a commit comment
