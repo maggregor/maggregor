@@ -58,7 +58,7 @@ describe('AggregateInterceptor', () => {
     const buffer = encodeMessage(EXAMPLE_MSG);
     interceptor.pipe(
       new PassThrough({
-        transform(chunk: any, encoding: any, callback: any) {
+        transform(chunk: any) {
           expect(chunk).toEqual(buffer);
         },
       }),
@@ -72,7 +72,7 @@ describe('AggregateInterceptor', () => {
     const buffer = encodeMessage(EXAMPLE_MSG);
     interceptor.pipe(
       new PassThrough({
-        transform(chunk: any, encoding: any, callback: any) {
+        transform(chunk: any) {
           expect(chunk).toEqual(buffer);
         },
       }),
@@ -97,7 +97,7 @@ describe('AggregateInterceptor', () => {
     const buffer = encodeMessage(EXAMPLE_MSG);
     interceptor.pipe(
       new PassThrough({
-        transform(chunk: any, encoding: any, callback: any) {
+        transform(chunk: any) {
           expect(chunk).toEqual(encodeResults(result));
         },
       }),

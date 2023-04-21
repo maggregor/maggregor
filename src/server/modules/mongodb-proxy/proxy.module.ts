@@ -1,4 +1,4 @@
-import { Module, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongoDBTcpProxyService } from './proxy.service';
 import { RequestModule } from '../request/request.module';

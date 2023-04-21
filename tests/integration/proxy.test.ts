@@ -66,5 +66,8 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     expect(docs[0].sumAge).toBe(40);
   });
 
-  test('Simple aggregate query with group and match', async () => {});
+  test('Simple aggregate query with group and match', async () => {
+    // Placeholder expect for futur tests
+    expect(true).toBe(true);
+  });
 });

@@ -30,9 +30,11 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async updateOne(request: Request): Promise<Request> {
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     await this.requestModel.updateOne({ _id: request._id }, request);
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     return this.requestModel.findOne(request._id);
   }
 

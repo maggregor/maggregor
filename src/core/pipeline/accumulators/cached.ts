@@ -148,7 +148,7 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
 }
 
 export class CountCachedAccumulator extends AbstractCachedAccumulator {
-  protected __cachedValue: number = 0;
+  protected __cachedValue = 0;
 
   constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('count', definition);

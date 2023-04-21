@@ -2,7 +2,6 @@ import { isEligible } from '@core/eligibility';
 import { MaterializedView } from '@core/materialized-view';
 import {
   CountBasicAccumulator,
-  AvgBasicAccumulator,
   AccumulatorDefinition,
 } from '@core/pipeline/accumulators';
 import { toHashExpression } from '@core/pipeline/expressions';
