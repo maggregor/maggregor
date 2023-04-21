@@ -25,3 +25,6 @@ jobs:
           # Enable alert commit comment
           comment-on-alert: true
           output-file-path: "benchmarks/.results/10k-aggregate.txt"
+
+          # Enable Job Summary for PRs
+          summary-always: true
