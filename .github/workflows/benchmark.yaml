@@ -1,19 +1,22 @@
 name: Release
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 jobs:
-  release:
+  benchmark:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite-setup
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+      - name: Run benchmark
+        run: pnpm benchmark --name 10k-aggregate --output
 
-      - name: Use Node.js 19
-        uses: actions/setup-node@v3
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
         with:
-          node-version: 19.x
-          cache: "pnpm"
+          tool: "benchmarkjs"
+          output-file-path: "benchmarks/.results/10k-aggregate.txt"

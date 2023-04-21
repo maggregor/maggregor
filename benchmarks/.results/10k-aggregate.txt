@@ -1,0 +1,2 @@
+MongoDB x 36.42 ops/sec ±2.16% (85 runs sampled)
+MongoDB with Maggregor x 397 ops/sec ±57.05% (72 runs sampled)

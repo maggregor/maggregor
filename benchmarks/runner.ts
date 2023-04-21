@@ -5,14 +5,19 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess, startMaggregor } from '../tests/e2e/setup-maggregor';
 import { loadTestData, startMongoServer } from '../tests/e2e/utils';
 import logger from '../tests/__utils__/logger';
+import fs from 'fs';
 
 const COLLECTION = 'mycoll';
 const DATABASE = 'mydb';
+const OUTPUT_DIR = 'benchmarks/.results';
 
 let mongodb: MongoMemoryReplSet;
 let maggregor: MaggregorProcess;
 
-export async function runBenchmarks(scenarios: MaggregorBenchmarkScenario[]) {
+export async function runBenchmarks(
+  scenarios: MaggregorBenchmarkScenario[],
+  output: boolean,
+) {
   mongodb = await startMongoServer();
   maggregor = await startMaggregor({ targetUri: mongodb.getUri() });
   for (const s of scenarios) {
@@ -22,7 +27,11 @@ export async function runBenchmarks(scenarios: MaggregorBenchmarkScenario[]) {
       const suite = await createBenchmarkSuite(s);
       logger.debug(`Starting benchmark: ${s.name}`);
       suite.run({ async: false });
-      suite.on('complete', () => {
+      suite.on('cycle', (event: Benchmark.Event) => {
+        logger.info(String(event.target));
+      });
+      suite.on('complete', function (this: Benchmark.Suite) {
+        flushResults(s.name, this);
         resolve();
         logger.debug(`Finished benchmark: ${s.name}`);
       });
@@ -51,15 +60,12 @@ async function createBenchmarkSuite(
       deferred.resolve();
     },
   });
-  suite.on('cycle', (e: Event) => {
-    logger.info(String(e.target));
-  });
   suite.on('complete', function (this: Benchmark.Suite) {
-    const results = this.filter('fastest');
-    const first = this['0'];
-    const second = this['1'];
+    const benchs = this.filter('successful');
+    const first = benchs[0];
+    const second = benchs[1];
     const diffPercent = (1 - first.hz / second.hz) * 100;
-    if (results.length > 1) {
+    if (this.filter('fastest').length > 1) {
       logger.warn('The both ways are equally fast.');
     } else if (diffPercent < 10) {
       logger.warn(
@@ -68,7 +74,7 @@ async function createBenchmarkSuite(
         } is ${diffPercent.toFixed(2)}% faster than ${second.name}.`,
       );
     } else {
-      logger.debug("The fastest is '" + results.map('name') + "'.");
+      logger.info("The fastest is '" + benchs.map('name') + "'.");
     }
   });
   return suite;
@@ -102,4 +108,27 @@ function createClient(uri: string) {
     maxPoolSize: 1,
     directConnection: true,
   });
+}
+
+function flushResults(scenarioName: string, suite: Benchmark.Suite) {
+  const benchs = suite.filter('successful');
+  const filename = `${scenarioName}.txt`;
+  const filepath = `${OUTPUT_DIR}/${filename}`;
+
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR);
+  }
+
+  if (fs.existsSync(filepath)) {
+    fs.unlinkSync(filepath);
+  }
+
+  benchs.forEach((bench: Benchmark) => {
+    // This format is compatible with our GitHub Action workflow
+    // https://github.com/benchmark-action/github-action-benchmark
+    const fmtResult = String(bench);
+    fs.appendFileSync(filepath, fmtResult + '\n');
+  });
+
+  logger.debug(`Benchmark results saved in ${filepath}`);
 }

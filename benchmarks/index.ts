@@ -4,12 +4,12 @@ import scenario1 from './scenario1';
 import scenario2 from './scenario2';
 import logger from '../tests/__utils__/logger';
 import yargs from 'yargs';
-import winston from 'winston';
 
 const argv = yargs
-  .option('ci', {
-    description: 'Execute in CI mode',
+  .option('output', {
+    alias: 'o',
     type: 'boolean',
+    description: 'Enable output results to file',
     default: false,
   })
   .option('name', {
@@ -38,13 +38,6 @@ export const allBenchmarks: MaggregorBenchmarkScenario[] = [
   scenario2,
 ];
 
-if (argv.ci) {
-  logger.level = 'info';
-  logger.format = winston.format.combine(
-    winston.format.printf((info) => info.message),
-  );
-}
-
 const toRun = argv.name
   ? allBenchmarks.filter((s) => s.name === argv.name)
   : allBenchmarks;
@@ -54,4 +47,4 @@ if (toRun.length === 0) {
   process.exit(1);
 }
 
-runBenchmarks(toRun);
+runBenchmarks(toRun, argv.output);
