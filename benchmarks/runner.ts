@@ -76,7 +76,9 @@ async function createBenchmarkSuite(
         } is ${diffPercent.toFixed(2)}% faster than ${second.name}.`,
       );
     } else {
-      logger.info("The fastest is '" + benchs.map('name') + "'.");
+      logger.info(
+        "The fastest is '" + this.filter('fastest').map('name') + "'.",
+      );
     }
   });
   return suite;
