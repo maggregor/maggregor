@@ -20,7 +20,7 @@ jobs:
       - uses: ./.github/workflows/composite-setup
 
       - name: Run benchmark
-        run: pnpm benchmark --flush
+        run: pnpm benchmark --name 10k-aggregate --flush
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
@@ -33,22 +33,6 @@ jobs:
           # Enable alert commit comment
           comment-on-alert: true
           output-file-path: "benchmarks/.results/10k-aggregate.txt"
-          # Enable Job Summary for PRs
-          summary-always: true
-          # Push benchmark results to gh-pages branch
-          auto-push: true
-
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          namel: "Find on 10k items"
-          tool: "benchmarkjs"
-          fail-on-alert: true
-          # GitHub API token to make a commit comment
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Enable alert commit comment
-          comment-on-alert: true
-          output-file-path: "benchmarks/.results/10k-find.txt"
           # Enable Job Summary for PRs
           summary-always: true
           # Push benchmark results to gh-pages branch
