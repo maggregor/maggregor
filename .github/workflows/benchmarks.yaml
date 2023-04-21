@@ -25,14 +25,14 @@ jobs:
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Benchmark"
+          name: Aggregate Benchmark
           tool: "benchmarkjs"
           fail-on-alert: true
           # GitHub API token to make a commit comment
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Enable alert commit comment
           comment-on-alert: true
-          output-file-path: "benchmarks/.results/10k-aggregate.txt"
+          output-file-path: benchmarks/.results/10k-aggregate.txt
           # Enable Job Summary for PRs
           summary-always: true
           # Push benchmark results to gh-pages branch
@@ -41,14 +41,14 @@ jobs:
       - name: Store benchmark result 2
         uses: benchmark-action/github-action-benchmark@v1
         with:
-          name: "Benchmark"
+          name: Find Benchmark
           tool: "benchmarkjs"
           fail-on-alert: true
           # GitHub API token to make a commit comment
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # Enable alert commit comment
           comment-on-alert: true
-          output-file-path: "benchmarks/.results/10k-find.txt"
+          output-file-path: benchmarks/.results/10k-find.txt
           # Enable Job Summary for PRs
           summary-always: true
           # Push benchmark results to gh-pages branch
