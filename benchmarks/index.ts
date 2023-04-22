@@ -1,4 +1,4 @@
-import { Double, MongoClient } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import { runBenchmarks } from './runner';
 import scenario1 from './aggregate.scenario';
 import scenario2 from './find.scenario';
