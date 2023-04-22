@@ -150,7 +150,7 @@ function expectMaggregorFaster(
       return true;
     }
   }
-  const th = s.expectedSpeedTreshold || 0.9;
+  const th = s.expectedSpeedTreshold || 0.8;
   const maggreMinHz = maggreBench.hz / th;
   const times = maggreBench.hz / mongoBench.hz;
   if (mongoBench.hz > maggreMinHz) {

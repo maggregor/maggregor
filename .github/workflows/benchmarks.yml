@@ -29,7 +29,7 @@ jobs:
       - name: Run benchmark
         run: |
           if [ "${{ github.event.inputs.tests }}" != "Run all scenarios" ]; then
-            pnpm benchmark --flush --name="${{ github.event.inputs.tests }}"
+            pnpm benchmark --docs 100000 --flush --name="${{ github.event.inputs.tests }}"
           else
-            pnpm benchmark --flush
+            pnpm benchmark --docs 100000  --flush
           fi
