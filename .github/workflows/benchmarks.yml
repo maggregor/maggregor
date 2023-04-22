@@ -22,18 +22,20 @@ jobs:
       - name: Run benchmark
         run: pnpm benchmark --flush
 
-      - name: Store benchmark result
+      - name: Get filenames
+        run: echo "::set-output name=filenames::$(ls -d ./benchmarks/.results/*)"
+
+      - name: Run benchmark action
+        id: benchmark
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Aggregate Benchmark
           tool: "benchmarkjs"
           fail-on-alert: true
-          # GitHub API token to make a commit comment
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Enable alert commit comment
           comment-on-alert: true
-          output-file-path: benchmarks/.results/10k-aggregate.txt
-          # Enable Job Summary for PRs
+          output-file-path: ${{ each filename in steps.get_filenames.outputs.filenames }}${{ filename }}
+          benchmark-data-dir-path: ${{ each filename in steps.get_filenames.outputs.filenames }}${{ basename(filename, '.txt') }}
           summary-always: true
-          # Push benchmark results to gh-pages branch
           auto-push: true
+          loop: ${{ steps.get_filenames.outputs.filenames }}
