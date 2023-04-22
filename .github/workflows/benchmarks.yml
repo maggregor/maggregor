@@ -6,9 +6,7 @@ on:
       - main
 
 permissions:
-  # deployments permission to deploy GitHub pages website
   deployments: write
-  # contents permission to update benchmark contents in gh-pages branch
   contents: write
 
 jobs:
@@ -22,11 +20,7 @@ jobs:
       - name: Run benchmark
         run: pnpm benchmark --flush
 
-      - name: Get filenames
-        run: echo "::set-output name=filenames::$(ls -d ./benchmarks/.results/*)"
-
-      - name: Run benchmark action
-        id: benchmark
+      - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: Aggregate Benchmark
@@ -34,8 +28,8 @@ jobs:
           fail-on-alert: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           comment-on-alert: true
-          output-file-path: ${{ each filename in steps.get_filenames.outputs.filenames }}${{ filename }}
-          benchmark-data-dir-path: ${{ each filename in steps.get_filenames.outputs.filenames }}${{ basename(filename, '.txt') }}
+          output-file-path: benchmarks/.results/10k-aggregate.txt
+          extra-output-file-paths: |
+            benchmarks/.results/10k-find.txt
           summary-always: true
           auto-push: true
-          loop: ${{ steps.get_filenames.outputs.filenames }}
