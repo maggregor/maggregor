@@ -14,32 +14,44 @@ const OUTPUT_DIR = 'benchmarks/.results';
 let mongodb: MongoMemoryReplSet;
 let maggregor: MaggregorProcess;
 
+export type RunnerOptions = {
+  totalDocs: number;
+  flushResults: boolean;
+};
+
 export async function runBenchmarks(
   scenarios: MaggregorBenchmarkScenario[],
-  flush: boolean,
+  opts: RunnerOptions,
 ) {
   mongodb = await startMongoServer();
   maggregor = await startMaggregor({ targetUri: mongodb.getUri() });
+  const totalScenarios = scenarios.length;
+  let totalScenariosSuccessed = 0;
   for (const s of scenarios) {
     await new Promise<void>(async (resolve) => {
-      logger.debug(`Prepare benchmark: ${s.name} (${s.description})`);
-      await setup(s);
+      logger.debug(`Prepare benchmark: '${s.name}' (${s.description})`);
+      await setup(s, opts);
       const suite = await createBenchmarkSuite(s);
-      logger.debug(`Starting benchmark: ${s.name}`);
-      suite.run({ async: false });
+      logger.debug(`Starting benchmark: '${s.name}'`);
       suite.on('cycle', (event: Benchmark.Event) => {
         logger.info(String(event.target));
       });
       suite.on('complete', function (this: Benchmark.Suite) {
-        if (flush) {
+        if (opts.flushResults) {
           flushResults(s.name, this);
         }
-        logger.debug(`Finished benchmark: ${s.name}`);
+        if (expectMaggregorFaster(s, this)) {
+          totalScenariosSuccessed++;
+        }
+        logger.debug(`Finished benchmark: '${s.name}'`);
         resolve();
       });
+      suite.run({ async: true });
     });
   }
-  stopAll();
+  const exitCode = totalScenariosSuccessed < totalScenarios ? 1 : 0;
+  logger.info(`Success rate: ${totalScenariosSuccessed}/${totalScenarios}`);
+  stopAll(exitCode);
 }
 
 async function createBenchmarkSuite(
@@ -55,43 +67,27 @@ async function createBenchmarkSuite(
     },
   });
   const maggregorClient = await createClient(maggregor.getUri());
-  suite.add('MongoDB with Maggregor', {
+  suite.add('Maggregor x MongoDB', {
     defer: true,
     fn: async (deferred: { resolve: () => void }) => {
       await s.run(maggregorClient, DATABASE, COLLECTION);
       deferred.resolve();
     },
   });
-  suite.on('complete', function (this: Benchmark.Suite) {
-    const benchs = this.filter('successful');
-    const first = benchs[0];
-    const second = benchs[1];
-    const diffPercent = (1 - first.hz / second.hz) * 100;
-    if (this.filter('fastest').length > 1) {
-      logger.warn('The both ways are equally fast.');
-    } else if (diffPercent < 10) {
-      logger.warn(
-        `The difference is not significant: ${
-          first.name
-        } is ${diffPercent.toFixed(2)}% faster than ${second.name}.`,
-      );
-    } else {
-      logger.info(
-        "The fastest is '" + this.filter('fastest').map('name') + "'.",
-      );
-    }
-  });
   return suite;
 }
 
-async function setup(scenario: MaggregorBenchmarkScenario) {
+async function setup(
+  scenario: MaggregorBenchmarkScenario,
+  opts: RunnerOptions,
+) {
   const client = await createClient(mongodb.getUri());
-  logger.debug(`Cleaning collection ${COLLECTION}`);
+  logger.debug(`Cleaning collection '${COLLECTION}'`);
   await cleanCollection();
   await loadTestData(client, {
     collection: COLLECTION,
     db: DATABASE,
-    totalDocs: scenario.data.start,
+    totalDocs: opts.totalDocs,
   });
 }
 
@@ -100,11 +96,11 @@ async function cleanCollection() {
   return client.db(DATABASE).collection(COLLECTION).deleteMany({});
 }
 
-function stopAll() {
+function stopAll(exitCode = 0) {
   mongodb?.stop();
   maggregor?.stop();
   // I don't know why, but the process doesn't exit without this
-  process.exit(0);
+  process.exit(exitCode);
 }
 
 function createClient(uri: string) {
@@ -135,4 +131,39 @@ function flushResults(scenarioName: string, suite: Benchmark.Suite) {
   });
 
   logger.debug(`Benchmark results saved in ${filepath}`);
+}
+
+// Return true if Maggregor is faster than expected
+function expectMaggregorFaster(
+  s: MaggregorBenchmarkScenario,
+  suite: Benchmark.Suite,
+): boolean {
+  const benchs = suite.filter('successful');
+  const fastestBenchs = benchs.filter('fastest');
+  const mongoBench = benchs[0];
+  const maggreBench = benchs[1];
+  const mustBeFaster = !!s.expectedSpeedTreshold;
+  if (fastestBenchs.length > 1) {
+    logger.warn('The both ways are equally fast.');
+    if (!mustBeFaster) {
+      // Everything is fine if we don't expect Maggregor to be faster.
+      return true;
+    }
+  }
+  const th = s.expectedSpeedTreshold || 0.9;
+  const maggreMinHz = maggreBench.hz / th;
+  const times = maggreBench.hz / mongoBench.hz;
+  if (mongoBench.hz > maggreMinHz) {
+    let baseMessage = 'Maggregor is slower than expected. ';
+    if (times < 1) {
+      baseMessage += `Expected: ${th}x faster but got ${1 - times}x slower.`;
+    } else {
+      baseMessage += `Expected: ${th}x faster but got only ${times}x faster.`;
+    }
+    logger.error(baseMessage);
+    return false;
+  } else {
+    logger.info(`Maggregor fast enough: ${maggreBench.hz.toFixed(2)}x faster`);
+  }
+  return true;
 }

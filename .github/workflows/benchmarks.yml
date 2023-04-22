@@ -1,6 +1,15 @@
 name: Benchmarks
 on:
   workflow_dispatch:
+    inputs:
+      tests:
+        type: choice
+        description: Scenarios
+        options:
+          - Run all scenarios
+          - Run 'find' scenario
+          - Run 'aggregate' scenario
+
   pull_request:
     branches:
       - main
@@ -18,18 +27,9 @@ jobs:
       - uses: ./.github/workflows/composite-setup
 
       - name: Run benchmark
-        run: pnpm benchmark --flush
-
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          name: Aggregate Benchmark
-          tool: "benchmarkjs"
-          fail-on-alert: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-on-alert: true
-          output-file-path: benchmarks/.results/10k-aggregate.txt
-          extra-output-file-paths: |
-            benchmarks/.results/10k-find.txt
-          summary-always: true
-          auto-push: true
+        run: |
+          if [ "${{ github.event.inputs.tests }}" != "Run all scenarios" ]; then
+            pnpm benchmark --flush --name="${{ github.event.inputs.tests }}"
+          else
+            pnpm benchmark --flush
+          fi
