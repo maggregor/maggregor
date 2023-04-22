@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb';
 
 const scenario: MaggregorBenchmarkScenario = {
   name: 'find',
-  description: 'aggregate documents, no doc changes',
+  description: 'find a user by his name | no changes',
   run: async (client: MongoClient, db: string, collection: string) => {
     await client
       .db(db)
