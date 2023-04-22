@@ -150,20 +150,22 @@ function expectMaggregorFaster(
       return true;
     }
   }
-  const th = s.expectedSpeedTreshold || 0.8;
+  const th = s.expectedSpeedTreshold || 0.9;
   const maggreMinHz = maggreBench.hz / th;
   const times = maggreBench.hz / mongoBench.hz;
   if (mongoBench.hz > maggreMinHz) {
-    let baseMessage = 'Maggregor is slower than expected. ';
+    let msg = 'Maggregor is slower than expected. ';
     if (times < 1) {
-      baseMessage += `Expected: ${th}x faster but got ${1 - times}x slower.`;
+      const fmtTimes = (1 - times).toFixed(2);
+      msg += `Expected: ${th}x faster but got ${fmtTimes}x slower.`;
     } else {
-      baseMessage += `Expected: ${th}x faster but got only ${times}x faster.`;
+      const fmtTimes = times.toFixed(2);
+      msg += `Expected: ${th}x faster but got only ${fmtTimes}x faster.`;
     }
-    logger.error(baseMessage);
+    logger.error(msg);
     return false;
   } else {
-    logger.info(`Maggregor fast enough: ${maggreBench.hz.toFixed(2)}x faster`);
+    logger.info(`Maggregor fast enough: ${times.toFixed(2)}x faster`);
   }
   return true;
 }
