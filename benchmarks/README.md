@@ -4,18 +4,13 @@
 
 ### Run all benchmarks
     
-```bash 
+```bash
 pnpm benchmark
 ```
 
-### Run a specific benchmark
-
-```bash
-pnpm benchmark --name=[benchmark-name]
-```
-
-### Enable output of benchmark results
-**Output directory:** `benchmarks/.results`
-```bash
-pnpm benchmark --output
-```
+### --name=[benchmark-name] (default all)
+Run a specific benchmark by name
+### --flush
+Flush the results in the output directory `benchmarks/.results`
+### --docs=[number] (default 10000)
+Run the benchmarks with the specified number of documents
