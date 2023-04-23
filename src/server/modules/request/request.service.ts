@@ -3,11 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
-import { MsgAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
-import { MsgResult as MsgResult } from '../mongodb-proxy/protocol/protocol';
-import { InterceptedReply as MsgReply } from '../mongodb-proxy/interceptors/reply-interceptor';
 import { parse } from '@parser/mongo-aggregation-parser';
 import { Request } from './request.schema';
+import { MsgRequest, MsgResponse } from '../mongodb-proxy/messages';
+import { MsgResult } from '../mongodb-proxy/protocol';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   private cache: InMemoryCache = new InMemoryCache(512);
@@ -43,7 +42,7 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   // Event: on aggregate query from client
-  async onAggregateQueryFromClient(msg: MsgAggregate): Promise<MsgResult> {
+  async onRequest(msg: MsgRequest): Promise<MsgResult> {
     const req: Request = await this.create({
       request: msg.pipeline,
       requestID: msg.requestID,
@@ -72,7 +71,7 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   // Event: on result from server
-  async onResultFromServer(msg: MsgReply): Promise<void> {
+  async onResult(msg: MsgResponse): Promise<void> {
     const requestID = msg.responseTo;
     const req = await this.findOneByRequestId(requestID);
     if (!req) {

@@ -1,11 +1,11 @@
-import { MsgAggregate } from '../../src/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
+import { MsgRequest } from '../../src/server/modules/mongodb-proxy/interceptors/request.interceptor';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Model } from 'mongoose';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/reply-interceptor';
+import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/response.interceptor';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
@@ -161,7 +161,7 @@ describe('RequestService (integration)', () => {
 
   describe('onAggregateQueryFromClient', () => {
     it('should create a new request', async () => {
-      const aggregateReq: MsgAggregate = {
+      const aggregateReq: MsgRequest = {
         requestID: 1,
         dbName: 'mydb',
         collectionName: 'collectionName',
@@ -183,7 +183,7 @@ describe('RequestService (integration)', () => {
         ],
       };
       // Request from client to server
-      let resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
+      let resultMsg = await service.onRequest(aggregateReq);
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.request).toStrictEqual(aggregateReq.pipeline);
@@ -194,7 +194,7 @@ describe('RequestService (integration)', () => {
       expect(req.dbName).toStrictEqual(aggregateReq.dbName);
       expect(resultMsg).toBe(null);
       // Result from server to client
-      await service.onResultFromServer(aggregateResult);
+      await service.onResult(aggregateResult);
       const updatedReq = (await service.findAll()).at(0);
       expect(updatedReq).toBeDefined();
       expect((await service.findAll()).length).toEqual(1);
@@ -202,7 +202,7 @@ describe('RequestService (integration)', () => {
       expect(updatedReq.requestID).toEqual(aggregateReq.requestID);
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
-      resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
+      resultMsg = await service.onRequest(aggregateReq);
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
       expect((await service.findAll()).length).toEqual(2);

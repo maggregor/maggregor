@@ -1,7 +1,7 @@
-import { AggregateInterceptor } from '@/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
+import { RequestInterceptor } from '@/server/modules/mongodb-proxy/interceptors/request.interceptor';
 import {
   MongoDBMessage,
-  MsgResult,
+  MsgResponse,
   encodeMessage,
   encodeResults,
 } from '@server/modules/mongodb-proxy/protocol';
@@ -29,10 +29,10 @@ const EXAMPLE_MSG: MongoDBMessage = {
 };
 
 describe('AggregateInterceptor', () => {
-  let interceptor: AggregateInterceptor;
+  let interceptor: RequestInterceptor;
 
   beforeEach(() => {
-    interceptor = new AggregateInterceptor({ write: vi.fn() } as any);
+    interceptor = new RequestInterceptor({ write: vi.fn() } as any);
   });
 
   test('Hook is called', async () => {
@@ -46,7 +46,7 @@ describe('AggregateInterceptor', () => {
         },
       ],
       responseTo: 0,
-    } as MsgResult;
+    } as MsgResponse;
     const hook = vi.fn().mockReturnValue(result);
     interceptor.registerHook(hook);
     const buffer = encodeMessage(EXAMPLE_MSG);
@@ -91,7 +91,7 @@ describe('AggregateInterceptor', () => {
         },
       ],
       responseTo: 0,
-    } as MsgResult;
+    } as MsgResponse;
     const hook = vi.fn().mockReturnValue(result);
     interceptor.registerHook(hook);
     const buffer = encodeMessage(EXAMPLE_MSG);
