@@ -5,13 +5,13 @@ import { EventEmitter } from 'events';
 import {
   AggregateInterceptor,
   AggregateInterceptorHook,
-} from './interceptors/request.interceptor';
+} from './interceptors/aggregate.interceptor';
 import { Transform } from 'stream';
 import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
-} from './interceptors/response.interceptor';
+} from './interceptors/reply-interceptor';
 import { RequestService } from '../request/request.service';
 import { LoggerService } from '../logger/logger.service';
 

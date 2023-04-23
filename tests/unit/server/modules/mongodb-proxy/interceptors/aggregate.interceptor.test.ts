@@ -1,4 +1,4 @@
-import { AggregateInterceptor } from '@/server/modules/mongodb-proxy/interceptors/request.interceptor';
+import { AggregateInterceptor } from '@/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
 import {
   MongoDBMessage,
   MsgResult,

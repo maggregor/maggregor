@@ -1,11 +1,11 @@
-import { MsgAggregate } from '../../src/server/modules/mongodb-proxy/interceptors/request.interceptor';
+import { MsgAggregate } from '../../src/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Model } from 'mongoose';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/response.interceptor';
+import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/reply-interceptor';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
