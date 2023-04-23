@@ -1,7 +1,7 @@
 import type net from 'net';
 import { decodeMessage, encodeResults } from '../protocol';
 import { Transform } from 'stream';
-import { MsgRequest, MsgResult } from '../messages';
+import { MsgRequest, MsgResult, handleRequestPayload } from '../messages';
 
 export type RequestInterceptorHook = (msg: MsgRequest) => Promise<MsgResult>;
 
@@ -28,18 +28,14 @@ export class RequestInterceptor extends Transform {
     try {
       const msg = decodeMessage(buffer);
       const payload = msg.contents.sections[0].payload;
-      const { pipeline } = payload;
+
       const requestID = msg.header.requestID;
-      const collectionName = payload.aggregate;
       const dbName = payload.$db;
-      if (pipeline) {
-        const intercepted: MsgRequest = {
-          requestID,
-          dbName,
-          collectionName,
-          pipeline,
-        };
+
+      if (dbName) {
+        const intercepted = handleRequestPayload(requestID, payload);
         let result: MsgResult;
+
         // iterate through all hooks and execute them
         // if one of them returns a result, we stop the iteration and assign the result
         for (const hook of this.hooks) {

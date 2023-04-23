@@ -44,7 +44,7 @@ export class RequestService implements MongoDBProxyListener {
   // Event: on aggregate query from client
   async onRequest(msg: MsgRequest): Promise<MsgResult> {
     const req: Request = await this.create({
-      request: msg.pipeline,
+      request: JSON.stringify(msg),
       requestID: msg.requestID,
       collectionName: msg.collectionName,
       dbName: msg.dbName,
@@ -62,9 +62,9 @@ export class RequestService implements MongoDBProxyListener {
         responseTo: msg.requestID,
       };
     }
-    const parsedPipeline = parsePipeline(msg.pipeline);
-    const stageCount = parsedPipeline.length;
-    Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
+    // const parsedPipeline = parsePipeline(msg.pipeline);
+    // const stageCount = parsedPipeline.length;
+    // Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
     req.source = 'delegate';
     await this.updateOne(req);
     return null;
