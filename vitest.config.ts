@@ -11,7 +11,6 @@ export default defineConfig({
       '@server': resolve(__dirname, 'src/server'),
       '@parser': resolve(__dirname, 'src/parser'),
       '@core': resolve(__dirname, 'src/core'),
-      '@client': resolve(__dirname, 'src/client'),
     },
   },
 }) as UserConfig;

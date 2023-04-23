@@ -2,11 +2,8 @@ import { MaggregorBenchmarkScenario } from 'benchmarks';
 import { MongoClient } from 'mongodb';
 
 const scenario: MaggregorBenchmarkScenario = {
-  name: '500k-find',
-  description: '500k documents, no changes',
-  data: {
-    start: 50000,
-  },
+  name: 'find',
+  description: 'find a user by his name | no changes',
   run: async (client: MongoClient, db: string, collection: string) => {
     await client
       .db(db)

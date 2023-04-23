@@ -1,11 +1,5 @@
 import { createBasicAccumulator } from '@core/pipeline/accumulators/index';
 import { MaterializedView } from '@core/materialized-view';
-import {
-  AvgBasicAccumulator,
-  SumBasicAccumulator,
-  MinBasicAccumulator,
-  MaxBasicAccumulator,
-} from '@core/pipeline/accumulators';
 import { createPipeline, executePipeline } from '@core/pipeline/pipeline';
 import { GroupStage, MatchStage, LimitStage } from '@core/pipeline/stages';
 

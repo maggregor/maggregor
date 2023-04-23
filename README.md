@@ -3,7 +3,7 @@
   <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/227661043-e747c07d-7813-432d-a866-d1e700461c80.png">
 </picture>
 
-[![MaggregorCache Build](https://github.com/estebgonza/maggregordb/actions/workflows/build.yaml/badge.svg)](#)
+[![MaggregorCache Build](https://img.shields.io/github/actions/workflow/status/maggregor/maggregor/tests.yaml?branch=main&label=Build)](#)
 
 # Quick start
 

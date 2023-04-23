@@ -1,0 +1,15 @@
+coverage:
+  range: 70..90
+
+  round: down
+  precision: 2
+
+ignore:
+  - */tests/.*
+  - */scripts/.*
+  - src/parser/mongo-aggregation-parser.ts
+  - benchmarks/*
+  
+
+comment:
+  layout: diff, files

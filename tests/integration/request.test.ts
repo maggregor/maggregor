@@ -1,11 +1,11 @@
-import { MsgRequest } from '../../src/server/modules/mongodb-proxy/interceptors/request.interceptor';
+import { MsgAggregate } from '../../src/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Model } from 'mongoose';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { InterceptedResponse } from '@/server/modules/mongodb-proxy/interceptors/response.interceptor';
+import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/reply-interceptor';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
@@ -36,7 +36,8 @@ describe('RequestService (integration)', () => {
 
   const expectRequest = (result: Request, request: Request) => {
     expect(result).toBeDefined();
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: Fix this
     expect(result._id).toBeDefined();
     expect(result.request).toStrictEqual(request.request);
     expect(result.requestID).toStrictEqual(request.requestID);
@@ -148,7 +149,8 @@ describe('RequestService (integration)', () => {
         dbName: 'testDatabase',
       };
       const created = await service.create(request);
-      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - TODO: Fix this
       const removed = await service.deleteByRequestID(created.requestID);
       expectRequest(removed, request);
       const result = await service.findAll();
@@ -159,7 +161,7 @@ describe('RequestService (integration)', () => {
 
   describe('onAggregateQueryFromClient', () => {
     it('should create a new request', async () => {
-      const aggregateReq: MsgRequest = {
+      const aggregateReq: MsgAggregate = {
         requestID: 1,
         dbName: 'mydb',
         collectionName: 'collectionName',
@@ -171,7 +173,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      const aggregateResult: InterceptedResponse = {
+      const aggregateResult: InterceptedReply = {
         requestID: -1,
         responseTo: 1,
         data: [

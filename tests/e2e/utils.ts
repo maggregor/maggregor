@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
+import logger from '../__utils__/logger';
 
 export type LoadTestDataOptions = {
   collection?: string;
@@ -21,6 +22,7 @@ export async function loadTestData(
   };
   const db = client.db(opts.db);
   const collection = db.collection(opts.collection);
+  logger.debug(`Loading ${opts.totalDocs} documents`);
   for (let i = 0; i < opts.totalDocs; i += opts.batchSize) {
     const testData = [];
     for (let j = i; j < i + opts.batchSize; j++) {
@@ -45,9 +47,8 @@ export async function loadTestData(
       testData.push(doc);
     }
     await collection.insertMany(testData);
-    process.stdout.write(`\rDocs: ${i + opts.batchSize}/${opts.totalDocs}... `);
   }
-  process.stdout.write(`done\n`);
+  logger.debug(`Loaded ${opts.totalDocs} documents`);
 }
 
 export async function startMongoServer() {
@@ -64,8 +65,6 @@ export async function healthCheck(
   db?: string,
 ) {
   db = db || global.__TEST_DB__;
-  console.debug('Running health check on db:', db);
-
   const maggreDb = maggreClient.db(db);
   const mongoDb = mongoClient.db(db);
 
@@ -100,5 +99,4 @@ export async function healthCheck(
   }
 
   await Promise.all(promises);
-  console.debug('Health check passed');
 }

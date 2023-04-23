@@ -2,11 +2,10 @@ import { MaggregorBenchmarkScenario } from 'benchmarks';
 import { MongoClient } from 'mongodb';
 
 const scenario: MaggregorBenchmarkScenario = {
-  name: '100k-aggregate',
-  description: '100k documents, no changes',
-  data: {
-    start: 100000,
-  },
+  name: 'aggregate',
+  description: 'group by city and calculate a sum | no changes',
+  // Maggregor must be at least 10x faster than MongoDB
+  expectedSpeedTreshold: 10,
   run: async (client: MongoClient, db: string, collection: string) => {
     await client
       .db(db)

@@ -1,19 +1,47 @@
 import { MongoClient } from 'mongodb';
 import { runBenchmarks } from './runner';
-import scenario1 from './scenario1';
-import scenario2 from './scenario2';
+import scenario1 from './aggregate.scenario';
+import scenario2 from './find.scenario';
+import logger from '../tests/__utils__/logger';
+import yargs from 'yargs';
+
+const argv = yargs
+  .option('flush', {
+    alias: 'f',
+    type: 'boolean',
+    description: 'Enable results flushing to disk',
+    default: false,
+  })
+  .option('name', {
+    alias: 'n',
+    description: 'Name of the benchmark to run',
+  })
+  .option('docs', {
+    alias: 'd',
+    description: 'Override the number of documents to insert',
+    type: 'number',
+    default: 10000,
+  })
+  .help()
+  .alias('help', 'h').argv;
 
 export type DataContext = {
-  start: number;
-  // TODO: add more data context, allow for more complex scenarios (e.g. with changes)
+  // TODO: add data context, allow for more complex scenarios (e.g. with changes)
   // intervalMs?: number;
   // toAdd?: number;
+  // toRemove?: number;
 };
 
 export interface MaggregorBenchmarkScenario {
   name: string;
   description: string;
-  data: DataContext;
+  data?: DataContext;
+  //
+  /**
+   * The treshold represents the percentage that Maggregor must be faster than MongoDB.
+   * e.g. 0.1 means that Maggregor must be at least 10% faster than MongoDB.
+   */
+  expectedSpeedTreshold?: number;
   run: (client: MongoClient, db: string, collection: string) => Promise<void>;
 }
 
@@ -22,15 +50,22 @@ export const allBenchmarks: MaggregorBenchmarkScenario[] = [
   scenario2,
 ];
 
-const filter = process.argv[2];
-const toRun = allBenchmarks.filter((b) => (filter ? b.name === filter : true));
+const toRun = argv.name
+  ? allBenchmarks.filter((s) => s.name === argv.name)
+  : allBenchmarks;
 
 if (toRun.length === 0) {
-  console.log('No benchmarks found');
+  logger.error('No benchmarks found');
   process.exit(1);
 }
 
-const names = toRun.map((b) => b.name).join(', ');
-console.log(`${toRun.length} benchmark(s) found: ${names}.`);
+if (argv.docs < 10000) {
+  logger.warn(
+    'The number of documents may be too low for accurate results. Recommended minimum: 10000.',
+  );
+}
 
-runBenchmarks(toRun);
+runBenchmarks(toRun, {
+  flushResults: argv.flush,
+  totalDocs: argv.docs,
+});

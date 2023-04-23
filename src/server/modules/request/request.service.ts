@@ -3,9 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
-import { MsgRequest } from '../mongodb-proxy/interceptors/request.interceptor';
+import { MsgAggregate } from '../mongodb-proxy/interceptors/aggregate.interceptor';
 import { MsgResult as MsgResult } from '../mongodb-proxy/protocol/protocol';
-import { InterceptedResponse as MsgReply } from '../mongodb-proxy/interceptors/response.interceptor';
+import { InterceptedReply as MsgReply } from '../mongodb-proxy/interceptors/reply-interceptor';
 import { parse } from '@parser/mongo-aggregation-parser';
 import { Request } from './request.schema';
 @Injectable()
@@ -30,9 +30,11 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async updateOne(request: Request): Promise<Request> {
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     await this.requestModel.updateOne({ _id: request._id }, request);
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - TODO: fix this
     return this.requestModel.findOne(request._id);
   }
 
@@ -41,7 +43,7 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   // Event: on aggregate query from client
-  async onAggregateQueryFromClient(msg: MsgRequest): Promise<MsgResult> {
+  async onAggregateQueryFromClient(msg: MsgAggregate): Promise<MsgResult> {
     const req: Request = await this.create({
       request: msg.pipeline,
       requestID: msg.requestID,
