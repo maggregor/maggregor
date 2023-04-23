@@ -25,7 +25,7 @@ export class ReplyInterceptor extends PassThrough {
 
   async _transform(
     chunk: Uint8Array,
-    _encoding: unknown,
+    encoding: unknown,
     callback: (err?: Error) => void,
   ): Promise<void> {
     const buffer = Buffer.from(chunk);
