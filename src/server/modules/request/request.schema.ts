@@ -4,7 +4,9 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export type RequestDocument = HydratedDocument<Request>;
 
-@Schema()
+@Schema({
+  minimize: false,
+})
 export class Request implements IRequest {
   @Prop({ type: Number, required: true })
   requestID: number;

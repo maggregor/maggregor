@@ -7,10 +7,10 @@ import { IRequest, RequestType } from '../request/request.interface';
 export type MsgRequestType = 'find' | 'aggregate' | 'count';
 
 /**
- * Represents the payload of read requests from the client to the proxy.
+ * Represents the payload of read requests
  */
-export type Payload = {
-  db: string;
+export type RequestPayload = {
+  $db: string;
   find?: string;
   aggregate?: string;
   count?: string;
@@ -21,22 +21,35 @@ export type Payload = {
 };
 
 /**
+ * Represents the payload of responses
+ */
+export type ResponsePayload = {
+  // For find and aggregate requests
+  cursor?: {
+    firstBatch: Record<string, unknown>[];
+  };
+  // For count requests
+  n?: number;
+  ok: number;
+};
+
+/**
  * Converts a payload from a client message to a Request object.
  *
  * @param requestID The ID of the request
  * @param payload The payload of the request
  * @returns The Request object
  */
-export const handlePayload = (
+export const resolveRequest = (
   requestID: number,
-  payload: Payload,
+  payload: RequestPayload,
 ): IRequest => {
-  const { find, aggregate, count, db, filter, pipeline, query } = payload;
+  const { find, aggregate, count, $db, filter, pipeline, query } = payload;
   const collection = find || aggregate || count;
-  const type = resolveType(payload);
+  const type = resolveRequestType(payload);
   return {
     requestID,
-    db,
+    db: $db,
     collName: collection,
     pipeline,
     filter,
@@ -53,7 +66,7 @@ export const handlePayload = (
  * @param payload  The payload of the request
  * @returns
  */
-export const resolveType = (payload: Payload): RequestType => {
+export const resolveRequestType = (payload: RequestPayload): RequestType => {
   if (payload.find) {
     return 'find';
   }
@@ -66,7 +79,22 @@ export const resolveType = (payload: Payload): RequestType => {
   return 'unknown';
 };
 
-export interface MsgResponse {
+export const resolveResponse = (
+  requestID: number,
+  responseTo: number,
+  payload: ResponsePayload,
+): IResponse => {
+  const { cursor } = payload;
+  return {
+    requestID,
+    responseTo,
+    // Retrieve the results from the cursor or the n field (count request)
+    // TODO: Improve this
+    data: cursor?.firstBatch || undefined,
+  };
+};
+
+export interface IResponse {
   requestID: number;
   responseTo: number;
   data: unknown;

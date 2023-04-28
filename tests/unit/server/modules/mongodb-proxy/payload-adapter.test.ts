@@ -1,19 +1,19 @@
 import {
-  resolveType,
-  handlePayload,
-  Payload,
-} from '@/server/modules/mongodb-proxy/request-adapter';
+  resolveRequestType,
+  resolveRequest,
+  RequestPayload,
+} from '@/server/modules/mongodb-proxy/payload-resolver';
 import { IRequest } from '@/server/modules/request/request.interface';
 
 describe('handlePayload', () => {
   it('should return a find request', () => {
     const requestID = 1;
-    const payload: Payload = {
-      db: 'my-db',
+    const payload: RequestPayload = {
+      $db: 'my-db',
       find: 'my-collection',
       filter: { field: 'value' },
     };
-    const request = handlePayload(requestID, payload);
+    const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
       requestID,
       db: 'my-db',
@@ -29,12 +29,12 @@ describe('handlePayload', () => {
 
   it('should return an aggregate request', () => {
     const requestID = 2;
-    const payload: Payload = {
-      db: 'my-db',
+    const payload: RequestPayload = {
+      $db: 'my-db',
       aggregate: 'my-collection',
       pipeline: [{ $match: { field: 'value' } }],
     };
-    const request = handlePayload(requestID, payload);
+    const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
       requestID,
       db: 'my-db',
@@ -50,12 +50,12 @@ describe('handlePayload', () => {
 
   it('should return a count request', () => {
     const requestID = 3;
-    const payload: Payload = {
-      db: 'my-db',
+    const payload: RequestPayload = {
+      $db: 'my-db',
       count: 'my-collection',
       query: { field: 'value' },
     };
-    const request = handlePayload(requestID, payload);
+    const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
       requestID,
       db: 'my-db',
@@ -72,10 +72,10 @@ describe('handlePayload', () => {
   it('should return an unknown request', () => {
     const requestID = 4;
     const payload: any = {
-      db: 'my-db',
+      $db: 'my-db',
       unknownField: 'value',
     };
-    const request = handlePayload(requestID, payload);
+    const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
       requestID,
       db: 'my-db',
@@ -95,7 +95,7 @@ describe('resolveType', () => {
     const payload: any = {
       find: 'my-collection',
     };
-    const type = resolveType(payload);
+    const type = resolveRequestType(payload);
     expect(type).toEqual('find');
   });
 
@@ -103,7 +103,7 @@ describe('resolveType', () => {
     const payload: any = {
       aggregate: 'my-collection',
     };
-    const type = resolveType(payload);
+    const type = resolveRequestType(payload);
     expect(type).toEqual('aggregate');
   });
 
@@ -111,7 +111,7 @@ describe('resolveType', () => {
     const payload: any = {
       count: 'my-collection',
     };
-    const type = resolveType(payload);
+    const type = resolveRequestType(payload);
     expect(type).toEqual('count');
   });
 
@@ -119,7 +119,7 @@ describe('resolveType', () => {
     const payload: any = {
       unknownField: 'value',
     };
-    const type = resolveType(payload);
+    const type = resolveRequestType(payload);
     expect(type).toEqual('unknown');
   });
 });

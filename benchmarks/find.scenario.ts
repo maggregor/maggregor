@@ -4,6 +4,8 @@ import { MongoClient } from 'mongodb';
 const scenario: MaggregorBenchmarkScenario = {
   name: 'find',
   description: 'find a user by his name | no changes',
+  // Maggregor must be at least 10x faster than MongoDB
+  expectedSpeedTreshold: 10,
   run: async (client: MongoClient, db: string, collection: string) => {
     await client
       .db(db)

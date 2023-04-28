@@ -5,7 +5,8 @@ import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Model } from 'mongoose';
 import { DatabaseModule } from '@/server/modules/database/database.module';
 import { IRequest } from '@/server/modules/request/request.interface';
-import { MsgResponse } from '@/server/modules/mongodb-proxy/request-adapter';
+import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
+import { LoggerModule } from '@/server/modules/logger/logger.module';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
@@ -14,6 +15,7 @@ describe('RequestService (integration)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        LoggerModule,
         DatabaseModule,
         MongooseModule.forFeature([
           { name: Request.name, schema: RequestSchema },
@@ -34,20 +36,20 @@ describe('RequestService (integration)', () => {
     await model.deleteMany({});
   });
 
-  const expectRequest = (result: Request, request: Request) => {
-    expect(result).toBeDefined();
+  const expectRequest = (actual: Request, request: Request) => {
+    expect(actual).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - TODO: Fix this
-    expect(result._id).toBeDefined();
-    expect(result.pipeline).toStrictEqual(request.pipeline);
-    expect(result.type).toStrictEqual(request.type);
-    expect(result.filter).toStrictEqual(request.filter);
-    expect(result.query).toStrictEqual(request.query);
-    expect(result.requestID).toStrictEqual(request.requestID);
-    expect(result.startAt).toStrictEqual(request.startAt);
-    expect(result.endAt).toStrictEqual(request.endAt);
-    expect(result.collName).toStrictEqual(request.collName);
-    expect(result.db).toStrictEqual(request.db);
+    expect(actual._id).toBeDefined();
+    expect(actual.pipeline).toStrictEqual(request.pipeline);
+    expect(actual.type).toStrictEqual(request.type);
+    expect(actual.filter).toStrictEqual(request.filter);
+    expect(actual.query).toStrictEqual(request.query);
+    expect(actual.requestID).toStrictEqual(request.requestID);
+    expect(actual.startAt).toStrictEqual(request.startAt);
+    expect(actual.endAt).toStrictEqual(request.endAt);
+    expect(actual.collName).toStrictEqual(request.collName);
+    expect(actual.db).toStrictEqual(request.db);
   };
 
   describe('create', () => {
@@ -171,7 +173,7 @@ describe('RequestService (integration)', () => {
     });
   });
 
-  describe('onAggregateQueryFromClient', () => {
+  describe('onRequest', () => {
     it('should create a new request', async () => {
       const aggregateReq: IRequest = {
         type: 'aggregate',
@@ -186,7 +188,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      const aggregateResult: MsgResponse = {
+      const aggregateResult: IResponse = {
         requestID: -1,
         responseTo: 1,
         data: [
@@ -199,7 +201,7 @@ describe('RequestService (integration)', () => {
       let resultMsg = await service.onRequest(aggregateReq);
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
-      // expect(req.request).toStrictEqual(aggregateReq.pipeline);
+      expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
       expect(req.requestID).toEqual(aggregateReq.requestID);
       expect(req.startAt).toBeDefined();
       expect(req.endAt).to.not.toBeDefined();
