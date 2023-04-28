@@ -11,9 +11,11 @@ export type MsgRequestType = 'find' | 'aggregate' | 'count';
  */
 export type RequestPayload = {
   $db: string;
+  distinct?: string;
   find?: string;
   aggregate?: string;
   count?: string;
+  key?: string;
   filter?: Record<string, unknown>;
   pipeline?: Record<string, unknown>[];
   query?: Record<string, unknown>;
@@ -44,8 +46,18 @@ export const resolveRequest = (
   requestID: number,
   payload: RequestPayload,
 ): IRequest => {
-  const { find, aggregate, count, $db, filter, pipeline, query } = payload;
-  const collection = find || aggregate || count;
+  const {
+    find,
+    aggregate,
+    count,
+    distinct,
+    $db,
+    filter,
+    pipeline,
+    query,
+    key,
+  } = payload;
+  const collection = find || aggregate || count || distinct;
   const type = resolveRequestType(payload);
   return {
     requestID,
@@ -54,6 +66,7 @@ export const resolveRequest = (
     pipeline,
     filter,
     query,
+    key,
     limit: payload.limit,
     requestSource: null,
     type,
@@ -75,6 +88,9 @@ export const resolveRequestType = (payload: RequestPayload): RequestType => {
   }
   if (payload.count) {
     return 'count';
+  }
+  if (payload.distinct) {
+    return 'distinct';
   }
   return 'unknown';
 };
