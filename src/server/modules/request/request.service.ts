@@ -48,7 +48,6 @@ export class RequestService implements MongoDBProxyListener {
   async onRequest(newReq: IRequest): Promise<MsgResult> {
     newReq.startAt = new Date();
     const req: Request = await this.create(newReq);
-    console.log(req.pipeline);
     if (this.hasCachedResults(req)) {
       req.endAt = new Date();
       req.requestSource = 'cache';
@@ -77,7 +76,6 @@ export class RequestService implements MongoDBProxyListener {
     if (!req) {
       return;
     }
-    console.log(req.pipeline);
     req.endAt = new Date();
     this.updateOne(req);
     this.tryCacheResults(req, res);
