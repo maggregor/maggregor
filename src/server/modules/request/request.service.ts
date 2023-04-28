@@ -6,7 +6,7 @@ import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
 import { Request } from './request.schema';
 import { IResponse } from '../mongodb-proxy/payload-resolver';
 import { MsgResult } from '../mongodb-proxy/protocol';
-import { IRequest, RequestType } from './request.interface';
+import { IRequest } from './request.interface';
 import { LoggerService } from '../logger/logger.service';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
