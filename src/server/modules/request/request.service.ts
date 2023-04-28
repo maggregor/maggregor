@@ -45,44 +45,45 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   // Event: on aggregate query from client
-  async onRequest(newReq: IRequest): Promise<MsgResult> {
-    newReq.startAt = new Date();
-    const req: Request = await this.create(newReq);
+  async onRequest(req: IRequest): Promise<MsgResult> {
+    const reqID = req.requestID;
+    let results = null;
+    req.startAt = new Date();
+    if (req.db === 'admin') {
+      // We ignore admin requests (such as heartbeat, listDatabases, etc.)
+      return null;
+    }
     if (this.hasCachedResults(req)) {
       req.endAt = new Date();
-      req.requestSource = 'cache';
-      await this.updateOne(req);
       this.logger.log(
-        `id:${req.requestID}: (${req.type}) Answered from cache (${
-          req.endAt.getTime() - req.startAt.getTime()
-        }ms)`,
+        `id:${reqID}: (${req.type}) Answered from cache (${ms(req)})`,
       );
-      return {
-        db: newReq.db,
-        collection: newReq.collName,
-        results: this.getCachedResults(req),
-        responseTo: newReq.requestID,
-      };
+      results = this.getCachedResults(req);
     }
-    req.requestSource = 'delegate';
-    await this.updateOne(req);
-    return null;
+    req.requestSource = results ? 'cache' : 'mongodb';
+    this.create(req);
+    return !results
+      ? null
+      : {
+          db: req.db,
+          collection: req.collName,
+          results,
+          responseTo: req.requestID,
+        };
   }
 
   // Event: on result from server
   async onResult(res: IResponse): Promise<void> {
     const requestID = res.responseTo;
     const req = await this.findOneByRequestId(requestID);
-    if (!req) {
+    if (!req || req.type === 'unknown') {
       return;
     }
     req.endAt = new Date();
     this.updateOne(req);
     this.tryCacheResults(req, res);
     this.logger.log(
-      `id:${req.requestID}: (${req.type}) Answered from MongoDB (${
-        req.endAt.getTime() - req.startAt.getTime()
-      }ms)`,
+      `id:${requestID}: (${req.type}) Answered from MongoDB (${ms(req)})`,
     );
     return;
   }
@@ -139,4 +140,7 @@ function canCache(req: IRequest, res: IResponse): boolean {
    * We apply a control on the request type to avoid caching irrelevant requests.
    */
   return ['find', 'aggregate'].includes(req.type);
+}
+function ms(req: IRequest) {
+  return `${req.endAt.getTime() - req.startAt.getTime()}ms`;
 }

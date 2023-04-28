@@ -1,9 +1,9 @@
 // Differents sources of request results.
 // Sources:
 // - cache: src/server/modules/cache/cache.ts (when the request is answered from the Maggregor cache)
-// - delegate: src/server/modules/request/request.service.ts (when the request is delegated to the server)
+// - mongodb: src/server/modules/request/request.service.ts (when the request is delegated to the server)
 // - intercept: src/server/modules/request/request.service.ts (when the request is intercepted by the Maggregor)
-export type RequestSourceType = 'cache' | 'delegate' | 'intercept';
+export type RequestSourceType = 'cache' | 'mongodb' | 'intercept';
 export type RequestType =
   | 'find'
   | 'aggregate'

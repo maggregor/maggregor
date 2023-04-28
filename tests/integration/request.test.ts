@@ -7,6 +7,7 @@ import { DatabaseModule } from '@/server/modules/database/database.module';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
+import { simulateDelay } from 'tests/e2e/utils';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
@@ -199,6 +200,7 @@ describe('RequestService (integration)', () => {
       };
       // Request from client to server
       let resultMsg = await service.onRequest(aggregateReq);
+      await simulateDelay();
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
@@ -210,6 +212,7 @@ describe('RequestService (integration)', () => {
       expect(resultMsg).toBe(null);
       // Result from server to client
       await service.onResult(aggregateResult);
+      await simulateDelay();
       const updatedReq = (await service.findAll()).at(0);
       expect(updatedReq).toBeDefined();
       expect((await service.findAll()).length).toEqual(1);
@@ -218,6 +221,7 @@ describe('RequestService (integration)', () => {
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
       resultMsg = await service.onRequest(aggregateReq);
+      await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
       expect((await service.findAll()).length).toEqual(2);

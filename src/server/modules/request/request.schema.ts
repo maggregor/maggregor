@@ -1,5 +1,9 @@
 import type { HydratedDocument } from 'mongoose';
-import type { IRequest, RequestType } from './request.interface';
+import type {
+  IRequest,
+  RequestSourceType,
+  RequestType,
+} from './request.interface';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export type RequestDocument = HydratedDocument<Request>;
@@ -15,10 +19,10 @@ export class Request implements IRequest {
   db: string;
 
   @Prop({ type: String, required: true })
-  collName: string;
-
-  @Prop({ type: String, required: true })
   type: RequestType;
+
+  @Prop({ type: String })
+  collName: string;
 
   @Prop({ type: Date })
   startAt?: Date;
@@ -39,7 +43,7 @@ export class Request implements IRequest {
   limit?: number;
 
   @Prop({ type: String })
-  requestSource?: 'cache' | 'delegate' | 'intercept';
+  requestSource?: RequestSourceType;
 }
 
 export const RequestSchema = SchemaFactory.createForClass(Request);

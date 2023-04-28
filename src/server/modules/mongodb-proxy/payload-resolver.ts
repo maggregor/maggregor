@@ -57,12 +57,12 @@ export const resolveRequest = (
     query,
     key,
   } = payload;
-  const collection = find || aggregate || count || distinct;
+  const collName = find || aggregate || count || distinct;
   const type = resolveRequestType(payload);
   return {
     requestID,
     db: $db,
-    collName: collection,
+    collName: collName,
     pipeline,
     filter,
     query,
