@@ -1,7 +1,9 @@
 import { MongoClient } from 'mongodb';
 import { runBenchmarks } from './runner';
-import scenario1 from './aggregate.scenario';
-import scenario2 from './find.scenario';
+import aggregateScenario from './aggregate.scenario';
+import findScenario from './find.scenario';
+import countScenario from './count.scenario';
+import distinctScenario from './distinct.scenario';
 import logger from '../tests/__utils__/logger';
 import yargs from 'yargs';
 
@@ -46,8 +48,10 @@ export interface MaggregorBenchmarkScenario {
 }
 
 export const allBenchmarks: MaggregorBenchmarkScenario[] = [
-  scenario1,
-  scenario2,
+  aggregateScenario,
+  findScenario,
+  countScenario,
+  distinctScenario,
 ];
 
 const toRun = argv.name
