@@ -1,9 +1,10 @@
 import type net from 'net';
 import { decodeMessage, encodeResults } from '../protocol';
 import { Transform } from 'stream';
-import { MsgRequest, MsgResult, handleRequestPayload } from '../messages';
+import { MsgResult, handlePayload } from '../request-adapter';
+import { IRequest } from '../../request/request.interface';
 
-export type RequestInterceptorHook = (msg: MsgRequest) => Promise<MsgResult>;
+export type RequestInterceptorHook = (msg: IRequest) => Promise<MsgResult>;
 
 export class RequestInterceptor extends Transform {
   socket: net.Socket;
@@ -33,13 +34,13 @@ export class RequestInterceptor extends Transform {
       const dbName = payload.$db;
 
       if (dbName) {
-        const intercepted = handleRequestPayload(requestID, payload);
+        const handled = handlePayload(requestID, payload);
         let result: MsgResult;
 
         // iterate through all hooks and execute them
         // if one of them returns a result, we stop the iteration and assign the result
         for (const hook of this.hooks) {
-          result = await hook(intercepted);
+          result = await hook(handled);
           if (result) {
             const resultBuffer = encodeResults(result);
             this.socket.write(resultBuffer);

@@ -1,6 +1,6 @@
 import { PassThrough } from 'stream';
 import { OP_MSG, decodeMessage } from '../protocol';
-import { MsgResponse } from '../messages';
+import { MsgResponse } from '../request-adapter';
 
 export type ReplyInterceptorHook = (intercepted: MsgResponse) => Promise<void>;
 
@@ -27,6 +27,7 @@ export class ReplyInterceptor extends PassThrough {
       const requestID = msg.header.requestID;
       const responseTo = msg.header.responseTo;
       if (
+        // Dirty condition to check if the message is a reply
         msg.header.opCode === OP_MSG &&
         msg.contents.sections.length > 0 &&
         msg.contents.sections[0].payload.hasOwnProperty('cursor')

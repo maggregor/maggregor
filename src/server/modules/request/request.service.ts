@@ -3,10 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
-import { parse } from '@parser/mongo-aggregation-parser';
 import { Request } from './request.schema';
-import { MsgRequest, MsgResponse } from '../mongodb-proxy/messages';
+import { MsgResponse } from '../mongodb-proxy/request-adapter';
 import { MsgResult } from '../mongodb-proxy/protocol';
+import { IRequest } from './request.interface';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   private cache: InMemoryCache = new InMemoryCache(512);
@@ -42,22 +42,19 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   // Event: on aggregate query from client
-  async onRequest(msg: MsgRequest): Promise<MsgResult> {
+  async onRequest(msg: IRequest): Promise<MsgResult> {
     const req: Request = await this.create({
-      request: JSON.stringify(msg),
-      requestID: msg.requestID,
-      collectionName: msg.collectionName,
-      dbName: msg.dbName,
+      ...msg,
       startAt: new Date(),
     });
     if (this.hasCachedResults(req)) {
       req.endAt = new Date();
-      req.source = 'cache';
+      req.requestSource = 'cache';
       await this.updateOne(req);
       Logger.log(`Request ${req.requestID}: Answered from cache ⚡`);
       return {
-        db: msg.dbName,
-        collection: msg.collectionName,
+        db: msg.db,
+        collection: msg.collName,
         results: this.getCachedResults(req),
         responseTo: msg.requestID,
       };
@@ -65,7 +62,7 @@ export class RequestService implements MongoDBProxyListener {
     // const parsedPipeline = parsePipeline(msg.pipeline);
     // const stageCount = parsedPipeline.length;
     // Logger.log(`Request ${req.requestID}: Pipeline (${stageCount} stage(s))`);
-    req.source = 'delegate';
+    req.requestSource = 'delegate';
     await this.updateOne(req);
     return null;
   }
@@ -83,49 +80,29 @@ export class RequestService implements MongoDBProxyListener {
     return;
   }
 
+  private withCache<T>(
+    req: Request,
+    operation: (key: string, collection: string, db: string, data?: T) => T,
+  ): T {
+    const key = JSON.stringify(req.pipeline || req.filter || req.query || {});
+    return operation(key, req.collName, req.db);
+  }
+
   private hasCachedResults(req: Request): boolean {
-    return this.cache.has(
-      JSON.stringify(req.request),
-      req.collectionName,
-      req.dbName,
+    return this.withCache(req, (key, collection, db) =>
+      this.cache.has(key, collection, db),
     );
   }
 
   private getCachedResults(req: Request): any {
-    return this.cache.get(
-      JSON.stringify(req.request),
-      req.collectionName,
-      req.dbName,
+    return this.withCache(req, (key, collection, db) =>
+      this.cache.get(key, collection, db),
     );
   }
 
   private cacheResults(req: Request, results: any): void {
-    this.cache.set(
-      JSON.stringify(req.request),
-      req.collectionName,
-      req.dbName,
-      results,
-    );
+    this.withCache(req, (key, collection, db) => {
+      this.cache.set(key, collection, db, results);
+    });
   }
-}
-
-function parsePipeline(pipeline: any): any[] {
-  try {
-    return parse('[' + objectToString(pipeline[0]) + ']');
-  } catch (e) {
-    console.debug('Parsing error on pipeline');
-    return [];
-  }
-}
-
-function objectToString(obj: object) {
-  const entries = Object.entries(obj);
-  const keyValuePairs = entries.map(([key, value]) => {
-    const formattedValue =
-      typeof value === 'object' && value !== null
-        ? objectToString(value)
-        : JSON.stringify(value);
-    return `${key}: ${formattedValue}`;
-  });
-  return `{ ${keyValuePairs.join(', ')} }`;
 }

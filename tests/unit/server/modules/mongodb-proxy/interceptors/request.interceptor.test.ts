@@ -1,7 +1,7 @@
 import { RequestInterceptor } from '@/server/modules/mongodb-proxy/interceptors/request.interceptor';
 import {
   MongoDBMessage,
-  MsgResponse,
+  MsgResult,
   encodeMessage,
   encodeResults,
 } from '@server/modules/mongodb-proxy/protocol';
@@ -46,7 +46,7 @@ describe('AggregateInterceptor', () => {
         },
       ],
       responseTo: 0,
-    } as MsgResponse;
+    } as MsgResult;
     const hook = vi.fn().mockReturnValue(result);
     interceptor.registerHook(hook);
     const buffer = encodeMessage(EXAMPLE_MSG);
@@ -91,7 +91,7 @@ describe('AggregateInterceptor', () => {
         },
       ],
       responseTo: 0,
-    } as MsgResponse;
+    } as MsgResult;
     const hook = vi.fn().mockReturnValue(result);
     interceptor.registerHook(hook);
     const buffer = encodeMessage(EXAMPLE_MSG);
