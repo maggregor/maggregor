@@ -28,7 +28,6 @@ export class ReplyInterceptor extends PassThrough {
       const responseTo = msg.header.responseTo;
 
       const payload = msg.contents.sections[0].payload;
-
       if (msg.header.opCode === OP_MSG) {
         const res: IResponse = resolveResponse(requestID, responseTo, payload);
         for (const hook of this.hooks) {

@@ -118,12 +118,13 @@ describe('RequestService', () => {
       startAt: new Date(),
     };
 
-    const createSpy = vitest.spyOn(service, 'create');
+    const createSpy = vitest
+      .spyOn(service, 'create')
+      .mockImplementation(async () => mockRequest);
 
     const result = await service.onRequest(mockRequest);
 
     expect(createSpy).toHaveBeenCalledWith(mockRequest);
-
     expect(result).toBeNull();
   });
 });
