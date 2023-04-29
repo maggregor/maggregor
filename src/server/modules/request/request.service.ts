@@ -44,6 +44,15 @@ export class RequestService implements MongoDBProxyListener {
     return this.requestModel.findOneAndDelete({ requestID });
   }
 
+  async deleteAll(): Promise<{ deletedCount: number }> {
+    const result = await this.requestModel.deleteMany({});
+    return { deletedCount: result.deletedCount };
+  }
+
+  async count(): Promise<number> {
+    return this.requestModel.count();
+  }
+
   // Event: on aggregate query from client
   async onRequest(req: IRequest): Promise<MsgResult> {
     const reqID = req.requestID;

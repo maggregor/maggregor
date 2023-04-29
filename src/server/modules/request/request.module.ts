@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseModule } from '../database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '../logger/logger.module';
+import { RequestController } from './request.controller';
+import { StatsController } from './stats.controller';
 
 @Module({
   imports: [
@@ -14,6 +16,6 @@ import { LoggerModule } from '../logger/logger.module';
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],
   providers: [RequestService],
-  controllers: [],
+  controllers: [RequestController, StatsController],
 })
 export class RequestModule {}
