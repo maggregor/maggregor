@@ -32,10 +32,10 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async updateOne(request: Request): Promise<Request> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line
     // @ts-ignore - TODO: fix this
     await this.requestModel.updateOne({ _id: request._id }, request);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line
     // @ts-ignore - TODO: fix this
     return this.requestModel.findOne(request._id);
   }
@@ -94,7 +94,6 @@ export class RequestService implements MongoDBProxyListener {
     this.logger.log(
       `id:${requestID}: (${req.type}) Answered from MongoDB (${ms(req)})`,
     );
-    return;
   }
 
   private withCache<T>(
