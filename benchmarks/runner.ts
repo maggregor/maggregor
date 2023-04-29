@@ -46,7 +46,7 @@ export async function runBenchmarks(
         logger.debug(`Finished benchmark: '${s.name}'`);
         resolve();
       });
-      suite.run({ async: false });
+      suite.run({ async: true });
     });
   }
   const exitCode = totalScenariosSuccessed < totalScenarios ? 1 : 0;
