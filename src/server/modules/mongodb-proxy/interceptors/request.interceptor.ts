@@ -35,7 +35,6 @@ export class RequestInterceptor extends Transform {
 
       if (dbName) {
         const handled = resolveRequest(requestID, payload);
-        // console.log('handled', handled);
         let result: MsgResult;
 
         // iterate through all hooks and execute them
