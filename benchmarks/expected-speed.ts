@@ -11,7 +11,7 @@ export const INCACHE_EXPECTED_SPEED: ExpectedSpeedPercentage = {
   10: SAME_AS_MONGODB,
   100: SAME_AS_MONGODB,
   1000: 1.5,
-  10000: 5,
+  10000: 3,
   100000: 10,
   1000000: 20,
 };
