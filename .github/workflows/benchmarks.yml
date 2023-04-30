@@ -4,11 +4,23 @@ on:
     inputs:
       tests:
         type: choice
-        description: Scenarios
+        description: Scenarios to run
         options:
-          - Run all scenarios
-          - Run 'find' scenario
-          - Run 'aggregate' scenario
+          - "Run all scenarios"
+          - "Run 'aggregate' scenario"
+          - "Run 'find' scenario"
+      docs:
+        type: choice
+        description: Number of documents
+        default: "10k"
+        options:
+          - "0"
+          - "10"
+          - "100"
+          - "1k"
+          - "10k"
+          - "100k"
+          - "1m"
 
   pull_request:
     branches:
@@ -29,7 +41,7 @@ jobs:
       - name: Run benchmark
         run: |
           if [ "${{ github.event.inputs.tests }}" != "Run all scenarios" ]; then
-            pnpm benchmark --docs 100000 --flush --name="${{ github.event.inputs.tests }}"
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}" --flush --name="${{ github.event.inputs.tests }}"
           else
-            pnpm benchmark --docs 100000  --flush
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}"  --flush
           fi
