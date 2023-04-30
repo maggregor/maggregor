@@ -114,7 +114,7 @@ function parsePipeline(pipeline: any): any[] {
   try {
     return parse('[' + objectToString(pipeline[0]) + ']');
   } catch (e) {
-    console.debug('Parsing error on pipeline');
+    console.error('Parsing error on pipeline');
     return [];
   }
 }

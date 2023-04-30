@@ -1,4 +1,4 @@
-import { MsgAggregate } from '../../src/server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
+import { MsgAggregate } from '@server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
