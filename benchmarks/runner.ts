@@ -47,7 +47,7 @@ export async function runBenchmarks(
         logger.debug(`Finished benchmark: '${s.name}'`);
         resolve();
       });
-      suite.run({ async: true });
+      suite.run({ async: false });
     });
   }
   const exitCode = totalScenariosSuccessed < totalScenarios ? 1 : 0;
@@ -62,6 +62,7 @@ async function createBenchmarkSuite(
   const mongoClient = await createClient(mongodb.getUri());
   suite.add('MongoDB', {
     defer: true,
+    // initCount: 1000,
     fn: async (deferred: { resolve: () => void }) => {
       await s.run(mongoClient, DATABASE, COLLECTION);
       deferred.resolve();
@@ -70,6 +71,7 @@ async function createBenchmarkSuite(
   const maggregorClient = await createClient(maggregor.getUri());
   suite.add('Maggregor x MongoDB', {
     defer: true,
+    // initCount: 1000,
     fn: async (deferred: { resolve: () => void }) => {
       await s.run(maggregorClient, DATABASE, COLLECTION);
       deferred.resolve();
