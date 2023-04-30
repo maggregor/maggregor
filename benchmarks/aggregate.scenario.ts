@@ -1,11 +1,11 @@
-import { MaggregorBenchmarkScenario } from 'benchmarks';
+import { INCACHE_EXPECTED_SPEED } from './expected-speed';
+import { MaggregorBenchmarkScenario } from './index';
 import { MongoClient } from 'mongodb';
 
 const scenario: MaggregorBenchmarkScenario = {
   name: 'aggregate',
   description: 'group by city and calculate a sum | no changes',
-  // Maggregor must be at least 10x faster than MongoDB
-  expectedSpeedTreshold: 10,
+  expectedSpeed: INCACHE_EXPECTED_SPEED,
   run: async (client: MongoClient, db: string, collection: string) => {
     await client
       .db(db)

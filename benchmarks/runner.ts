@@ -40,7 +40,8 @@ export async function runBenchmarks(
         if (opts.flushResults) {
           flushResults(s.name, this);
         }
-        if (expectMaggregorFaster(s, this)) {
+        const percent = s.expectedSpeed ? s.expectedSpeed[opts.totalDocs] : 0.9;
+        if (expectMaggregorFaster(percent, this)) {
           totalScenariosSuccessed++;
         }
         logger.debug(`Finished benchmark: '${s.name}'`);
@@ -137,37 +138,29 @@ function flushResults(scenarioName: string, suite: Benchmark.Suite) {
 
 // Return true if Maggregor is faster than expected
 function expectMaggregorFaster(
-  s: MaggregorBenchmarkScenario,
+  minSpeedPercent: number,
   suite: Benchmark.Suite,
 ): boolean {
   const benchs = suite.filter('successful');
   const fastestBenchs = benchs.filter('fastest');
   const mongoBench = benchs[0];
   const maggreBench = benchs[1];
-  const mustBeFaster = !!s.expectedSpeedTreshold;
   if (fastestBenchs.length > 1) {
-    logger.warn('The both ways are equally fast.');
-    if (!mustBeFaster) {
-      // Everything is fine if we don't expect Maggregor to be faster.
-      return true;
-    }
+    logger.warn('Mongodb and Maggregor are equally fast');
   }
-  const th = s.expectedSpeedTreshold || 0.9;
-  const maggreMinHz = maggreBench.hz / th;
-  const times = maggreBench.hz / mongoBench.hz;
+  const maggreMinHz = maggreBench.hz / minSpeedPercent;
+  const fmtExpected = (minSpeedPercent * 100).toFixed(0);
+  const fmtActual = ((maggreBench.hz / mongoBench.hz) * 100).toFixed(0);
   if (mongoBench.hz > maggreMinHz) {
     let msg = 'Maggregor is slower than expected. ';
-    if (times < 1) {
-      const fmtTimes = (1 - times).toFixed(2);
-      msg += `Expected: ${th}x faster but got ${fmtTimes}x slower.`;
-    } else {
-      const fmtTimes = times.toFixed(2);
-      msg += `Expected: ${th}x faster but got only ${fmtTimes}x faster.`;
-    }
+    msg += `Expected: minimum ${fmtExpected}% of MongoDB speed but got only ${fmtActual}%`;
+
     logger.error(msg);
     return false;
   } else {
-    logger.info(`Maggregor fast enough: ${times.toFixed(2)}x faster`);
+    logger.info(
+      `Maggregor fast enough: ${fmtActual}% of MongoDB speed (expected: >=${fmtExpected}%)`,
+    );
   }
   return true;
 }
