@@ -35,7 +35,7 @@ const argv = yargs
       }
       return parsed;
     },
-    default: '10k',
+    default: '100k',
   })
   .help()
   .alias('help', 'h').argv;
