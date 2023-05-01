@@ -104,3 +104,7 @@ export async function healthCheck(
 export const simulateDelay = (delay = 10) => {
   return new Promise<void>((resolve) => process.nextTick(resolve, delay));
 };
+
+export const wait = (ms: number) => {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
+};
