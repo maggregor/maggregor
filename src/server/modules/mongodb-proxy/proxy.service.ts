@@ -3,15 +3,15 @@ import { Inject, Injectable } from '@nestjs/common';
 import * as net from 'net';
 import { EventEmitter } from 'events';
 import {
-  AggregateInterceptor,
-  AggregateInterceptorHook,
-} from './interceptors/aggregate.interceptor';
+  RequestInterceptor,
+  RequestInterceptorHook,
+} from './interceptors/request.interceptor';
 import { Transform } from 'stream';
 import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
-} from './interceptors/reply-interceptor';
+} from './interceptors/response.interceptor';
 import { RequestService } from '../request/request.service';
 import { LoggerService } from '../logger/logger.service';
 
@@ -41,8 +41,8 @@ export type MongoDBProxyOptions = {
  * Hook functions to modify incoming/outgoing data on the proxy
  */
 export interface MongoDBProxyListener {
-  onAggregateQueryFromClient: AggregateInterceptorHook;
-  onResultFromServer: ReplyInterceptorHook;
+  onRequest: RequestInterceptorHook;
+  onResult: ReplyInterceptorHook;
 }
 
 /**
@@ -84,14 +84,14 @@ export class MongoDBTcpProxyService extends EventEmitter {
     this.server = net.createServer(async (socket) => {
       const proxySocket = new net.Socket();
       // Setup aggregate interceptor (client -> proxy)
-      const aggregateInterceptor = new AggregateInterceptor(socket);
+      const aggregateInterceptor = new RequestInterceptor(socket);
       aggregateInterceptor.registerHook((hook) =>
-        this.requestService.onAggregateQueryFromClient(hook),
+        this.requestService.onRequest(hook),
       );
       // Setup result interceptor (proxy -> client)
       const resultInterceptor = new ReplyInterceptor();
       resultInterceptor.registerHook((hook) =>
-        this.requestService.onResultFromServer(hook),
+        this.requestService.onResult(hook),
       );
       // Setup bidirectional data flow between client, interceptors and proxy
       socket.pipe(aggregateInterceptor).pipe(proxySocket);

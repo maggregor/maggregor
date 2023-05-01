@@ -1,0 +1,48 @@
+name: Benchmarks
+on:
+  workflow_dispatch:
+    inputs:
+      tests:
+        type: choice
+        description: Scenarios to run
+        default: "Run all scenarios"
+        options:
+          - "Run all scenarios"
+          - "Run 'aggregate' scenario"
+          - "Run 'find' scenario"
+      docs:
+        type: choice
+        description: Number of documents
+        default: "100k"
+        options:
+          - "0"
+          - "10"
+          - "100"
+          - "1k"
+          - "10k"
+          - "100k"
+          - "1m"
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  deployments: write
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite-setup
+
+      - name: Run benchmark
+        run: |
+          if [ "${{ github.event.inputs.tests }}" != "Run all scenarios" ]; then
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}" --flush --name="${{ github.event.inputs.tests }}"
+          else
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}"  --flush
+          fi

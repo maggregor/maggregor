@@ -1,15 +1,8 @@
 import { PassThrough } from 'stream';
 import { OP_MSG, decodeMessage } from '../protocol';
+import { IResponse, resolveResponse } from '../payload-resolver';
 
-export type InterceptedReply = {
-  requestID: number;
-  responseTo: number;
-  data: any;
-};
-
-export type ReplyInterceptorHook = (
-  intercepted: InterceptedReply,
-) => Promise<void>;
+export type ReplyInterceptorHook = (intercepted: IResponse) => Promise<void>;
 
 export class ReplyInterceptor extends PassThrough {
   hooks: ReplyInterceptorHook[];
@@ -25,7 +18,7 @@ export class ReplyInterceptor extends PassThrough {
 
   async _transform(
     chunk: Uint8Array,
-    encoding: unknown,
+    _encoding: unknown,
     callback: (err?: Error) => void,
   ): Promise<void> {
     const buffer = Buffer.from(chunk);
@@ -33,18 +26,12 @@ export class ReplyInterceptor extends PassThrough {
       const msg = decodeMessage(buffer);
       const requestID = msg.header.requestID;
       const responseTo = msg.header.responseTo;
-      if (
-        msg.header.opCode === OP_MSG &&
-        msg.contents.sections.length > 0 &&
-        msg.contents.sections[0].payload.hasOwnProperty('cursor')
-      ) {
-        const intercepted: InterceptedReply = {
-          requestID,
-          responseTo,
-          data: msg.contents.sections[0].payload.cursor.firstBatch,
-        };
+
+      const payload = msg.contents.sections[0].payload;
+      if (msg.header.opCode === OP_MSG) {
+        const res: IResponse = resolveResponse(requestID, responseTo, payload);
         for (const hook of this.hooks) {
-          hook(intercepted);
+          hook(res);
         }
       }
     } catch (e) {}
