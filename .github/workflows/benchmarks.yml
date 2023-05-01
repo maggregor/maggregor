@@ -9,6 +9,8 @@ on:
         options:
           - "Run all scenarios"
           - "Run 'aggregate' scenario"
+          - "Run 'count' scenario"
+          - "Run 'distinct' scenario"
           - "Run 'find' scenario"
       docs:
         type: choice
@@ -41,8 +43,10 @@ jobs:
 
       - name: Run benchmark
         run: |
-          if [ "${{ github.event.inputs.tests }}" != "Run all scenarios" ]; then
-            pnpm benchmark --docs "${{ github.event.inputs.docs }}" --flush --name="${{ github.event.inputs.tests }}"
+          TEST_NAME=${{ github.event.inputs.tests }}
+          if [ "$TEST_NAME" != "Run all scenarios" ]; then
+            SCENARIO="--name=$(echo $TEST_NAME | sed 's/Run //; s/ //')"
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}" --flush $SCENARIO
           else
-            pnpm benchmark --docs "${{ github.event.inputs.docs }}"  --flush
+            pnpm benchmark --docs "${{ github.event.inputs.docs }}" --flush
           fi
