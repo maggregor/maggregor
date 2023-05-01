@@ -85,6 +85,8 @@ async function setup(
   opts: RunnerOptions,
 ) {
   const client = await createClient(mongodb.getUri());
+  logger.debug(`Cleaning Maggregor's internal database`);
+  await maggregor?.clearDatabase();
   logger.debug(`Cleaning collection '${COLLECTION}'`);
   await cleanCollection();
   await loadTestData(client, {

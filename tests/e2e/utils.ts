@@ -100,3 +100,7 @@ export async function healthCheck(
 
   await Promise.all(promises);
 }
+
+export const simulateDelay = (delay = 10) => {
+  return new Promise<void>((resolve) => process.nextTick(resolve, delay));
+};

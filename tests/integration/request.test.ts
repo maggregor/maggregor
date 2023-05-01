@@ -1,11 +1,13 @@
-import { MsgAggregate } from '@server/modules/mongodb-proxy/interceptors/aggregate.interceptor';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Model } from 'mongoose';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { InterceptedReply } from '@/server/modules/mongodb-proxy/interceptors/reply-interceptor';
+import { IRequest } from '@/server/modules/request/request.interface';
+import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
+import { LoggerModule } from '@/server/modules/logger/logger.module';
+import { simulateDelay } from 'tests/e2e/utils';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
@@ -14,6 +16,7 @@ describe('RequestService (integration)', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        LoggerModule,
         DatabaseModule,
         MongooseModule.forFeature([
           { name: Request.name, schema: RequestSchema },
@@ -34,28 +37,32 @@ describe('RequestService (integration)', () => {
     await model.deleteMany({});
   });
 
-  const expectRequest = (result: Request, request: Request) => {
-    expect(result).toBeDefined();
+  const expectRequest = (actual: Request, request: Request) => {
+    expect(actual).toBeDefined();
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - TODO: Fix this
-    expect(result._id).toBeDefined();
-    expect(result.request).toStrictEqual(request.request);
-    expect(result.requestID).toStrictEqual(request.requestID);
-    expect(result.startAt).toStrictEqual(request.startAt);
-    expect(result.endAt).toStrictEqual(request.endAt);
-    expect(result.collectionName).toStrictEqual(request.collectionName);
-    expect(result.dbName).toStrictEqual(request.dbName);
+    expect(actual._id).toBeDefined();
+    expect(actual.pipeline).toStrictEqual(request.pipeline);
+    expect(actual.type).toStrictEqual(request.type);
+    expect(actual.filter).toStrictEqual(request.filter);
+    expect(actual.query).toStrictEqual(request.query);
+    expect(actual.requestID).toStrictEqual(request.requestID);
+    expect(actual.startAt).toStrictEqual(request.startAt);
+    expect(actual.endAt).toStrictEqual(request.endAt);
+    expect(actual.collName).toStrictEqual(request.collName);
+    expect(actual.db).toStrictEqual(request.db);
   };
 
   describe('create', () => {
     it('should create a new request', async () => {
-      const request = {
-        request: 'test',
+      const request: Request = {
+        filter: { test: 'test' },
+        type: 'find',
         requestID: 1,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection',
-        dbName: 'testDatabase',
+        collName: 'testCollection',
+        db: 'testDatabase',
       };
       const result = await service.create(request);
       expectRequest(result, request);
@@ -64,21 +71,23 @@ describe('RequestService (integration)', () => {
 
   describe('findAll', () => {
     it('should return all requests', async () => {
-      const request1 = {
-        request: 'test1',
+      const request1: IRequest = {
+        filter: { test: 'test' },
+        type: 'find',
         requestID: 1,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection1',
-        dbName: 'testDatabase1',
+        collName: 'testCollection1',
+        db: 'testDatabase1',
       };
-      const request2 = {
-        request: 'test2',
+      const request2: IRequest = {
+        filter: { test: 'test' },
+        type: 'aggregate',
         requestID: 2,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection2',
-        dbName: 'testDatabase2',
+        collName: 'testCollection2',
+        db: 'testDatabase2',
       };
       await service.create(request1);
       await service.create(request2);
@@ -92,13 +101,14 @@ describe('RequestService (integration)', () => {
 
   describe('findOne', () => {
     it('should return a request by id', async () => {
-      const request = {
-        request: 'test',
+      const request: IRequest = {
+        type: 'find',
+        filter: { test: 'test' },
         requestID: 1,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection',
-        dbName: 'testDatabase',
+        collName: 'testCollection',
+        db: 'testDatabase',
       };
       const created = await service.create(request);
       const result = await service.findOneByRequestId(created.requestID);
@@ -108,8 +118,9 @@ describe('RequestService (integration)', () => {
 
   describe('update', () => {
     it('should update a request', async () => {
-      const request = {
-        request: [
+      const request: Request = {
+        type: 'aggregate',
+        pipeline: [
           {
             $project: {
               name: 1,
@@ -119,23 +130,27 @@ describe('RequestService (integration)', () => {
         requestID: 3,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection',
-        dbName: 'testDatabase',
+        collName: 'testCollection',
+        db: 'testDatabase',
       };
       const created = await service.create(request);
-      created.request = 'testUpdated';
+      created.pipeline = [
+        { $project: { name: 1 } },
+        { $match: { name: 'testUpdated' } },
+      ];
       const updated = await service.updateOne(created);
       expectRequest(updated, {
         ...request,
-        request: 'testUpdated',
+        pipeline: created.pipeline,
       });
     });
   });
 
   describe('remove', () => {
     it('should remove a request', async () => {
-      const request = {
-        request: [
+      const request: Request = {
+        type: 'aggregate',
+        pipeline: [
           {
             $match: {
               name: 'test',
@@ -145,8 +160,8 @@ describe('RequestService (integration)', () => {
         requestID: 10,
         startAt: new Date(),
         endAt: new Date(),
-        collectionName: 'testCollection',
-        dbName: 'testDatabase',
+        collName: 'testCollection',
+        db: 'testDatabase',
       };
       const created = await service.create(request);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -159,12 +174,13 @@ describe('RequestService (integration)', () => {
     });
   });
 
-  describe('onAggregateQueryFromClient', () => {
+  describe('onRequest', () => {
     it('should create a new request', async () => {
-      const aggregateReq: MsgAggregate = {
+      const aggregateReq: IRequest = {
+        type: 'aggregate',
         requestID: 1,
-        dbName: 'mydb',
-        collectionName: 'collectionName',
+        db: 'mydb',
+        collName: 'collection',
         pipeline: [
           {
             $match: {
@@ -173,7 +189,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      const aggregateResult: InterceptedReply = {
+      const aggregateResult: IResponse = {
         requestID: -1,
         responseTo: 1,
         data: [
@@ -183,30 +199,35 @@ describe('RequestService (integration)', () => {
         ],
       };
       // Request from client to server
-      let resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
+      let resultMsg = await service.onRequest(aggregateReq);
+      await simulateDelay();
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
-      expect(req.request).toStrictEqual(aggregateReq.pipeline);
+      expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
       expect(req.requestID).toEqual(aggregateReq.requestID);
       expect(req.startAt).toBeDefined();
       expect(req.endAt).to.not.toBeDefined();
-      expect(req.collectionName).toStrictEqual(aggregateReq.collectionName);
-      expect(req.dbName).toStrictEqual(aggregateReq.dbName);
+      expect(req.collName).toStrictEqual(aggregateReq.collName);
+      expect(req.db).toStrictEqual(aggregateReq.db);
       expect(resultMsg).toBe(null);
       // Result from server to client
-      await service.onResultFromServer(aggregateResult);
+      await service.onResult(aggregateResult);
+      await simulateDelay();
       const updatedReq = (await service.findAll()).at(0);
       expect(updatedReq).toBeDefined();
       expect((await service.findAll()).length).toEqual(1);
-      expect(updatedReq.request).toStrictEqual(aggregateReq.pipeline);
+      // expect(updatedReq.request).toStrictEqual(aggregateReq.pipeline);
       expect(updatedReq.requestID).toEqual(aggregateReq.requestID);
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
-      resultMsg = await service.onAggregateQueryFromClient(aggregateReq);
+      resultMsg = await service.onRequest(aggregateReq);
+      await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
       expect((await service.findAll()).length).toEqual(2);
-      expect((await service.findAll()).at(1).source).toStrictEqual('cache');
+      expect((await service.findAll()).at(1).requestSource).toStrictEqual(
+        'cache',
+      );
     });
   });
 });

@@ -3,12 +3,14 @@ import waitPort from 'wait-port';
 import { config } from 'dotenv';
 import chalk from 'chalk';
 import logger from '../__utils__/logger';
+import axios from 'axios';
 
 config({ path: '.env.test' });
 
-type MProcessParams = { port?: number; targetUri?: string };
+type MProcessParams = { port?: number; httpPort?: number; targetUri?: string };
 
 const defaultParams: MProcessParams = {
+  httpPort: parseInt(process.env.HTTP_PORT),
   port: parseInt(process.env.PROXY_PORT),
   targetUri: process.env.MONGODB_TARGET_URI,
 };
@@ -22,6 +24,7 @@ export class MaggregorProcess {
     process.env.MONGODB_TARGET_URI =
       this.params.targetUri || process.env.MONGODB_TARGET_URI;
     process.env.PROXY_PORT = this.params.port.toString();
+    process.env.HTTP_PORT = this.params.httpPort.toString();
   }
 
   async start() {
@@ -52,6 +55,10 @@ export class MaggregorProcess {
     return `mongodb://localhost:${this.params.port}`;
   }
 
+  getHttpUri() {
+    return `http://localhost:${this.params.httpPort}`;
+  }
+
   stop() {
     this.process && process.kill(-this.process.pid);
     this.debug('Process killed');
@@ -63,6 +70,10 @@ export class MaggregorProcess {
 
   warn(msg: string) {
     logger.warn(chalk.yellow(`[Maggregor] ${msg}`));
+  }
+
+  async clearDatabase() {
+    await axios.delete(`${this.getHttpUri()}/requests`);
   }
 
   async processAlreadyStarted(): Promise<boolean> {
