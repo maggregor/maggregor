@@ -76,7 +76,7 @@ describe('InMemoryCache', () => {
     const result = [{ id: 1, name: 'John Doe' }];
     cache.set(query, collection, db, result);
     expect(cache.has(query, collection, db)).to.be.true;
-    cache.invalidateCollection(collection, db);
+    cache.invalidateCollection(db, collection);
     expect(cache.get(query, collection, db)).to.be.null;
   });
 });

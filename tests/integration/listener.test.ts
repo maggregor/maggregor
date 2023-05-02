@@ -1,11 +1,11 @@
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
-import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
+import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { startMongoServer, wait } from 'tests/e2e/utils';
 import { createListenerService } from 'tests/unit/server/utils';
 
 describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
-  let service: MongoDBListenerService;
+  let service: ListenerService;
   let mongodbClient: MongoClient;
   let mongodbServer: MongoMemoryReplSet;
 
@@ -30,7 +30,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     });
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
-    await service.subscribeToCollectionChanges('test', callback);
+    await service.subscribeToCollectionChanges('test', 'test', callback);
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
     await collection.deleteOne({ city: 'New York' });
@@ -42,8 +42,8 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     const callback = vitest.fn();
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
-    await service.subscribeToCollectionChanges('test', callback);
-    await service.unsubscribeFromCollectionChanges('test', callback);
+    await service.subscribeToCollectionChanges('test', 'test', callback);
+    await service.unsubscribeFromCollectionChanges('test', 'test', callback);
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await wait(10);
     expect(callback).not.toHaveBeenCalled();

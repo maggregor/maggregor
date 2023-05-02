@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import bytes from 'bytes';
 import { IRequest } from '../request/request.interface';
 import { IResponse } from '../mongodb-proxy/payload-resolver';
+import { ListenerService } from '../mongodb-listener/listener.service';
 
 @Injectable()
 export class CacheService {
@@ -13,6 +14,7 @@ export class CacheService {
   constructor(
     @Inject(ConfigService) private readonly config: ConfigService,
     @Inject(LoggerService) private readonly logger: LoggerService,
+    @Inject(ListenerService) private readonly listener: ListenerService,
   ) {
     this.logger.setContext(CacheService.name);
     this.__cache = new InMemoryCache(this.config.get('CACHE_MAX_SIZE') ?? 512);
@@ -47,11 +49,16 @@ export class CacheService {
 
   public tryCacheResults(req: IRequest, res: IResponse): void {
     if (!this.canCache(req, res)) {
-      // Not eligible for caching.
       return;
     }
     this.withCache(req, (key, collection, db) => {
       this.__cache.set(key, collection, db, res.data);
+      this.listener.subscribeToCollectionChanges(db, collection, () => {
+        this.logger.debug(
+          `CacheService: Received change on collection ${collection} in database ${db}`,
+        );
+        this.__cache.invalidateCollection(db, collection);
+      });
     });
   }
 
