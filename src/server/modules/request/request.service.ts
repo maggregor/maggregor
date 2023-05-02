@@ -8,6 +8,7 @@ import { IResponse } from '../mongodb-proxy/payload-resolver';
 import { MsgResult } from '../mongodb-proxy/protocol';
 import { IRequest } from './request.interface';
 import { LoggerService } from '../logger/logger.service';
+import { CacheService } from '../cache-request/cache.service';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   private cache: InMemoryCache = new InMemoryCache(512);
@@ -15,6 +16,7 @@ export class RequestService implements MongoDBProxyListener {
   constructor(
     @InjectModel(Request.name) private readonly requestModel: Model<Request>,
     @Inject(LoggerService) private readonly logger: LoggerService,
+    @Inject(CacheService) private readonly cacheService: CacheService,
   ) {
     this.logger.setContext('Requests');
   }
@@ -62,12 +64,12 @@ export class RequestService implements MongoDBProxyListener {
       // We ignore admin requests (such as heartbeat, listDatabases, etc.)
       return null;
     }
-    if (this.hasCachedResults(req)) {
+    if (this.cacheService.hasCachedResults(req)) {
       req.endAt = new Date();
       this.logger.log(
         `id:${reqID}: (${req.type}) Answered from cache (${ms(req)})`,
       );
-      results = this.getCachedResults(req);
+      results = this.cacheService.getCachedResults(req);
     }
     req.requestSource = results ? 'cache' : 'mongodb';
     this.create(req);
@@ -90,65 +92,13 @@ export class RequestService implements MongoDBProxyListener {
     }
     req.endAt = new Date();
     this.updateOne(req);
-    this.tryCacheResults(req, res);
+    this.cacheService.tryCacheResults(req, res);
     this.logger.log(
       `id:${requestID}: (${req.type}) Answered from MongoDB (${ms(req)})`,
     );
   }
-
-  private withCache<T>(
-    req: Request,
-    operation: (key: string, collection: string, db: string, data?: T) => T,
-  ): T {
-    const key = JSON.stringify(req.pipeline || req.filter || req.query || {});
-    return operation(key, req.collName, req.db);
-  }
-
-  private hasCachedResults(req: Request): boolean {
-    return this.withCache(req, (key, collection, db) =>
-      this.cache.has(key, collection, db),
-    );
-  }
-
-  private getCachedResults(req: Request): any {
-    return this.withCache(req, (key, collection, db) =>
-      this.cache.get(key, collection, db),
-    );
-  }
-
-  private tryCacheResults(req: IRequest, res: IResponse): void {
-    if (!canCache(req, res)) {
-      // Not eligible for caching.
-      return;
-    }
-    this.withCache(req, (key, collection, db) => {
-      this.cache.set(key, collection, db, res.data);
-    });
-  }
 }
 
-/**
- * Checks if the request can be cached.
- * TODO: Check if the request doesn't contains
- * - time-based operators.
- * - user-based operators.
- * @param req
- * @param res
- * @returns
- */
-function canCache(req: IRequest, res: IResponse): boolean {
-  if (res.data === undefined) {
-    /**
-     * We don't cache undefined results.
-     * This is the case when the response type isn't supported by Maggregor.
-     */
-    return false;
-  }
-  /**
-   * We apply a control on the request type to avoid caching irrelevant requests.
-   */
-  return ['find', 'aggregate'].includes(req.type);
-}
 function ms(req: IRequest) {
   return `${req.endAt.getTime() - req.startAt.getTime()}ms`;
 }

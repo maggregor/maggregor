@@ -7,12 +7,14 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '../logger/logger.module';
 import { RequestController } from './request.controller';
 import { StatsController } from './stats.controller';
+import { CacheService } from '../cache-request/cache.service';
 
 @Module({
   imports: [
     LoggerModule,
     ConfigModule,
     DatabaseModule,
+    CacheService,
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],
   providers: [RequestService],
