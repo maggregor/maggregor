@@ -1,8 +1,8 @@
-import { RequestService } from '@/server/modules/request/request.service';
 import { createCacheServiceWithMockDeps } from '../../utils';
+import { CacheService } from '@/server/modules/cache-request/cache.service';
 
 describe('RequestService', () => {
-  let service: RequestService;
+  let service: CacheService;
 
   beforeEach(async () => {
     service = await createCacheServiceWithMockDeps({

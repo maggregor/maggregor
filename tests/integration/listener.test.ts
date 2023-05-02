@@ -4,7 +4,7 @@ import { MongoClient } from 'mongodb';
 import { ConfigService } from '@nestjs/config';
 import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
-import { startMongoServer } from 'tests/e2e/utils';
+import { startMongoServer, wait } from 'tests/e2e/utils';
 
 describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
   let service: MongoDBListenerService;
@@ -38,22 +38,30 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await mongodbClient.close();
   });
 
-  test('should emit changed event', async () => {
-    const callback = vi.fn((change) => {
+  test('should emit "change" event when document is inserted and updated', async () => {
+    const callback = vitest.fn((change) => {
       expect(change).toHaveProperty('operationType');
-      expect(change).toHaveProperty('fullDocument');
-      if (change.operationType === 'update') {
-        expect(change).toHaveProperty('fullDocumentBeforeChange');
-      }
       expect(change).toHaveProperty('ns');
     });
-    service.on('change', callback);
     const db = mongodbClient.db('test');
-    const collection = await db.createCollection('test');
-    await db.command({ collMod: 'test', recordPreImages: true });
+    const collection = db.collection('test');
+    await service.subscribeToCollectionChanges('test', callback);
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
-    // await wait(1000);
-    // expect(callback).toBeCalledTimes(2);
+    await collection.deleteOne({ city: 'New York' });
+    await wait(10);
+    expect(callback).toHaveBeenCalledTimes(3);
+  });
+
+  test('should not emit "change" event when unsubscribed from collection', async () => {
+    const callback = vitest.fn();
+    service.on('change', callback);
+    const db = mongodbClient.db('test');
+    const collection = db.collection('test');
+    await service.subscribeToCollectionChanges('test', () => null);
+    await service.unsubscribeFromCollectionChanges('test', () => null);
+    await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
+    expect(callback).not.toHaveBeenCalled();
+    service.off('change', callback);
   });
 });

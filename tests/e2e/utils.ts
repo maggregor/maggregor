@@ -53,7 +53,8 @@ export async function loadTestData(
 
 export async function startMongoServer() {
   const server = await MongoMemoryReplSet.create({
-    replSet: { count: 3 },
+    replSet: { count: 1 },
+    instanceOpts: [{ storageEngine: 'wiredTiger' }],
   });
   return server;
 }

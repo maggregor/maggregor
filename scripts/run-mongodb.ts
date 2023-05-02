@@ -12,12 +12,8 @@ import { loadTestData } from '../tests/e2e/utils';
 logger.info('Starting MongoDB instance...');
 
 MongoMemoryReplSet.create({
-  replSet: { count: 3 },
-  instanceOpts: [
-    { storageEngine: 'wiredTiger', port: 27017 },
-    { storageEngine: 'wiredTiger' },
-    { storageEngine: 'wiredTiger' },
-  ],
+  replSet: { count: 1 },
+  instanceOpts: [{ storageEngine: 'wiredTiger', port: 27017 }],
 }).then(async (server) => {
   server.waitUntilRunning();
   const uri = server.getUri();
