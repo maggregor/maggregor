@@ -10,6 +10,7 @@ import { DatabaseModule } from '@/server/modules/database/database.module';
 import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
+import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
 
 export type TestConfigServiceOptions = {
   env: {
