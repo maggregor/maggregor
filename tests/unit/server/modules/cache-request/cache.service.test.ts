@@ -1,5 +1,4 @@
 import { CacheService } from '@/server/modules/cache-request/cache.service';
-import { LoggerService } from '@/server/modules/logger/logger.service';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { IRequest } from '@/server/modules/request/request.interface';
 import {

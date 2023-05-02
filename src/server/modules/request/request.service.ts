@@ -11,8 +11,6 @@ import { LoggerService } from '../logger/logger.service';
 import { CacheService } from '../cache-request/cache.service';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
-  private cache: InMemoryCache = new InMemoryCache(512);
-
   constructor(
     @InjectModel(Request.name) private readonly requestModel: Model<Request>,
     @Inject(LoggerService) private readonly logger: LoggerService,
