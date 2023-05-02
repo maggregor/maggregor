@@ -53,7 +53,7 @@ export async function loadTestData(
 
 export async function startMongoServer() {
   const server = await MongoMemoryReplSet.create({
-    replSet: { count: 1 },
+    replSet: { count: 3 },
   });
   return server;
 }

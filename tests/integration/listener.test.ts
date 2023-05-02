@@ -4,6 +4,7 @@ import { MongoClient } from 'mongodb';
 import { ConfigService } from '@nestjs/config';
 import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
+import { startMongoServer } from 'tests/e2e/utils';
 
 describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
   let service: MongoDBListenerService;
@@ -11,9 +12,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
   let mongodbServer: MongoMemoryReplSet;
 
   beforeAll(async () => {
-    mongodbServer = await MongoMemoryReplSet.create({
-      replSet: { count: 1, storageEngine: 'wiredTiger' },
-    });
+    mongodbServer = await startMongoServer();
     const app: TestingModule = await Test.createTestingModule({
       imports: [LoggerModule],
       providers: [
@@ -54,6 +53,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await db.command({ collMod: 'test', recordPreImages: true });
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
-    expect(true).toBeTruthy();
+    // await wait(1000);
+    // expect(callback).toBeCalledTimes(2);
   });
 });

@@ -29,11 +29,14 @@ export class MongoDBListenerService extends EventEmitter {
           },
         );
         // Try to connect to the MongoDB instance.
-        this.client.db();
         this.logger.success(
           'Successfully connected to the target MongoDB instance',
         );
-        // TODO: Implement change stream
+        const changeStream = this.client.db('mydb').watch();
+        changeStream.on('change', (change) => {
+          this.logger.log(`Received change from MongoDB: ${change}`);
+          this.emit('change', change);
+        });
         return;
       } catch (error) {
         retries--;
