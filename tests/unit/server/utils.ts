@@ -7,9 +7,10 @@ import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CacheService } from '@/server/modules/cache-request/cache.service';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
+import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
+import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -82,6 +83,13 @@ export async function createCacheServiceWithMockDeps(
     providers: [
       CacheService,
       {
+        provide: ListenerService,
+        useValue: {
+          subscribeToCollectionChanges: () => null,
+          unsubscribeFromCollectionChanges: () => null,
+        },
+      },
+      {
         provide: ConfigService,
         useValue: {
           get: (key: string) => {
@@ -104,7 +112,18 @@ export async function createRequestService() {
         { name: Request.name, schema: RequestSchema },
       ]),
     ],
-    providers: [RequestService, ConfigService, CacheService],
+    providers: [
+      RequestService,
+      ConfigService,
+      CacheService,
+      {
+        provide: ListenerService,
+        useValue: {
+          subscribeToCollectionChanges: () => null,
+          unsubscribeFromCollectionChanges: () => null,
+        },
+      },
+    ],
   }).compile();
   return app.get<RequestService>(RequestService);
 }
@@ -114,7 +133,7 @@ export async function createListenerService(config: TestConfigServiceOptions) {
   const app = await Test.createTestingModule({
     imports: [LoggerModule],
     providers: [
-      MongoDBListenerService,
+      ListenerService,
       {
         provide: ConfigService,
         useValue: {
@@ -125,7 +144,7 @@ export async function createListenerService(config: TestConfigServiceOptions) {
       },
     ],
   }).compile();
-  return app.get<MongoDBListenerService>(MongoDBListenerService);
+  return app.get<ListenerService>(ListenerService);
 }
 
 export const createMockRequest = (overrides?: Partial<IRequest>): IRequest => {

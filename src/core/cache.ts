@@ -87,7 +87,7 @@ export class InMemoryCache {
     this.cache = {};
   }
 
-  public invalidateCollection(collection: string, db: string): void {
+  public invalidateCollection(db: string, collection: string): void {
     for (const key in this.cache) {
       if (
         this.cache.hasOwnProperty(key) &&

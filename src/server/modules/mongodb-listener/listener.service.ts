@@ -10,13 +10,14 @@ import EventEmitter from 'events';
 interface CollectionChangeListener {
   stream: ChangeStream; // The ChangeStream object listening for changes on the collection
   listeners: Set<(change: any) => void>; // The listeners for changes on the collection
+  dbName: string; // The name of the database the collection belongs to
 }
 
 /**
  * Service class that allows subscribing to changes on MongoDB collections
  */
 @Injectable()
-export class MongoDBListenerService extends EventEmitter {
+export class ListenerService extends EventEmitter {
   private client: MongoClient;
   private changeStreams = new Map<string, CollectionChangeListener>(); // Map of CollectionChangeListener objects
 
@@ -68,6 +69,7 @@ export class MongoDBListenerService extends EventEmitter {
    * @param callback The callback function to call when a change is detected on the collection
    */
   public async subscribeToCollectionChanges(
+    dbName: string,
     collectionName: string,
     callback: (change: any) => void,
   ) {
@@ -75,12 +77,13 @@ export class MongoDBListenerService extends EventEmitter {
     let collectionChangeListener = this.changeStreams.get(collectionName);
     if (!collectionChangeListener) {
       // Create a new CollectionChangeListener object for this collection
-      const db = this.client.db();
+      const db = this.client.db(dbName);
       const collection: Collection = db.collection(collectionName);
       const stream: ChangeStream = collection.watch();
       const listeners: Set<(change: any) => void> = new Set();
-      collectionChangeListener = { stream, listeners };
-      this.changeStreams.set(collectionName, collectionChangeListener);
+      collectionChangeListener = { stream, listeners, dbName };
+      const key = `${db.databaseName}.${collectionName}`;
+      this.changeStreams.set(key, collectionChangeListener);
     }
     // Add the callback to the listeners set for the collection
     collectionChangeListener.listeners.add(callback);
@@ -98,14 +101,16 @@ export class MongoDBListenerService extends EventEmitter {
    * @param callback The callback function to remove from the listeners list for the collection
    */
   public async unsubscribeFromCollectionChanges(
+    dbName: string,
     collectionName: string,
     callback: (change: any) => void,
   ) {
-    const collectionChangeListener = this.changeStreams.get(collectionName);
+    const key = `${dbName}.${collectionName}`;
+    const collectionChangeListener = this.changeStreams.get(key);
     collectionChangeListener.listeners.delete(callback);
     if (collectionChangeListener.listeners.size === 0) {
       collectionChangeListener.stream.close();
-      this.changeStreams.delete(collectionName);
+      this.changeStreams.delete(key);
     }
   }
 }
