@@ -4,12 +4,12 @@ import { RequestService } from '@/server/modules/request/request.service';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { CacheService } from '@/server/modules/cache-request/cache.service';
 import { DatabaseModule } from '@/server/modules/database/database.module';
-import { RequestModule } from '@/server/modules/request/request.module';
-import { CacheModule } from '@/server/modules/cache-request/cache.module';
+import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
+import { IRequest } from '@/server/modules/request/request.interface';
+import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -17,6 +17,7 @@ export type TestConfigServiceOptions = {
   };
 };
 
+// Proxy service with injected dependencies mocked
 export async function createProxyServiceWithMockDeps(
   config: TestConfigServiceOptions,
 ) {
@@ -41,6 +42,7 @@ export async function createProxyServiceWithMockDeps(
   return app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
 }
 
+// Requset service with injected dependencies mocked
 export async function createRequestServiceWithMockDeps() {
   const app: TestingModule = await Test.createTestingModule({
     imports: [LoggerModule],
@@ -71,20 +73,7 @@ export async function createRequestServiceWithMockDeps() {
   return app.get<RequestService>(RequestService);
 }
 
-export async function createRequestServiceTest() {
-  const app: TestingModule = await Test.createTestingModule({
-    imports: [
-      LoggerModule,
-      DatabaseModule,
-      MongooseModule.forFeature([
-        { name: Request.name, schema: RequestSchema },
-      ]),
-    ],
-    providers: [RequestService, ConfigService, CacheService],
-  }).compile();
-  return app.get<RequestService>(RequestService);
-}
-
+// Cache service with injected dependencies mocked
 export async function createCacheServiceWithMockDeps(
   config: TestConfigServiceOptions,
 ) {
@@ -104,3 +93,66 @@ export async function createCacheServiceWithMockDeps(
   }).compile();
   return app.get<CacheService>(CacheService);
 }
+
+// Request service with real dependencies (for integration tests)
+export async function createRequestService() {
+  const app: TestingModule = await Test.createTestingModule({
+    imports: [
+      LoggerModule,
+      DatabaseModule,
+      MongooseModule.forFeature([
+        { name: Request.name, schema: RequestSchema },
+      ]),
+    ],
+    providers: [RequestService, ConfigService, CacheService],
+  }).compile();
+  return app.get<RequestService>(RequestService);
+}
+
+// Listener service with real dependencies (for integration tests)
+export async function createListenerService(config: TestConfigServiceOptions) {
+  const app = await Test.createTestingModule({
+    imports: [LoggerModule],
+    providers: [
+      MongoDBListenerService,
+      {
+        provide: ConfigService,
+        useValue: {
+          get: (key: string) => {
+            return config.env[key];
+          },
+        },
+      },
+    ],
+  }).compile();
+  return app.get<MongoDBListenerService>(MongoDBListenerService);
+}
+
+export const createMockRequest = (overrides?: Partial<IRequest>): IRequest => {
+  return {
+    requestID: 1,
+    db: 'myDb',
+    collName: 'myCollection',
+    startAt: new Date(),
+    endAt: new Date(),
+    pipeline: [],
+    filter: {},
+    query: {},
+    key: 'myKey',
+    limit: 10,
+    requestSource: 'mongodb',
+    type: 'find',
+    ...overrides,
+  };
+};
+
+export const createMockResponse = (
+  overrides?: Partial<IResponse>,
+): IResponse => {
+  return {
+    requestID: 1,
+    responseTo: 0,
+    data: [{ name: 'John' }],
+    ...overrides,
+  };
+};

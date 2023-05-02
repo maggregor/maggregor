@@ -1,10 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
-import { ConfigService } from '@nestjs/config';
 import { MongoDBListenerService } from '@/server/modules/mongodb-listener/listener.service';
-import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { startMongoServer, wait } from 'tests/e2e/utils';
+import { createListenerService } from 'tests/unit/server/utils';
 
 describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
   let service: MongoDBListenerService;
@@ -13,26 +11,13 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
 
   beforeAll(async () => {
     mongodbServer = await startMongoServer();
-    const app: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule],
-      providers: [
-        MongoDBListenerService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: (key: string) => {
-              if (key === 'MONGODB_TARGET_URI') {
-                return mongodbServer.getUri();
-              }
-            },
-          },
-        },
-      ],
-    }).compile();
-    service = app.get<MongoDBListenerService>(MongoDBListenerService);
+    service = await createListenerService({
+      env: {
+        MONGODB_TARGET_URI: mongodbServer.getUri(),
+      },
+    });
     mongodbClient = await MongoClient.connect(mongodbServer.getUri());
   });
-
   afterAll(async () => {
     await mongodbServer.stop();
     await mongodbClient.close();
@@ -55,13 +40,12 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
 
   test('should not emit "change" event when unsubscribed from collection', async () => {
     const callback = vitest.fn();
-    service.on('change', callback);
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
-    await service.subscribeToCollectionChanges('test', () => null);
-    await service.unsubscribeFromCollectionChanges('test', () => null);
+    await service.subscribeToCollectionChanges('test', callback);
+    await service.unsubscribeFromCollectionChanges('test', callback);
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
+    await wait(10);
     expect(callback).not.toHaveBeenCalled();
-    service.off('change', callback);
   });
 });

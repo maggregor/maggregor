@@ -8,13 +8,13 @@ import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { simulateDelay } from 'tests/e2e/utils';
-import { createRequestServiceTest } from 'tests/unit/server/utils';
+import { createRequestService } from 'tests/unit/server/utils';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
 
   beforeAll(async () => {
-    service = await createRequestServiceTest();
+    service = await createRequestService();
   });
 
   beforeEach(async () => {

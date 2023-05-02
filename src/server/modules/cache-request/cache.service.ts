@@ -64,7 +64,7 @@ export class CacheService {
    * @param res
    * @returns
    */
-  private canCache(req: IRequest, res: IResponse): boolean {
+  public canCache(req: IRequest, res: IResponse): boolean {
     if (res.data === undefined) {
       /**
        * We don't cache undefined results.

@@ -10,11 +10,11 @@ interface CacheItem {
 }
 
 export class InMemoryCache {
-  private _maxSize: number;
+  private _maxBytesSize: number;
   private cache: Record<string, CacheItem>;
 
-  constructor(max_size_mb: number) {
-    this._maxSize = max_size_mb * 1024 * 1024;
+  constructor(maxSizeMb: number) {
+    this._maxBytesSize = maxSizeMb * 1024 * 1024;
     this.cache = {};
   }
 
@@ -35,14 +35,14 @@ export class InMemoryCache {
   }
 
   set(query: string, collection: string, db: string, result: any): void {
-    if (this._maxSize <= 0) {
+    if (this._maxBytesSize <= 0) {
       // Cache is disabled
       return;
     }
     const key = `${query}-${collection}-${db}`;
     const item_size = sizeof(result);
     const now = Date.now();
-    if (this.currentSize() + item_size > this._maxSize) {
+    if (this.currentSize() + item_size > this._maxBytesSize) {
       // Sort items in cache by frequency count
       const items = Object.keys(this.cache).map((key) => this.cache[key]);
       items.sort((a, b) => a.frequency - b.frequency);
@@ -100,6 +100,6 @@ export class InMemoryCache {
   }
 
   public get maxSize(): number {
-    return this._maxSize;
+    return this._maxBytesSize;
   }
 }
