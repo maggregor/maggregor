@@ -1,6 +1,4 @@
 import type { MongoClient } from 'mongodb';
-import { wait, simulateDelay } from '../utils';
-
 export interface E2EScenarios {
   name: string;
   // Will run the request on MongoDB and Maggregor asynchronously

@@ -6,7 +6,6 @@ interface CacheItem {
   query: string;
   collection: string;
   db: string;
-  timestamp: number;
 }
 
 export class InMemoryCache {
@@ -58,18 +57,7 @@ export class InMemoryCache {
       query,
       collection,
       db,
-      timestamp: now,
     };
-    // Invalidate items older than 10 minutes
-    const ten_minutes_ago = now - 10 * 60 * 1000;
-    for (const key in this.cache) {
-      if (
-        this.cache.hasOwnProperty(key) &&
-        this.cache[key].timestamp < ten_minutes_ago
-      ) {
-        delete this.cache[key];
-      }
-    }
   }
 
   private currentSize(): number {
