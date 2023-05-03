@@ -79,4 +79,14 @@ describe('InMemoryCache', () => {
     cache.invalidateCollection(db, collection);
     expect(cache.get(query, collection, db)).to.be.null;
   });
+
+  it('should not cache items when the max size is set to 0', () => {
+    const query = 'myquery';
+    const collection = 'users';
+    const db = 'mydb';
+    const result = [{ id: 1, name: 'John Doe' }];
+    cache = new InMemoryCache(0);
+    cache.set(query, collection, db, result);
+    expect(cache.get(query, collection, db)).to.be.null;
+  });
 });
