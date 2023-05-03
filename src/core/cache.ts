@@ -40,7 +40,6 @@ export class InMemoryCache {
     }
     const key = `${query}-${collection}-${db}`;
     const item_size = sizeof(result);
-    const now = Date.now();
     if (this.currentSize() + item_size > this._maxBytesSize) {
       // Sort items in cache by frequency count
       const items = Object.keys(this.cache).map((key) => this.cache[key]);
