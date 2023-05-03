@@ -5,7 +5,7 @@ coverage:
   precision: 2
 
 ignore:
-  - parser/mongo-aggregation-parser.ts
+  - "src/parser/mongo-aggregation-parser.ts"
 
 comment:
   layout: diff, files
