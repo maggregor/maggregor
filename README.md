@@ -10,6 +10,7 @@
 
 </div>
 
+# Architecture
 [![Maggregor Architecture](https://user-images.githubusercontent.com/32603471/236058294-6f0525bd-cb84-4178-a2c6-cc87d742b0e8.png)](#)
 
 # Quick start
