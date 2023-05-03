@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  tests:
+  unit:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,13 +20,34 @@ jobs:
         run: |
           pnpm test:unit:coverage
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: coverage/unit
+
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite-setup
+
       - name: Integration Tests
         run: |
-          pnpm test:integration
+          pnpm test:integration:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: coverage/integration
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/composite-setup
 
       - name: E2E Tests
         run: |
           pnpm test:e2e
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3

@@ -1,4 +1,4 @@
-import { mergeConfig } from 'vitest/config';
+import { UserConfigExport, mergeConfig } from 'vitest/config';
 import commonConfig from './vitest.config';
 
 export default mergeConfig(commonConfig, {
@@ -6,5 +6,8 @@ export default mergeConfig(commonConfig, {
     include: ['**/tests/integration/**/*.test.ts'],
     hookTimeout: 10000,
     testTimeout: 20000,
+    coverage: {
+      reportsDirectory: './coverage/integration',
+    },
   },
-});
+} as UserConfigExport);
