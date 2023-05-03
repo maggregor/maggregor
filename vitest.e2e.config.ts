@@ -1,4 +1,4 @@
-import { mergeConfig } from 'vitest/config';
+import { UserConfigExport, mergeConfig } from 'vitest/config';
 import commonConfig from './vitest.config';
 
 export default mergeConfig(commonConfig, {
@@ -8,4 +8,4 @@ export default mergeConfig(commonConfig, {
     testTimeout: 60000,
     setupFiles: ['./tests/e2e/setup-all.ts'],
   },
-});
+} as UserConfigExport);

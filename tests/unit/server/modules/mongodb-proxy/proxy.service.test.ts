@@ -1,5 +1,5 @@
 import { MongoDBTcpProxyService } from '@server/modules/mongodb-proxy/proxy.service';
-import { createProxyServiceTest } from '../../utils';
+import { createProxyServiceWithMockDeps } from '../../utils';
 
 test('should be correctly configured', async () => {
   const opts = {
@@ -9,7 +9,7 @@ test('should be correctly configured', async () => {
       MONGODB_TARGET_URI: 'mongodb://localhost:27017',
     },
   };
-  const service = await createProxyServiceTest(opts);
+  const service = await createProxyServiceWithMockDeps(opts);
   expect(service).toBeDefined();
   expect(service).toBeInstanceOf(MongoDBTcpProxyService);
   expect(service.getProxyHost()).toBe(opts.env.HOST);
@@ -20,7 +20,7 @@ test('should be correctly configured', async () => {
 
 test('should throw an error if MONGODB_TARGET_URI is invalid', async () => {
   await expect(
-    createProxyServiceTest({
+    createProxyServiceWithMockDeps({
       env: {
         MONGODB_TARGET_URI: 'mongodcalhost',
       },
@@ -35,7 +35,7 @@ test('should works with complex MONGODB_TARGET_URI', async () => {
         'mongodb+srv://username:password@localhost/name?a=b&c=d',
     },
   };
-  const service = await createProxyServiceTest(opts);
+  const service = await createProxyServiceWithMockDeps(opts);
   expect(service).toBeDefined();
   expect(service).toBeInstanceOf(MongoDBTcpProxyService);
   expect(service.getTargetHost()).toBe('localhost');

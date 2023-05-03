@@ -4,7 +4,6 @@ import {
 } from '@/server/modules/mongodb-proxy/interceptors/response.interceptor';
 import {
   MongoDBMessage,
-  OP_MSG,
   encodeMessage,
 } from '@/server/modules/mongodb-proxy/protocol';
 
@@ -42,7 +41,7 @@ describe('ReplyInterceptor', () => {
     interceptor.registerHook(hook);
 
     const onDataPromise = new Promise<void>((resolve) => {
-      interceptor.on('data', (chunk) => {
+      interceptor.on('data', () => {
         // Verify that the hook is called
         expect(hook).toHaveBeenCalledTimes(1);
 
@@ -87,7 +86,7 @@ describe('ReplyInterceptor', () => {
     interceptor.registerHook(hook);
 
     const onDataPromise = new Promise<void>((resolve) => {
-      interceptor.on('data', (chunk) => {
+      interceptor.on('data', () => {
         // Verify that the hook is not called
         expect(hook).toHaveBeenCalledTimes(0);
 

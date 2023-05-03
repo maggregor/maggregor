@@ -27,11 +27,11 @@ beforeAll(async () => {
   const maggreClient = await MongoClient.connect(maggreUri, {
     directConnection: true,
   });
-  const mongoClient = await MongoClient.connect(mongoUri, {
-    directConnection: true,
-  });
-  // Initial check list databases
-  await loadTestData(mongoClient);
+  const mongoClient = await MongoClient.connect(mongoUri);
+  // Load principal data for tests
+  await loadTestData(mongoClient, { totalDocs: 1000 });
+  // Load data for data cache invalidation tests
+  await loadTestData(mongoClient, { totalDocs: 1000, collection: 'col2' });
   await healthCheck(maggreClient, mongoClient);
   global.__MAGGRE_CLIENT__ = maggreClient;
   global.__MONGO_CLIENT__ = mongoClient;

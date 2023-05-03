@@ -1,4 +1,4 @@
-import { UserConfig, defineConfig } from 'vitest/config';
+import { UserConfigExport, defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 
 export default defineConfig({
@@ -13,4 +13,4 @@ export default defineConfig({
       '@core': resolve(__dirname, 'src/core'),
     },
   },
-}) as UserConfig;
+}) as UserConfigExport;

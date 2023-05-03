@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongoDBListenerService } from './listener.service';
+import { ListenerService } from './listener.service';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
+@Global()
 @Module({
   imports: [ConfigModule, LoggerModule],
-  controllers: [],
-  providers: [MongoDBListenerService],
+  providers: [ListenerService],
+  exports: [ListenerService],
 })
 export class ListenerModule {}

@@ -1,8 +1,15 @@
 import type { MongoClient } from 'mongodb';
+export interface E2EScenarios {
+  name: string;
+  // Will run the request on MongoDB and Maggregor asynchronously
+  asyncCompare?: boolean;
+  request: (client: MongoClient) => Promise<any>;
+}
 
 export default [
   {
     name: 'Get user by ID',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -14,6 +21,7 @@ export default [
   },
   {
     name: 'Get all users',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -25,6 +33,7 @@ export default [
   },
   {
     name: 'Get users in New York',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -36,6 +45,7 @@ export default [
   },
   {
     name: 'Get users under 18 in Los Angeles',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -47,6 +57,7 @@ export default [
   },
   {
     name: 'Get users over 50 with no address',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -58,6 +69,7 @@ export default [
   },
   {
     name: 'Get users with a zip code divisible by 5000',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -69,6 +81,7 @@ export default [
   },
   {
     name: 'Get users without an age',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -80,6 +93,7 @@ export default [
   },
   {
     name: 'Get users without an address',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const result = await db
@@ -91,6 +105,7 @@ export default [
   },
   {
     name: 'Get average age by city and state',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const pipeline = [
@@ -117,6 +132,7 @@ export default [
   },
   {
     name: 'Get group by with multiple fields',
+    asyncCompare: true,
     request: async (client: MongoClient) => {
       const db = client.db(global.__TEST_DB__);
       const pipeline = [
@@ -157,6 +173,23 @@ export default [
         .aggregate(pipeline)
         .toArray();
       return result;
+    },
+  },
+  {
+    name: 'Cache invalidation on insert, delete and update',
+    asyncCompare: false,
+    request: async (client: MongoClient) => {
+      const db = client.db(global.__TEST_DB__);
+      const c = db.collection('col2');
+      // Count documents before insert
+      const res1 = await c.aggregate([{ $count: 'count' }]).toArray();
+      const inserted = await c.insertOne({ name: 'John Doe' });
+      // Count documents after insert
+      const res2 = await c.aggregate([{ $count: 'count' }]).toArray();
+      await c.deleteOne({ _id: inserted.insertedId });
+      // Count documents after delete
+      const res3 = await c.aggregate([{ $count: 'count' }]).toArray();
+      return [res1, res2, res3];
     },
   },
 ].map((scenario) => ({

@@ -5,11 +5,10 @@ coverage:
   precision: 2
 
 ignore:
-  - */tests/.*
-  - */scripts/.*
-  - src/parser/mongo-aggregation-parser.ts
-  - benchmarks/*
-  
+  - "*/tests/.*"
+  - "*/scripts/.*"
+  - "parser/mongo-aggregation-parser.ts"
+  - "benchmarks/*"
 
 comment:
   layout: diff, files

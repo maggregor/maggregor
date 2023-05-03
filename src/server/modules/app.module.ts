@@ -5,6 +5,7 @@ import { RequestModule } from './request/request.module';
 import { ProxyModule } from './mongodb-proxy/proxy.module';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
+import { CacheModule } from './cache-request/cache.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import * as Joi from 'joi';
           .empty('')
           .default('mongodb://localhost:27017'),
         MONGODB_METADATA_URI: Joi.string().empty('').optional(),
+        CACHE_MAX_SIZE: Joi.number().default(512),
       }),
       validationOptions: {
         abortEarly: true,
@@ -37,6 +39,7 @@ import * as Joi from 'joi';
     RequestModule,
     ProxyModule,
     ListenerModule,
+    CacheModule,
   ],
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
 import { RequestService } from '@/server/modules/request/request.service';
-import { createRequestServiceTest } from '../../utils';
+import { createRequestServiceWithMockDeps } from '../../utils';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { MsgResult } from '@/server/modules/mongodb-proxy/protocol';
 
@@ -7,7 +7,7 @@ describe('RequestService', () => {
   let service: RequestService;
 
   beforeEach(async () => {
-    service = await createRequestServiceTest();
+    service = await createRequestServiceWithMockDeps();
   });
 
   it('should be defined', () => {

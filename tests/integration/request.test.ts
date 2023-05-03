@@ -1,40 +1,23 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { RequestService } from '@server/modules/request/request.service';
-import { MongooseModule, getModelToken } from '@nestjs/mongoose';
-import { Request, RequestSchema } from '@server/modules/request/request.schema';
-import { Model } from 'mongoose';
-import { DatabaseModule } from '@/server/modules/database/database.module';
+import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
-import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { simulateDelay } from 'tests/e2e/utils';
+import { createRequestService } from 'tests/unit/server/utils';
 
 describe('RequestService (integration)', () => {
   let service: RequestService;
-  let model: Model<Request>;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        LoggerModule,
-        DatabaseModule,
-        MongooseModule.forFeature([
-          { name: Request.name, schema: RequestSchema },
-        ]),
-      ],
-      providers: [RequestService],
-    }).compile();
-
-    service = module.get<RequestService>(RequestService);
-    model = module.get<Model<Request>>(getModelToken(Request.name));
+    service = await createRequestService();
   });
 
   beforeEach(async () => {
-    await model.deleteMany({});
+    await service?.deleteAll();
   });
 
   afterAll(async () => {
-    await model.deleteMany({});
+    await service?.deleteAll();
   });
 
   const expectRequest = (actual: Request, request: Request) => {

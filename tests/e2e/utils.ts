@@ -54,6 +54,7 @@ export async function loadTestData(
 export async function startMongoServer() {
   const server = await MongoMemoryReplSet.create({
     replSet: { count: 1 },
+    instanceOpts: [{ storageEngine: 'wiredTiger' }],
   });
   return server;
 }
@@ -101,6 +102,10 @@ export async function healthCheck(
   await Promise.all(promises);
 }
 
-export const simulateDelay = (delay = 10) => {
+export const simulateDelay = (delay = 30) => {
   return new Promise<void>((resolve) => process.nextTick(resolve, delay));
+};
+
+export const wait = (ms: number) => {
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
 };

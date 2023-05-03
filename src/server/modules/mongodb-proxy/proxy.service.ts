@@ -188,16 +188,29 @@ interface MongoDBConnectionInfo {
   host: string;
   port: number;
   database: string;
-  username?: string;
-  password?: string;
+  username: string;
+  password: string;
+  replicaSet?: string;
 }
 
+/**
+ * Parses a MongoDB connection string into its individual components
+ *
+ * Support the following connection string format:
+ * mongodb://[username:password@]host1[:port1][,host2[:port2],…]/database?replicaSet=replicaSetName
+ *
+ * @param connectionString The MongoDB connection string to parse
+ * @returns The parsed connection information
+ */
 function parseMongoDBConnectionString(
   connectionString: string,
 ): MongoDBConnectionInfo {
-  const url = new URL(connectionString);
-
+  // Find the first host in the connection string
+  const mainUrl = connectionString.split(',')[0];
+  const url = new URL(mainUrl);
   const [, username, password] = url.username.split(':');
+  const replicaSetParam = connectionString.match(/replicaSet=([^&]+)/);
+  const replicaSet = replicaSetParam ? replicaSetParam[1] : undefined;
 
   return {
     host: url.hostname,
@@ -205,6 +218,7 @@ function parseMongoDBConnectionString(
     database: url.pathname.slice(1),
     username,
     password,
+    replicaSet,
   };
 }
 
