@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32603471/236143338-f48aa292-1964-443a-9bb6-0bfdc5ca09d7.png">
-  <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/236143424-580d21c2-2214-4548-98cf-2008e3622d3a.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32603471/236147320-9c6d40ec-c444-46ce-b6db-9bfed445850a.png">
+  <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/236147375-5b21bc05-cd61-4177-820a-e116a470c8d6.png">
 </picture>
 
 <div align="center">
