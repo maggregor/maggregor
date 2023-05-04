@@ -2,7 +2,7 @@
   "name": "maggregor-cache",
   "version": "1.0.0",
   "description": "",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
