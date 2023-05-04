@@ -7,7 +7,7 @@ coverage:
 ignore:
   - "*/tests/.*"
   - "*/scripts/.*"
-  - "parser/mongo-aggregation-parser.ts"
+  - "src/parser/mongo-aggregation-parser.ts"
   - "benchmarks/*"
 
 comment:

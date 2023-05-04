@@ -1,9 +1,17 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32603471/227660775-500b7b52-37f6-469c-beea-f3d0f940b4cd.png">
-  <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/227661043-e747c07d-7813-432d-a866-d1e700461c80.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32603471/236147320-9c6d40ec-c444-46ce-b6db-9bfed445850a.png">
+  <img alt="MaggregorCache light" src="https://user-images.githubusercontent.com/32603471/236147375-5b21bc05-cd61-4177-820a-e116a470c8d6.png">
 </picture>
 
-[![MaggregorCache Build](https://img.shields.io/github/actions/workflow/status/maggregor/maggregor/tests.yaml?branch=main&label=Build)](#)
+<div align="center">
+
+[![Maggregor Build](https://img.shields.io/github/actions/workflow/status/maggregor/maggregor/tests.yaml?branch=main&label=Build)](#)
+[![Maggregor Code Coverage](https://codecov.io/gh/maggregor/maggregor/branch/main/graph/badge.svg?token=etcX0aJ1Er)](https://codecov.io/gh/maggregor/maggregor)
+
+</div>
+
+# Architecture
+[![Maggregor Architecture](https://user-images.githubusercontent.com/32603471/236058294-6f0525bd-cb84-4178-a2c6-cc87d742b0e8.png)](#)
 
 # Quick start
 
