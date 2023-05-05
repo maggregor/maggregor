@@ -40,8 +40,9 @@ export class MaterializedViewService {
    * @returns True if the request can be executed, false otherwise
    */
   async canExecute(req: IRequest): Promise<boolean> {
+    if (!req || req.type !== 'aggregate') return false;
     const pipeline = await this.createPipelineFromRequest(req);
-    return (await this.findEligibleMV(pipeline)).length > 0;
+    return (await this.findEligibleMV(pipeline))?.length > 0;
   }
 
   /**
@@ -65,8 +66,7 @@ export class MaterializedViewService {
   async createPipelineFromRequest(req: IRequest): Promise<Pipeline> {
     if (!req) return null;
 
-    // Maggregor only supports aggregate requests on materialized views
-    if (req.type !== 'aggregate' || req.pipeline.length === 0) return null;
+    if (req.pipeline?.length === 0) return null;
     // Parse the stages from the request
     let stages: StageDefinition[];
     try {

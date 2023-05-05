@@ -244,5 +244,54 @@ describe('RequestService (integration)', () => {
       expect(req.requestSource).toStrictEqual('materialized_view');
       expect(resultMsg).not.toBe(null);
     });
+    it('should cache a find request', async () => {
+      const findReq: IRequest = {
+        type: 'find',
+        requestID: 1,
+        db: 'mydb',
+        collName: 'collection',
+        filter: {
+          name: 'test',
+        },
+      };
+      const findResult: IResponse = {
+        requestID: -1,
+        responseTo: 1,
+        data: [
+          {
+            name: 'test',
+          },
+        ],
+      };
+      // Request from client to server
+      let resultMsg = await requestService.onRequest(findReq);
+      await simulateDelay();
+      const req = (await requestService.findAll()).at(0);
+      expect(req).toBeDefined();
+      expect(req.requestID).toEqual(findReq.requestID);
+      expect(req.startAt).toBeDefined();
+      expect(req.endAt).to.not.toBeDefined();
+      expect(req.collName).toStrictEqual(findReq.collName);
+      expect(req.db).toStrictEqual(findReq.db);
+      expect(req.requestSource).toStrictEqual('mongodb');
+      expect(resultMsg).toBe(null);
+      // Result from server to client
+      await requestService.onResult(findResult);
+      await simulateDelay();
+      const updatedReq = (await requestService.findAll()).at(0);
+      expect(updatedReq).toBeDefined();
+      expect((await requestService.findAll()).length).toEqual(1);
+      expect(updatedReq.requestID).toEqual(findReq.requestID);
+      expect(updatedReq.startAt).toBeDefined();
+      // Same request from client to server
+      resultMsg = await requestService.onRequest(findReq);
+      await simulateDelay();
+      expect(resultMsg).toBeDefined();
+      expect(resultMsg.results).toStrictEqual(findResult.data);
+      expect((await requestService.findAll()).length).toEqual(2);
+      expect(
+        (await requestService.findAll()).at(1).requestSource,
+      ).toStrictEqual('cache');
+    });
   });
 });
