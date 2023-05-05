@@ -212,5 +212,26 @@ describe('RequestService (integration)', () => {
         'cache',
       );
     });
+    it('should be be processed with a Materialized View', async () => {
+      const aggregateReq: IRequest = {
+        type: 'aggregate',
+        requestID: 1,
+        db: 'mydb',
+        collName: 'collection',
+        pipeline: [
+          {
+            $group: {
+              _id: 'country',
+            },
+          },
+        ],
+      };
+
+      const resultMsg = await service.onRequest(aggregateReq);
+      const req = (await service.findAll()).at(0);
+      expect(req).toBeDefined();
+      expect(req.requestSource).toStrictEqual('processed');
+      expect(resultMsg).not.toBe(null);
+    });
   });
 });

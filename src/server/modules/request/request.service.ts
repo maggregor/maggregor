@@ -8,6 +8,10 @@ import { MsgResult } from '../mongodb-proxy/protocol';
 import { IRequest } from './request.interface';
 import { LoggerService } from '../logger/logger.service';
 import { CacheService } from '../cache-request/cache.service';
+import { parseStages } from '@/parser';
+import { isEligible } from '@/core/eligibility';
+import { MaterializedView } from '@/core/materialized-view';
+import { createPipeline, executePipeline } from '@/core/pipeline/pipeline';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   constructor(
@@ -61,23 +65,62 @@ export class RequestService implements MongoDBProxyListener {
       // We ignore admin requests (such as heartbeat, listDatabases, etc.)
       return null;
     }
+    // First, we check if the request is cached
     if (this.cacheService.hasCachedResults(req)) {
       req.endAt = new Date();
       this.logger.log(
         `id:${reqID}: (${req.type}) Answered from cache (${ms(req)})`,
       );
       results = this.cacheService.getCachedResults(req);
+      req.requestSource = 'cache';
+    } else if (req.type === 'aggregate') {
+      // Then, we check if the request can be answered from Materialized Views
+      try {
+        const stages = parseStages(req.pipeline);
+        const pipeline = createPipeline(stages);
+        const mv = new MaterializedView({
+          groupBy: { field: 'country' },
+          accumulatorDefs: [
+            {
+              operator: 'count',
+              expression: { field: 'name' },
+            },
+          ],
+        });
+        if (isEligible(pipeline, mv)) {
+          results = executePipeline(pipeline, mv.getView());
+          req.endAt = new Date();
+          this.logger.log(
+            `id:${reqID}: (${req.type}) Answered from Materialized View (${ms(
+              req,
+            )})`,
+          );
+          req.requestSource = 'processed';
+        }
+      } catch (e) {
+        this.logger.debug(`id:${reqID}: (${req.type}) ${e.message}`);
+      }
     }
-    req.requestSource = results ? 'cache' : 'mongodb';
+    if (!req.requestSource) {
+      /**
+       * Maggregor is not able to answer the request from cache or from the
+       * Materialized Views, so we need to forward the request to MongoDB.
+       */
+      req.requestSource = 'mongodb';
+    }
+    // Save the request to the database
     this.create(req);
-    return !results
-      ? null
-      : {
-          db: req.db,
-          collection: req.collName,
-          results,
-          responseTo: req.requestID,
-        };
+    if (req.requestSource === 'mongodb') {
+      // Forward the request to MongoDB
+      return null;
+    }
+    // Maggregor is able to answer by itself
+    return {
+      db: req.db,
+      collection: req.collName,
+      results,
+      responseTo: req.requestID,
+    } as MsgResult;
   }
 
   // Event: on result from server

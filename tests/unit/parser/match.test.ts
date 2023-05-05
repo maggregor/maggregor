@@ -1,10 +1,10 @@
 import { MatchStage } from '@/core/pipeline/stages';
-import { parsePipeline } from '@/parser';
+import { parseStages } from '@/parser';
 import { parse } from 'path';
 
 test('Match with simple equality condition', () => {
   const pipeline = `[ { $match: { country: "France" } } ]`;
-  expect(parsePipeline(pipeline)).toEqual([
+  expect(parseStages(pipeline)).toEqual([
     new MatchStage([
       {
         operator: 'eq',
@@ -16,7 +16,7 @@ test('Match with simple equality condition', () => {
 
 test('Match with single condition', () => {
   const pipeline = `[ { $match: { $and: [ { age: { $gte: 18 } } ] } } ]`;
-  expect(parsePipeline(pipeline)).toBeDefined();
+  expect(parseStages(pipeline)).toBeDefined();
 });
 
 test('Match with multiple conditions', () => {

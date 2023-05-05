@@ -10,7 +10,10 @@ start
   = p:pipeline
 
 pipeline
-  = "[" ws stage:stage (ws "," ws stage)* ws "]" { return [stage] as Stage[]; }
+  = "[" ws stages:stageArray ws "]" { return stages as Stage[]; }
+
+stageArray
+  = head:stage tail:(ws "," ws s:stage { return s; })* { return [head, ...tail]; }
 
 stage
   = groupStage / matchStage / limitStage
