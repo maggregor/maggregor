@@ -1,4 +1,10 @@
-import { Stage } from './stages';
+import {
+  GroupStage,
+  LimitStage,
+  MatchStage,
+  Stage,
+  StageDefinition,
+} from './stages';
 import { Document } from '../index';
 
 export interface Pipeline {
@@ -18,7 +24,18 @@ export function executePipeline(
   return result;
 }
 
-export function createPipeline(stages: Stage[]): Pipeline {
+export function createPipeline(defs: StageDefinition[]): Pipeline {
+  const stages: Stage[] = defs.map((stageDef) => {
+    let stage: Stage;
+    if (stageDef.type === 'group') {
+      stage = new GroupStage(stageDef);
+    } else if (stageDef.type === 'match') {
+      stage = new MatchStage(stageDef);
+    } else if (stageDef.type === 'limit') {
+      stage = new LimitStage(stageDef);
+    }
+    return stage;
+  });
   stages.forEach((stage, index) => {
     if (index < stages.length - 1) {
       stage.next = stages[index + 1];

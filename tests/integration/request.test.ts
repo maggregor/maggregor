@@ -2,7 +2,7 @@ import { RequestService } from '@server/modules/request/request.service';
 import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
-import { simulateDelay } from 'tests/e2e/utils';
+import { simulateDelay, wait } from 'tests/e2e/utils';
 import { createRequestService } from 'tests/unit/server/utils';
 
 describe('RequestService (integration)', () => {
@@ -221,17 +221,19 @@ describe('RequestService (integration)', () => {
         pipeline: [
           {
             $group: {
-              _id: 'country',
+              _id: '$country',
             },
           },
         ],
       };
 
       const resultMsg = await service.onRequest(aggregateReq);
+      await wait(5); // Wait for the request to be stored in the DB
       const req = (await service.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.requestSource).toStrictEqual('processed');
       expect(resultMsg).not.toBe(null);
+      expect(resultMsg.results).toStrictEqual([{ _id: 'USA' }]);
     });
   });
 });

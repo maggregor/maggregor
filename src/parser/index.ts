@@ -1,4 +1,4 @@
-import { Stage } from '@/core/pipeline/stages';
+import { StageDefinition } from '@/core/pipeline/stages';
 import { parse } from '@/parser/mongo-aggregation-parser';
 
 type StagesInput = string | Array<Record<string, unknown>>;
@@ -24,7 +24,7 @@ function convertPipelineToJson(
   return `[${pipelineStrings.join(',')}]`;
 }
 
-export function parseStages(input: StagesInput): Stage[] {
+export function parseStages(input: StagesInput): StageDefinition[] {
   const inputStr =
     typeof input === 'string' ? input : convertPipelineToJson(input);
   return parse(inputStr);

@@ -1,8 +1,5 @@
 import { MaterializedView } from './materialized-view';
-import {
-  resolveAllExpressionFields,
-  toHashExpression,
-} from './pipeline/expressions';
+import { toHashExpression } from './pipeline/expressions';
 import { Pipeline } from './pipeline/pipeline';
 import { Stage, GroupStage, MatchStage } from './pipeline/stages';
 import { deepEqual } from './pipeline/accumulators/common';
@@ -36,8 +33,9 @@ export function isEligible(pipeline: Pipeline, mv: MaterializedView): boolean {
 function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
   if (stage.type === 'group') {
     const { groupExpr, accumulators } = stage as GroupStage;
-    const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
-    const resolvedHash = toHashExpression(resolved);
+    // TODO: Understand how properly resolve the expression
+    // const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
+    const resolvedHash = toHashExpression(groupExpr);
     const mvGroupExprHash = toHashExpression(mv.getGroupExpression());
     // The group expression must be equal to the materialized view's group expression
     if (resolvedHash !== mvGroupExprHash) return false;

@@ -9,12 +9,18 @@ export interface Stage {
   next?: Stage;
 }
 
+export type StageDefinition =
+  | GroupStageDefinition
+  | MatchStageDefinition
+  | LimitStageDefinition;
+
 export type GroupStageDefinition = {
+  type: 'group';
   groupExpr: Expression;
   accumulators: Accumulator[];
 };
 
-export type StageType = 'match' | 'group' | 'sort' | 'limit' | 'skip';
+export type StageType = 'match' | 'group' | 'limit';
 
 export class GroupStage {
   type: StageType;
@@ -22,10 +28,10 @@ export class GroupStage {
   accumulators: Accumulator[];
   next?: Stage | undefined;
 
-  constructor(options: GroupStageDefinition) {
+  constructor({ groupExpr, accumulators }: Partial<GroupStageDefinition>) {
     this.type = 'group' as StageType;
-    this.groupExpr = options.groupExpr;
-    this.accumulators = options.accumulators;
+    this.groupExpr = groupExpr;
+    this.accumulators = accumulators;
   }
 
   /**
@@ -67,12 +73,17 @@ export class GroupStage {
   }
 }
 
+export type MatchStageDefinition = {
+  type: 'match';
+  conditions: Expression[];
+};
+
 export class MatchStage implements Stage {
   type: StageType;
   next?: Stage | undefined;
   conditions: Expression[];
 
-  constructor(conditions: Expression[]) {
+  constructor({ conditions }: Partial<MatchStageDefinition>) {
     this.type = 'match' as StageType;
     this.conditions = conditions;
   }
@@ -90,7 +101,8 @@ export class MatchStage implements Stage {
   }
 }
 
-export type LimitStageOptions = {
+export type LimitStageDefinition = {
+  type: 'limit';
   limit: number;
 };
 
@@ -99,9 +111,9 @@ export class LimitStage implements Stage {
   next?: Stage | undefined;
   limit: number;
 
-  constructor(options: LimitStageOptions) {
+  constructor({ limit }: Partial<LimitStageDefinition>) {
     this.type = 'limit' as StageType;
-    this.limit = options.limit;
+    this.limit = limit;
   }
 
   execute(docs: Document[]): Document[] {

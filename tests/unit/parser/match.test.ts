@@ -5,12 +5,14 @@ import { parse } from 'path';
 test('Match with simple equality condition', () => {
   const pipeline = `[ { $match: { country: "France" } } ]`;
   expect(parseStages(pipeline)).toEqual([
-    new MatchStage([
-      {
-        operator: 'eq',
-        value: [{ field: 'country' }, { value: 'France' }],
-      },
-    ]),
+    new MatchStage({
+      conditions: [
+        {
+          operator: 'eq',
+          value: [{ field: 'country' }, { value: 'France' }],
+        },
+      ],
+    }),
   ]);
 });
 

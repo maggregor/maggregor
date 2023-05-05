@@ -6,7 +6,12 @@ import {
 } from '@core/pipeline/accumulators';
 import { toHashExpression } from '@core/pipeline/expressions';
 import { createPipeline } from '@core/pipeline/pipeline';
-import { GroupStage, LimitStage, MatchStage } from '@core/pipeline/stages';
+import {
+  GroupStage,
+  LimitStage,
+  MatchStage,
+  StageDefinition,
+} from '@core/pipeline/stages';
 
 const sampleData = [
   { genre: 'action', score: 10 },
@@ -28,19 +33,19 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [
-        new GroupStage({
-          groupExpr: { field: 'name' },
-          accumulators: [
-            new CountBasicAccumulator({
-              expression: { field: 'name' },
-              outputFieldName: 'count',
-            }),
-          ],
-        }),
-      ],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'group',
+        groupExpr: { field: 'name' },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'name' },
+            outputFieldName: 'count',
+          }),
+        ],
+      },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -54,19 +59,19 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [
-        new GroupStage({
-          groupExpr: { field: 'name' },
-          accumulators: [
-            new CountBasicAccumulator({
-              expression: { field: 'name' },
-              outputFieldName: 'count',
-            }),
-          ],
-        }),
-      ],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'group',
+        groupExpr: { field: 'name' },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'name' },
+            outputFieldName: 'count',
+          }),
+        ],
+      },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -96,18 +101,23 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [new MatchStage([{ field: 'name' }])],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      { type: 'match', conditions: [{ field: 'name' }] },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
   test('should return false if groupExpr is not equal to materialized view groupBy', () => {
-    const pipeline = createPipeline([
-      new MatchStage([
-        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-      ]),
-      new GroupStage({
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'match',
+        conditions: [
+          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+        ],
+      },
+      {
+        type: 'group',
         groupExpr: { field: 'genre' },
         accumulators: [
           new CountBasicAccumulator({
@@ -115,8 +125,8 @@ describe('isEligible', () => {
             outputFieldName: 'count',
           }),
         ],
-      }),
-    ]);
+      },
+    ];
     const mv = new MaterializedView({
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
@@ -126,6 +136,7 @@ describe('isEligible', () => {
         },
       ],
     });
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -139,19 +150,19 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [
-        new GroupStage({
-          groupExpr: { field: 'name' },
-          accumulators: [
-            new CountBasicAccumulator({
-              expression: { field: 'name' },
-              outputFieldName: 'count',
-            }),
-          ],
-        }),
-      ],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'group',
+        groupExpr: { field: 'name' },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'name' },
+            outputFieldName: 'count',
+          }),
+        ],
+      },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -165,19 +176,19 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [
-        new GroupStage({
-          groupExpr: { field: 'name' },
-          accumulators: [
-            new CountBasicAccumulator({
-              expression: { field: 'name' },
-              outputFieldName: 'count',
-            }),
-          ],
-        }),
-      ],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'group',
+        groupExpr: { field: 'name' },
+        accumulators: [
+          new CountBasicAccumulator({
+            expression: { field: 'name' },
+            outputFieldName: 'count',
+          }),
+        ],
+      },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -191,9 +202,8 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [],
-    };
+    const stages = [];
+    const pipeline = createPipeline(stages);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -207,18 +217,23 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = {
-      stages: [new MatchStage([{ field: 'name' }])],
-    };
+    const stageDefinitions: StageDefinition[] = [
+      { type: 'match', conditions: [{ field: 'name' }] },
+    ];
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
   test('should not be eligible - groupExpr must be equal to materialized view groupBy', () => {
-    const pipeline = createPipeline([
-      new MatchStage([
-        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-      ]),
-      new GroupStage({
+    const stageDefinitions: StageDefinition[] = [
+      {
+        type: 'match',
+        conditions: [
+          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+        ],
+      },
+      {
+        type: 'group',
         groupExpr: { field: 'genre' },
         accumulators: [
           new CountBasicAccumulator({
@@ -226,8 +241,8 @@ describe('isEligible', () => {
             outputFieldName: 'count',
           }),
         ],
-      }),
-    ]);
+      },
+    ];
     const mv = new MaterializedView({
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
@@ -238,6 +253,7 @@ describe('isEligible', () => {
       ],
     });
     mv.addDocument({ genre: 'action', score: 10 });
+    const pipeline = createPipeline(stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -306,9 +322,11 @@ describe('isEligible', () => {
     });
 
     test('Simple match stage', () => {
-      const matchStage = new MatchStage([
-        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-      ]);
+      const matchStage = new MatchStage({
+        conditions: [
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        ],
+      });
       const result = matchStage.execute(sampleData);
       expect(result).toEqual([
         { genre: 'action', score: 10 },
@@ -318,11 +336,15 @@ describe('isEligible', () => {
     });
 
     test('notEligible: the groupExpr must be equals to materialized view groupBy', () => {
-      const pipeline = createPipeline([
-        new MatchStage([
-          { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-        ]),
-        new GroupStage({
+      const stageDefinitions: StageDefinition[] = [
+        {
+          type: 'match',
+          conditions: [
+            { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+          ],
+        },
+        {
+          type: 'group',
           groupExpr: { field: 'genre' },
           accumulators: [
             new CountBasicAccumulator({
@@ -330,8 +352,8 @@ describe('isEligible', () => {
               outputFieldName: 'count',
             }),
           ],
-        }),
-      ]);
+        },
+      ];
       const mv = new MaterializedView({
         groupBy: {
           operator: 'gt',
@@ -344,6 +366,7 @@ describe('isEligible', () => {
           },
         ],
       });
+      const pipeline = createPipeline(stageDefinitions);
       expect(isEligible(pipeline, mv)).toEqual(false);
     });
   });

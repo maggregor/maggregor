@@ -1,7 +1,6 @@
 import { createBasicAccumulator } from '@core/pipeline/accumulators/index';
 import { MaterializedView } from '@core/materialized-view';
 import { createPipeline, executePipeline } from '@core/pipeline/pipeline';
-import { GroupStage, MatchStage, LimitStage } from '@core/pipeline/stages';
 
 const sampleData = [
   { genre: 'action', score: 10 },
@@ -15,7 +14,8 @@ const sampleData = [
 describe('Pipeline creation and execution', () => {
   it('returns the expected result', () => {
     const pipeline = createPipeline([
-      new GroupStage({
+      {
+        type: 'group',
         groupExpr: { field: 'genre' },
         accumulators: [
           createBasicAccumulator({
@@ -39,7 +39,7 @@ describe('Pipeline creation and execution', () => {
             expression: { field: 'score' },
           }),
         ],
-      }),
+      },
     ]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
@@ -62,9 +62,12 @@ describe('Pipeline creation and execution', () => {
 
   it('returns the expected result', () => {
     const pipeline = createPipeline([
-      new MatchStage([
-        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-      ]),
+      {
+        type: 'match',
+        conditions: [
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        ],
+      },
     ]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
@@ -77,7 +80,7 @@ describe('Pipeline creation and execution', () => {
 
 describe('Pipeline with limit stage', () => {
   it('returns the expected result', () => {
-    const pipeline = createPipeline([new LimitStage({ limit: 2 })]);
+    const pipeline = createPipeline([{ type: 'limit', limit: 2 }]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
       { genre: 'action', score: 10 },
@@ -89,10 +92,14 @@ describe('Pipeline with limit stage', () => {
 describe('Pipeline with two stages: match and group', () => {
   it('returns the expected result', () => {
     const pipeline = createPipeline([
-      new MatchStage([
-        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-      ]),
-      new GroupStage({
+      {
+        type: 'match',
+        conditions: [
+          { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        ],
+      },
+      {
+        type: 'group',
         groupExpr: { field: 'genre' },
 
         accumulators: [
@@ -117,7 +124,7 @@ describe('Pipeline with two stages: match and group', () => {
             expression: { field: 'score' },
           }),
         ],
-      }),
+      },
     ]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
@@ -134,11 +141,15 @@ describe('Pipeline with two stages: match and group', () => {
 
 it('group and match with two conditions', () => {
   const pipeline = createPipeline([
-    new MatchStage([
-      { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-      { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
-    ]),
-    new GroupStage({
+    {
+      type: 'match',
+      conditions: [
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+        { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
+      ],
+    },
+    {
+      type: 'group',
       groupExpr: { field: 'genre' },
 
       accumulators: [
@@ -163,7 +174,7 @@ it('group and match with two conditions', () => {
           expression: { field: 'score' },
         }),
       ],
-    }),
+    },
   ]);
   const result = executePipeline(pipeline, sampleData);
   expect(result).toEqual([
@@ -179,7 +190,8 @@ it('group and match with two conditions', () => {
 
 it('advanced group stage', () => {
   const pipeline = createPipeline([
-    new GroupStage({
+    {
+      type: 'group',
       groupExpr: { field: 'genre' },
       accumulators: [
         createBasicAccumulator({
@@ -196,7 +208,7 @@ it('advanced group stage', () => {
           },
         }),
       ],
-    }),
+    },
   ]);
   const result = executePipeline(pipeline, sampleData);
   expect(result).toEqual([
@@ -215,10 +227,14 @@ it('advanced group stage', () => {
 
 it('with match stage and MV', () => {
   const pipeline = createPipeline([
-    new MatchStage([
-      { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-    ]),
-    new GroupStage({
+    {
+      type: 'match',
+      conditions: [
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      ],
+    },
+    {
+      type: 'group',
       groupExpr: { field: 'genre' },
 
       accumulators: [
@@ -228,7 +244,7 @@ it('with match stage and MV', () => {
           expression: { field: 'score' },
         }),
       ],
-    }),
+    },
   ]);
   const mv = new MaterializedView({
     groupBy: { field: 'genre' },

@@ -80,13 +80,9 @@ export class RequestService implements MongoDBProxyListener {
         const pipeline = createPipeline(stages);
         const mv = new MaterializedView({
           groupBy: { field: 'country' },
-          accumulatorDefs: [
-            {
-              operator: 'count',
-              expression: { field: 'name' },
-            },
-          ],
+          accumulatorDefs: [],
         });
+        mv.addDocument({ country: 'USA' });
         if (isEligible(pipeline, mv)) {
           results = executePipeline(pipeline, mv.getView());
           req.endAt = new Date();
