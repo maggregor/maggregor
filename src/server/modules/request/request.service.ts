@@ -8,16 +8,15 @@ import { MsgResult } from '../mongodb-proxy/protocol';
 import { IRequest } from './request.interface';
 import { LoggerService } from '../logger/logger.service';
 import { CacheService } from '../cache-request/cache.service';
-import { parseStages } from '@/parser';
-import { isEligible } from '@/core/eligibility';
-import { MaterializedView } from '@/core/materialized-view';
-import { createPipeline, executePipeline } from '@/core/pipeline/pipeline';
+import { MaterializedViewService } from '../materialized-view/materialized-view.service';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   constructor(
     @InjectModel(Request.name) private readonly requestModel: Model<Request>,
     @Inject(LoggerService) private readonly logger: LoggerService,
     @Inject(CacheService) private readonly cacheService: CacheService,
+    @Inject(MaterializedViewService)
+    private readonly mvService: MaterializedViewService,
   ) {
     this.logger.setContext('Requests');
   }
@@ -58,46 +57,24 @@ export class RequestService implements MongoDBProxyListener {
 
   // Event: on aggregate query from client
   async onRequest(req: IRequest): Promise<MsgResult> {
-    const reqID = req.requestID;
     let results = null;
     req.startAt = new Date();
-    if (req.db === 'admin') {
-      // We ignore admin requests (such as heartbeat, listDatabases, etc.)
-      return null;
-    }
-    // First, we check if the request is cached
+
+    // We ignore admin requests (such as heartbeat, listDatabases, etc.)
+    if (req.db === 'admin') return null;
+
+    // Attempt to answer via cache
     if (this.cacheService.hasCachedResults(req)) {
-      req.endAt = new Date();
-      this.logger.log(
-        `id:${reqID}: (${req.type}) Answered from cache (${ms(req)})`,
-      );
       results = this.cacheService.getCachedResults(req);
       req.requestSource = 'cache';
-    } else if (req.type === 'aggregate') {
-      // Then, we check if the request can be answered from Materialized Views
-      try {
-        const stages = parseStages(req.pipeline);
-        const pipeline = createPipeline(stages);
-        const mv = new MaterializedView({
-          groupBy: { field: 'country' },
-          accumulatorDefs: [],
-        });
-        mv.addDocument({ country: 'USA' });
-        if (isEligible(pipeline, mv)) {
-          results = executePipeline(pipeline, mv.getView());
-          req.endAt = new Date();
-          this.logger.log(
-            `id:${reqID}: (${req.type}) Answered from Materialized View (${ms(
-              req,
-            )})`,
-          );
-          req.requestSource = 'processed';
-        }
-      } catch (e) {
-        this.logger.debug(`id:${reqID}: (${req.type}) ${e.message}`);
-      }
     }
-    if (!req.requestSource) {
+    // Attempt to answer via Materialized Views
+    else if (await this.mvService.canExecute(req)) {
+      results = await this.mvService.execute(req);
+      req.requestSource = 'materialized_view';
+    }
+    // Finally, deleguate the request to MongoDB
+    else {
       /**
        * Maggregor is not able to answer the request from cache or from the
        * Materialized Views, so we need to forward the request to MongoDB.
@@ -106,10 +83,13 @@ export class RequestService implements MongoDBProxyListener {
     }
     // Save the request to the database
     this.create(req);
+
     if (req.requestSource === 'mongodb') {
       // Forward the request to MongoDB
       return null;
     }
+    this.requestIsFinished(req);
+
     // Maggregor is able to answer by itself
     return {
       db: req.db,
@@ -123,15 +103,17 @@ export class RequestService implements MongoDBProxyListener {
   async onResult(res: IResponse): Promise<void> {
     const requestID = res.responseTo;
     const req = await this.findOneByRequestId(requestID);
-    if (!req || req.type === 'unknown') {
-      return;
-    }
-    req.endAt = new Date();
+    if (!req) return;
+    this.requestIsFinished(req);
     this.updateOne(req);
     this.cacheService.tryCacheResults(req, res);
-    this.logger.log(
-      `id:${requestID}: (${req.type}) Answered from MongoDB (${ms(req)})`,
-    );
+  }
+
+  requestIsFinished(req: IRequest) {
+    const id = req.requestID;
+    const src = req.requestSource;
+    req.endAt = new Date();
+    this.logger.log(`${id}: (${req.type}) Answered from ${src} (${ms(req)})`);
   }
 }
 

@@ -3,7 +3,7 @@
 // - cache: src/server/modules/cache/cache.ts (when the request is answered from the Maggregor cache)
 // - mongodb: src/server/modules/request/request.service.ts (when the request is delegated to the server)
 // - processed: src/server/modules/request/request.service.ts (when the request is processed by Maggregor)
-export type RequestSourceType = 'cache' | 'mongodb' | 'processed';
+export type RequestSourceType = 'cache' | 'materialized_view' | 'mongodb';
 export type RequestType =
   | 'find'
   | 'aggregate'

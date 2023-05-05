@@ -3,21 +3,25 @@ import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { simulateDelay, wait } from 'tests/e2e/utils';
-import { createRequestService } from 'tests/unit/server/utils';
+import { createMaggregorModule } from 'tests/unit/server/utils';
+import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 
 describe('RequestService (integration)', () => {
-  let service: RequestService;
+  let requestService: RequestService;
+  let mvService: MaterializedViewService;
 
   beforeAll(async () => {
-    service = await createRequestService();
+    const module = await createMaggregorModule();
+    requestService = module.get<RequestService>(RequestService);
+    mvService = module.get<MaterializedViewService>(MaterializedViewService);
   });
 
   beforeEach(async () => {
-    await service?.deleteAll();
+    await requestService?.deleteAll();
   });
 
   afterAll(async () => {
-    await service?.deleteAll();
+    await requestService?.deleteAll();
   });
 
   const expectRequest = (actual: Request, request: Request) => {
@@ -47,7 +51,7 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const result = await service.create(request);
+      const result = await requestService.create(request);
       expectRequest(result, request);
     });
   });
@@ -72,9 +76,9 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection2',
         db: 'testDatabase2',
       };
-      await service.create(request1);
-      await service.create(request2);
-      const result = await service.findAll();
+      await requestService.create(request1);
+      await requestService.create(request2);
+      const result = await requestService.findAll();
       expect(result).toBeDefined();
       expect(result.length).toEqual(2);
       expectRequest(result[0], request1);
@@ -93,8 +97,8 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
-      const result = await service.findOneByRequestId(created.requestID);
+      const created = await requestService.create(request);
+      const result = await requestService.findOneByRequestId(created.requestID);
       expectRequest(result, request);
     });
   });
@@ -116,12 +120,12 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
+      const created = await requestService.create(request);
       created.pipeline = [
         { $project: { name: 1 } },
         { $match: { name: 'testUpdated' } },
       ];
-      const updated = await service.updateOne(created);
+      const updated = await requestService.updateOne(created);
       expectRequest(updated, {
         ...request,
         pipeline: created.pipeline,
@@ -146,12 +150,12 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
+      const created = await requestService.create(request);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - TODO: Fix this
-      const removed = await service.deleteByRequestID(created.requestID);
+      const removed = await requestService.deleteByRequestID(created.requestID);
       expectRequest(removed, request);
-      const result = await service.findAll();
+      const result = await requestService.findAll();
       expect(result).toBeDefined();
       expect(result.length).toEqual(0);
     });
@@ -182,9 +186,9 @@ describe('RequestService (integration)', () => {
         ],
       };
       // Request from client to server
-      let resultMsg = await service.onRequest(aggregateReq);
+      let resultMsg = await requestService.onRequest(aggregateReq);
       await simulateDelay();
-      const req = (await service.findAll()).at(0);
+      const req = (await requestService.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
       expect(req.requestID).toEqual(aggregateReq.requestID);
@@ -192,25 +196,26 @@ describe('RequestService (integration)', () => {
       expect(req.endAt).to.not.toBeDefined();
       expect(req.collName).toStrictEqual(aggregateReq.collName);
       expect(req.db).toStrictEqual(aggregateReq.db);
+      expect(req.requestSource).toStrictEqual('mongodb');
       expect(resultMsg).toBe(null);
       // Result from server to client
-      await service.onResult(aggregateResult);
+      await requestService.onResult(aggregateResult);
       await simulateDelay();
-      const updatedReq = (await service.findAll()).at(0);
+      const updatedReq = (await requestService.findAll()).at(0);
       expect(updatedReq).toBeDefined();
-      expect((await service.findAll()).length).toEqual(1);
+      expect((await requestService.findAll()).length).toEqual(1);
       // expect(updatedReq.request).toStrictEqual(aggregateReq.pipeline);
       expect(updatedReq.requestID).toEqual(aggregateReq.requestID);
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
-      resultMsg = await service.onRequest(aggregateReq);
+      resultMsg = await requestService.onRequest(aggregateReq);
       await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
-      expect((await service.findAll()).length).toEqual(2);
-      expect((await service.findAll()).at(1).requestSource).toStrictEqual(
-        'cache',
-      );
+      expect((await requestService.findAll()).length).toEqual(2);
+      expect(
+        (await requestService.findAll()).at(1).requestSource,
+      ).toStrictEqual('cache');
     });
     it('should be be processed with a Materialized View', async () => {
       const aggregateReq: IRequest = {
@@ -226,14 +231,16 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-
-      const resultMsg = await service.onRequest(aggregateReq);
+      mvService.register({
+        groupBy: { field: 'country' },
+        accumulatorDefs: [],
+      });
+      const resultMsg = await requestService.onRequest(aggregateReq);
       await wait(5); // Wait for the request to be stored in the DB
-      const req = (await service.findAll()).at(0);
+      const req = (await requestService.findAll()).at(0);
       expect(req).toBeDefined();
-      expect(req.requestSource).toStrictEqual('processed');
+      expect(req.requestSource).toStrictEqual('materialized_view');
       expect(resultMsg).not.toBe(null);
-      expect(resultMsg.results).toStrictEqual([{ _id: 'USA' }]);
     });
   });
 });

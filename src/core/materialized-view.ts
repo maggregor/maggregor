@@ -12,6 +12,8 @@ export interface MaterializedViewDefinition {
 }
 
 export class MaterializedView implements CollectionListener {
+  private _db: string;
+  private _collection: string;
   private groupBy: Expression;
   private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();
@@ -77,5 +79,13 @@ export class MaterializedView implements CollectionListener {
 
   getAccumulatorDefinitions(): AccumulatorDefinition[] {
     return this.definitions;
+  }
+
+  get db(): string {
+    return this._db;
+  }
+
+  get collection(): string {
+    return this._collection;
   }
 }

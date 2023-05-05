@@ -10,6 +10,7 @@ import { DatabaseModule } from '@/server/modules/database/database.module';
 import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
+import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -51,6 +52,12 @@ export async function createRequestServiceWithMockDeps() {
       {
         provide: getModelToken(Request.name),
         useValue: {},
+      },
+      {
+        provide: MaterializedViewService,
+        useValue: {
+          canExecute: () => false,
+        },
       },
       {
         provide: MongoDBTcpProxyService,
@@ -102,7 +109,7 @@ export async function createCacheServiceWithMockDeps(
 }
 
 // Request service with real dependencies (for integration tests)
-export async function createRequestService() {
+export async function createMaggregorModule(): Promise<TestingModule> {
   const app: TestingModule = await Test.createTestingModule({
     imports: [
       LoggerModule,
@@ -115,6 +122,7 @@ export async function createRequestService() {
       RequestService,
       ConfigService,
       CacheService,
+      MaterializedViewService,
       {
         provide: ListenerService,
         useValue: {
@@ -124,7 +132,7 @@ export async function createRequestService() {
       },
     ],
   }).compile();
-  return app.get<RequestService>(RequestService);
+  return app;
 }
 
 // Listener service with real dependencies (for integration tests)
