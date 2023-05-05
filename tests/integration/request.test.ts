@@ -189,14 +189,7 @@ describe('RequestService (integration)', () => {
       let resultMsg = await requestService.onRequest(aggregateReq);
       await simulateDelay();
       const req = (await requestService.findAll()).at(0);
-      expect(req).toBeDefined();
-      expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
-      expect(req.requestID).toEqual(aggregateReq.requestID);
-      expect(req.startAt).toBeDefined();
-      expect(req.endAt).to.not.toBeDefined();
-      expect(req.collName).toStrictEqual(aggregateReq.collName);
-      expect(req.db).toStrictEqual(aggregateReq.db);
-      expect(req.requestSource).toStrictEqual('mongodb');
+      expectRequest(req, aggregateReq);
       expect(resultMsg).toBe(null);
       // Result from server to client
       await requestService.onResult(aggregateResult);
@@ -267,13 +260,7 @@ describe('RequestService (integration)', () => {
       let resultMsg = await requestService.onRequest(findReq);
       await simulateDelay();
       const req = (await requestService.findAll()).at(0);
-      expect(req).toBeDefined();
-      expect(req.requestID).toEqual(findReq.requestID);
-      expect(req.startAt).toBeDefined();
-      expect(req.endAt).to.not.toBeDefined();
-      expect(req.collName).toStrictEqual(findReq.collName);
-      expect(req.db).toStrictEqual(findReq.db);
-      expect(req.requestSource).toStrictEqual('mongodb');
+      expectRequest(req, findReq);
       expect(resultMsg).toBe(null);
       // Result from server to client
       await requestService.onResult(findResult);
@@ -295,3 +282,16 @@ describe('RequestService (integration)', () => {
     });
   });
 });
+
+const expectRequest = (actual: Request, request: Request) => {
+  expect(actual).toBeDefined();
+  expect(actual.pipeline).toStrictEqual(request.pipeline);
+  expect(actual.type).toStrictEqual(request.type);
+  expect(actual.filter).toStrictEqual(request.filter);
+  expect(actual.query).toStrictEqual(request.query);
+  expect(actual.requestID).toStrictEqual(request.requestID);
+  expect(actual.startAt).toStrictEqual(request.startAt);
+  expect(actual.endAt).toStrictEqual(request.endAt);
+  expect(actual.collName).toStrictEqual(request.collName);
+  expect(actual.db).toStrictEqual(request.db);
+};

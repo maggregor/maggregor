@@ -119,5 +119,9 @@ describe('MaterializedViewService', () => {
 
     const pipeline = await service.createPipelineFromRequest(request);
     expect(pipeline.stages.length).toBe(1);
+
+    expect(
+      await service.createPipelineFromRequest([{ wrong: {} }] as any),
+    ).toBe(null);
   });
 });
