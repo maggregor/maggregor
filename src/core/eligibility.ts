@@ -8,13 +8,16 @@ import { deepEqual } from './pipeline/accumulators/common';
  * Check if a pipeline is eligible for a materialized view.
  * A pipeline is eligible if it's fields are a subset of the materialized view's fields.
  *
- * @param pipeline The pipeline to check
+ * @param p The pipeline to check
  * @param mv The materialized view to check
  * @returns True if the pipeline is eligible, false otherwise
  */
-export function isEligible(pipeline: Pipeline, mv: MaterializedView): boolean {
-  if (pipeline.stages.length === 0) return false;
-  let currentStage: Stage | undefined = pipeline.stages[0];
+export function isEligible(p: Pipeline, mv: MaterializedView): boolean {
+  // The pipeline must have the same db and collection as the materialized view
+  if (p.db !== mv.db || p.collection !== mv.collection) return false;
+  // The pipeline must have at least one stage
+  if (p.stages.length === 0) return false;
+  let currentStage: Stage | undefined = p.stages[0];
   do {
     if (!canBeExecuted(currentStage, mv)) {
       return false;

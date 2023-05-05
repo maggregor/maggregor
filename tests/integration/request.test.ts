@@ -232,6 +232,8 @@ describe('RequestService (integration)', () => {
         ],
       };
       mvService.register({
+        db: 'mydb',
+        collection: 'collection',
         groupBy: { field: 'country' },
         accumulatorDefs: [],
       });

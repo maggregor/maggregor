@@ -1,6 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { IRequest } from '../request/request.interface';
 import { isEligible } from '@/core/eligibility';
 import { parseStages } from '@/parser';
@@ -61,7 +59,6 @@ export class MaterializedViewService {
      * TODO: Select the best materialized view (based on the count of documents in the view)
      */
     const mv = mvs.at(0);
-
     return executePipeline(pipeline, mv.getView());
   }
 
@@ -69,8 +66,7 @@ export class MaterializedViewService {
     if (!req) return null;
 
     // Maggregor only supports aggregate requests on materialized views
-    if (req.type !== 'aggregate' || !req.pipeline) return null;
-
+    if (req.type !== 'aggregate' || req.pipeline.length === 0) return null;
     // Parse the stages from the request
     let stages: StageDefinition[];
     try {
@@ -80,6 +76,6 @@ export class MaterializedViewService {
       return null;
     }
     // Create a pipeline from the stages
-    return createPipeline(stages);
+    return createPipeline(req.db, req.collName, stages);
   }
 }

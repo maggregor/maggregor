@@ -135,6 +135,20 @@ export async function createMaggregorModule(): Promise<TestingModule> {
   return app;
 }
 
+export async function createMaterializedViewService() {
+  const app: TestingModule = await Test.createTestingModule({
+    imports: [LoggerModule],
+    providers: [
+      MaterializedViewService,
+      {
+        provide: ConfigService,
+        useValue: {},
+      },
+    ],
+  }).compile();
+  return app.get<MaterializedViewService>(MaterializedViewService);
+}
+
 // Listener service with real dependencies (for integration tests)
 export async function createListenerService(config: TestConfigServiceOptions) {
   const app = await Test.createTestingModule({

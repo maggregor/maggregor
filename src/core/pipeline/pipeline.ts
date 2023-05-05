@@ -8,6 +8,8 @@ import {
 import { Document } from '../index';
 
 export interface Pipeline {
+  db?: string;
+  collection?: string;
   stages: Stage[];
 }
 
@@ -24,7 +26,11 @@ export function executePipeline(
   return result;
 }
 
-export function createPipeline(defs: StageDefinition[]): Pipeline {
+export function createPipeline(
+  db: string,
+  collection: string,
+  defs: StageDefinition[],
+): Pipeline {
   const stages: Stage[] = defs.map((stageDef) => {
     let stage: Stage;
     if (stageDef.type === 'group') {
@@ -41,5 +47,5 @@ export function createPipeline(defs: StageDefinition[]): Pipeline {
       stage.next = stages[index + 1];
     }
   });
-  return { stages };
+  return { db, collection, stages } as Pipeline;
 }

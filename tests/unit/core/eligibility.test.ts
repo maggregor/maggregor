@@ -25,6 +25,8 @@ const sampleData = [
 describe('isEligible', () => {
   test('should return true if the pipeline is eligible', () => {
     const mv = new MaterializedView({
+      db: 'myDb',
+      collection: 'myCol',
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
@@ -45,7 +47,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline('myDb', 'myCol', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -71,7 +73,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline(null, null, stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -93,6 +95,8 @@ describe('isEligible', () => {
 
   test('should return true if there is a MatchStage', () => {
     const mv = new MaterializedView({
+      db: 'test',
+      collection: 'test',
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
@@ -104,7 +108,7 @@ describe('isEligible', () => {
     const stageDefinitions: StageDefinition[] = [
       { type: 'match', conditions: [{ field: 'name' }] },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline('test', 'test', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -136,12 +140,14 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline(null, null, stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
   test('should be eligible', () => {
     const mv = new MaterializedView({
+      db: 'test',
+      collection: 'test',
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
@@ -162,7 +168,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline('test', 'test', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -188,7 +194,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline(null, null, stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -203,12 +209,14 @@ describe('isEligible', () => {
       ],
     });
     const stages = [];
-    const pipeline = createPipeline(stages);
+    const pipeline = createPipeline(null, null, stages);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
   test('should be eligible - MatchStage', () => {
     const mv = new MaterializedView({
+      db: 'test',
+      collection: 'test',
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
@@ -220,7 +228,7 @@ describe('isEligible', () => {
     const stageDefinitions: StageDefinition[] = [
       { type: 'match', conditions: [{ field: 'name' }] },
     ];
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline('test', 'test', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -253,7 +261,7 @@ describe('isEligible', () => {
       ],
     });
     mv.addDocument({ genre: 'action', score: 10 });
-    const pipeline = createPipeline(stageDefinitions);
+    const pipeline = createPipeline(null, null, stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -366,7 +374,7 @@ describe('isEligible', () => {
           },
         ],
       });
-      const pipeline = createPipeline(stageDefinitions);
+      const pipeline = createPipeline(null, null, stageDefinitions);
       expect(isEligible(pipeline, mv)).toEqual(false);
     });
   });
