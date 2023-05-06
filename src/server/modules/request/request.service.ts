@@ -84,12 +84,12 @@ export class RequestService implements MongoDBProxyListener {
     // Save the request to the database
     this.create(req);
 
+    this.makeAsCompleted(req);
+
     if (req.requestSource === 'mongodb') {
       // Forward the request to MongoDB
       return null;
     }
-    this.requestIsFinished(req);
-
     // Maggregor is able to answer by itself
     return {
       db: req.db,
@@ -104,12 +104,12 @@ export class RequestService implements MongoDBProxyListener {
     const requestID = res.responseTo;
     const req = await this.findOneByRequestId(requestID);
     if (!req) return;
-    this.requestIsFinished(req);
+    this.makeAsCompleted(req);
     this.updateOne(req);
     this.cacheService.tryCacheResults(req, res);
   }
 
-  requestIsFinished(req: IRequest) {
+  makeAsCompleted(req: IRequest) {
     const id = req.requestID;
     const src = req.requestSource;
     req.endAt = new Date();

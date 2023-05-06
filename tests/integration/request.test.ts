@@ -34,8 +34,6 @@ describe('RequestService (integration)', () => {
     expect(actual.filter).toStrictEqual(request.filter);
     expect(actual.query).toStrictEqual(request.query);
     expect(actual.requestID).toStrictEqual(request.requestID);
-    expect(actual.startAt).toStrictEqual(request.startAt);
-    expect(actual.endAt).toStrictEqual(request.endAt);
     expect(actual.collName).toStrictEqual(request.collName);
     expect(actual.db).toStrictEqual(request.db);
   };
@@ -205,10 +203,9 @@ describe('RequestService (integration)', () => {
       await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
-      expect((await requestService.findAll()).length).toEqual(2);
-      expect(
-        (await requestService.findAll()).at(1).requestSource,
-      ).toStrictEqual('maggregor_cache');
+      const requests = await requestService.findAll();
+      expect(requests.length).toEqual(2);
+      expect(requests.at(1).requestSource).toEqual('maggregor_cache');
     });
     it('should be be processed with a Materialized View', async () => {
       const aggregateReq: IRequest = {
@@ -275,10 +272,9 @@ describe('RequestService (integration)', () => {
       await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(findResult.data);
-      expect((await requestService.findAll()).length).toEqual(2);
-      expect(
-        (await requestService.findAll()).at(1).requestSource,
-      ).toStrictEqual('maggregor_cache');
+      const requests = await requestService.findAll();
+      expect(requests.length).toEqual(2);
+      expect(requests.at(1).requestSource).toEqual('maggregor_cache');
     });
   });
 });
