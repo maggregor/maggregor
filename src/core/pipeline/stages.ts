@@ -20,7 +20,7 @@ export type GroupStageDefinition = {
   accumulators: Accumulator[];
 };
 
-export type StageType = 'match' | 'group' | 'limit';
+export type StageType = 'match' | 'group' | 'sort' | 'limit' | 'skip';
 
 export class GroupStage {
   type: StageType;

@@ -36,8 +36,9 @@ export function isEligible(p: Pipeline, mv: MaterializedView): boolean {
 function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
   if (stage.type === 'group') {
     const { groupExpr, accumulators } = stage as GroupStage;
-    // TODO: Understand how properly resolve the expression
-    // const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
+    // LIMITATION: For the moment we only support field references in the group expression
+    // A small change is needed to support expressions (e.g. $group: { _id: { $toUpperCase: 'country' } } )
+    // DISABLED => const resolved = resolveAllExpressionFields([groupExpr], mv.getView())[0];
     const resolvedHash = toHashExpression(groupExpr);
     const mvGroupExprHash = toHashExpression(mv.getGroupExpression());
     // The group expression must be equal to the materialized view's group expression
@@ -59,6 +60,9 @@ function canBeExecuted(stage: Stage, mv: MaterializedView): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore -  Change by good deepEqual
     if (!deepEqual(filterExpr, mv.getGroupExpression())) return false;
+  } else {
+    // The stage is not supported
+    return false;
   }
 
   return true;

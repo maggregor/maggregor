@@ -208,7 +208,7 @@ describe('RequestService (integration)', () => {
       expect((await requestService.findAll()).length).toEqual(2);
       expect(
         (await requestService.findAll()).at(1).requestSource,
-      ).toStrictEqual('cache');
+      ).toStrictEqual('maggregor_cache');
     });
     it('should be be processed with a Materialized View', async () => {
       const aggregateReq: IRequest = {
@@ -234,7 +234,7 @@ describe('RequestService (integration)', () => {
       await wait(5); // Wait for the request to be stored in the DB
       const req = (await requestService.findAll()).at(0);
       expect(req).toBeDefined();
-      expect(req.requestSource).toStrictEqual('materialized_view');
+      expect(req.requestSource).toStrictEqual('maggregor_mv');
       expect(resultMsg).not.toBe(null);
     });
     it('should cache a find request', async () => {
@@ -278,20 +278,7 @@ describe('RequestService (integration)', () => {
       expect((await requestService.findAll()).length).toEqual(2);
       expect(
         (await requestService.findAll()).at(1).requestSource,
-      ).toStrictEqual('cache');
+      ).toStrictEqual('maggregor_cache');
     });
   });
 });
-
-const expectRequest = (actual: Request, request: Request) => {
-  expect(actual).toBeDefined();
-  expect(actual.pipeline).toStrictEqual(request.pipeline);
-  expect(actual.type).toStrictEqual(request.type);
-  expect(actual.filter).toStrictEqual(request.filter);
-  expect(actual.query).toStrictEqual(request.query);
-  expect(actual.requestID).toStrictEqual(request.requestID);
-  expect(actual.startAt).toStrictEqual(request.startAt);
-  expect(actual.endAt).toStrictEqual(request.endAt);
-  expect(actual.collName).toStrictEqual(request.collName);
-  expect(actual.db).toStrictEqual(request.db);
-};

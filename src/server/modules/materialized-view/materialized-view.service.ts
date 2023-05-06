@@ -63,6 +63,12 @@ export class MaterializedViewService {
     return executePipeline(pipeline, mv.getView());
   }
 
+  /**
+   * Creates a pipeline from the request received from the client
+   * If the request is not valid, null is returned
+   * @param req
+   * @returns
+   */
   async createPipelineFromRequest(req: IRequest): Promise<Pipeline> {
     if (!req) return null;
 

@@ -66,12 +66,12 @@ export class RequestService implements MongoDBProxyListener {
     // Attempt to answer via cache
     if (this.cacheService.hasCachedResults(req)) {
       results = this.cacheService.getCachedResults(req);
-      req.requestSource = 'cache';
+      req.requestSource = 'maggregor_cache';
     }
     // Attempt to answer via Materialized Views
     else if (await this.mvService.canExecute(req)) {
       results = await this.mvService.execute(req);
-      req.requestSource = 'materialized_view';
+      req.requestSource = 'maggregor_mv';
     }
     // Finally, deleguate the request to MongoDB
     else {

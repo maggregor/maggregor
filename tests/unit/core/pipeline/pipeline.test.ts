@@ -13,7 +13,7 @@ const sampleData = [
 
 describe('Pipeline creation and execution', () => {
   it('returns the expected result', () => {
-    const pipeline = createPipeline(null, null, [
+    const pipeline = createPipeline('mydb', 'mycol', [
       {
         type: 'group',
         groupExpr: { field: 'genre' },
@@ -61,7 +61,7 @@ describe('Pipeline creation and execution', () => {
   });
 
   it('returns the expected result', () => {
-    const pipeline = createPipeline(null, null, [
+    const pipeline = createPipeline('mydb', 'mycol', [
       {
         type: 'match',
         conditions: [
@@ -80,7 +80,9 @@ describe('Pipeline creation and execution', () => {
 
 describe('Pipeline with limit stage', () => {
   it('returns the expected result', () => {
-    const pipeline = createPipeline(null, null, [{ type: 'limit', limit: 2 }]);
+    const pipeline = createPipeline('mydb', 'mycol', [
+      { type: 'limit', limit: 2 },
+    ]);
     const result = executePipeline(pipeline, sampleData);
     expect(result).toEqual([
       { genre: 'action', score: 10 },
@@ -91,7 +93,7 @@ describe('Pipeline with limit stage', () => {
 
 describe('Pipeline with two stages: match and group', () => {
   it('returns the expected result', () => {
-    const pipeline = createPipeline(null, null, [
+    const pipeline = createPipeline('mydb', 'mycol', [
       {
         type: 'match',
         conditions: [
@@ -140,7 +142,7 @@ describe('Pipeline with two stages: match and group', () => {
 });
 
 it('group and match with two conditions', () => {
-  const pipeline = createPipeline(null, null, [
+  const pipeline = createPipeline('mydb', 'mycol', [
     {
       type: 'match',
       conditions: [
@@ -189,7 +191,7 @@ it('group and match with two conditions', () => {
 });
 
 it('advanced group stage', () => {
-  const pipeline = createPipeline(null, null, [
+  const pipeline = createPipeline('mydb', 'mycol', [
     {
       type: 'group',
       groupExpr: { field: 'genre' },
@@ -226,7 +228,7 @@ it('advanced group stage', () => {
 });
 
 it('with match stage and MV', () => {
-  const pipeline = createPipeline(null, null, [
+  const pipeline = createPipeline('mydb', 'mycol', [
     {
       type: 'match',
       conditions: [

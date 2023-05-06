@@ -73,7 +73,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(null, null, stageDefinitions);
+    const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -140,7 +140,7 @@ describe('isEligible', () => {
         },
       ],
     });
-    const pipeline = createPipeline(null, null, stageDefinitions);
+    const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -194,7 +194,7 @@ describe('isEligible', () => {
         ],
       },
     ];
-    const pipeline = createPipeline(null, null, stageDefinitions);
+    const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -209,7 +209,7 @@ describe('isEligible', () => {
       ],
     });
     const stages = [];
-    const pipeline = createPipeline(null, null, stages);
+    const pipeline = createPipeline('mydb', 'mycol', stages);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -261,7 +261,7 @@ describe('isEligible', () => {
       ],
     });
     mv.addDocument({ genre: 'action', score: 10 });
-    const pipeline = createPipeline(null, null, stageDefinitions);
+    const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -363,6 +363,8 @@ describe('isEligible', () => {
         },
       ];
       const mv = new MaterializedView({
+        db: 'mydb',
+        collection: 'mycol',
         groupBy: {
           operator: 'gt',
           value: [{ field: 'score' }, { value: 10 }],
@@ -374,7 +376,29 @@ describe('isEligible', () => {
           },
         ],
       });
-      const pipeline = createPipeline(null, null, stageDefinitions);
+      const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
+      expect(isEligible(pipeline, mv)).toEqual(false);
+    });
+
+    it('unsupported not be eligible - unsupported stage - limit stage', () => {
+      const stageDefinitions: StageDefinition[] = [
+        {
+          type: 'limit',
+          limit: 10,
+        },
+      ];
+      const mv = new MaterializedView({
+        db: 'test',
+        collection: 'test',
+        groupBy: { field: 'genre' },
+        accumulatorDefs: [
+          {
+            operator: 'count',
+            expression: { field: 'genre' },
+          },
+        ],
+      });
+      const pipeline = createPipeline('test', 'test', stageDefinitions);
       expect(isEligible(pipeline, mv)).toEqual(false);
     });
   });

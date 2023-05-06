@@ -1,9 +1,10 @@
-// Differents sources of request results.
-// Sources:
-// - cache: src/server/modules/cache/cache.ts (when the request is answered from the Maggregor cache)
-// - mongodb: src/server/modules/request/request.service.ts (when the request is delegated to the server)
-// - processed: src/server/modules/request/request.service.ts (when the request is processed by Maggregor)
-export type RequestSourceType = 'cache' | 'materialized_view' | 'mongodb';
+/**
+ * Differents sources of request results.
+ * maggregor_cache: when the request is answered from the Maggregor cache
+ * maggregor_mv: when the request is processed by Maggregor
+ * mongodb: when the request is delegated to the MongoDB server
+ */
+export type RequestSourceType = 'maggregor_cache' | 'maggregor_mv' | 'mongodb';
 export type RequestType =
   | 'find'
   | 'aggregate'
