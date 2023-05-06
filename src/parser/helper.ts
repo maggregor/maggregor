@@ -1,6 +1,6 @@
 /**
  * Helper functions for the parser
- * Transform a array of stages into a compact string representation for the parser
+ * Transform a array of stages into a compatible string representation for the parser
  * @param pipeline - The pipeline to stringify
  * @returns The stringified pipeline
  */
