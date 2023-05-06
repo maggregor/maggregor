@@ -30,9 +30,11 @@ describe('LimitStage', () => {
 
 describe('MatchStage', () => {
   it("should filter data by genre 'action'", async () => {
-    const matchStage = new MatchStage([
-      { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
-    ]);
+    const matchStage = new MatchStage({
+      conditions: [
+        { operator: 'eq', value: [{ field: 'genre' }, { value: 'action' }] },
+      ],
+    });
     const result = matchStage.execute(sampleData);
     expect(result).toEqual([
       { genre: 'action', score: 10 },

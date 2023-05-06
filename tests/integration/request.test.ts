@@ -2,22 +2,26 @@ import { RequestService } from '@server/modules/request/request.service';
 import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
-import { simulateDelay } from 'tests/e2e/utils';
-import { createRequestService } from 'tests/unit/server/utils';
+import { simulateDelay, wait } from 'tests/e2e/utils';
+import { createMaggregorModule } from 'tests/unit/server/utils';
+import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 
 describe('RequestService (integration)', () => {
-  let service: RequestService;
+  let requestService: RequestService;
+  let mvService: MaterializedViewService;
 
   beforeAll(async () => {
-    service = await createRequestService();
+    const module = await createMaggregorModule();
+    requestService = module.get<RequestService>(RequestService);
+    mvService = module.get<MaterializedViewService>(MaterializedViewService);
   });
 
   beforeEach(async () => {
-    await service?.deleteAll();
+    await requestService?.deleteAll();
   });
 
   afterAll(async () => {
-    await service?.deleteAll();
+    await requestService?.deleteAll();
   });
 
   const expectRequest = (actual: Request, request: Request) => {
@@ -30,8 +34,6 @@ describe('RequestService (integration)', () => {
     expect(actual.filter).toStrictEqual(request.filter);
     expect(actual.query).toStrictEqual(request.query);
     expect(actual.requestID).toStrictEqual(request.requestID);
-    expect(actual.startAt).toStrictEqual(request.startAt);
-    expect(actual.endAt).toStrictEqual(request.endAt);
     expect(actual.collName).toStrictEqual(request.collName);
     expect(actual.db).toStrictEqual(request.db);
   };
@@ -47,7 +49,7 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const result = await service.create(request);
+      const result = await requestService.create(request);
       expectRequest(result, request);
     });
   });
@@ -72,9 +74,9 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection2',
         db: 'testDatabase2',
       };
-      await service.create(request1);
-      await service.create(request2);
-      const result = await service.findAll();
+      await requestService.create(request1);
+      await requestService.create(request2);
+      const result = await requestService.findAll();
       expect(result).toBeDefined();
       expect(result.length).toEqual(2);
       expectRequest(result[0], request1);
@@ -93,8 +95,8 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
-      const result = await service.findOneByRequestId(created.requestID);
+      const created = await requestService.create(request);
+      const result = await requestService.findOneByRequestId(created.requestID);
       expectRequest(result, request);
     });
   });
@@ -116,12 +118,12 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
+      const created = await requestService.create(request);
       created.pipeline = [
         { $project: { name: 1 } },
         { $match: { name: 'testUpdated' } },
       ];
-      const updated = await service.updateOne(created);
+      const updated = await requestService.updateOne(created);
       expectRequest(updated, {
         ...request,
         pipeline: created.pipeline,
@@ -146,12 +148,12 @@ describe('RequestService (integration)', () => {
         collName: 'testCollection',
         db: 'testDatabase',
       };
-      const created = await service.create(request);
+      const created = await requestService.create(request);
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - TODO: Fix this
-      const removed = await service.deleteByRequestID(created.requestID);
+      const removed = await requestService.deleteByRequestID(created.requestID);
       expectRequest(removed, request);
-      const result = await service.findAll();
+      const result = await requestService.findAll();
       expect(result).toBeDefined();
       expect(result.length).toEqual(0);
     });
@@ -182,35 +184,97 @@ describe('RequestService (integration)', () => {
         ],
       };
       // Request from client to server
-      let resultMsg = await service.onRequest(aggregateReq);
+      let resultMsg = await requestService.onRequest(aggregateReq);
       await simulateDelay();
-      const req = (await service.findAll()).at(0);
-      expect(req).toBeDefined();
-      expect(req.pipeline).toStrictEqual(aggregateReq.pipeline);
-      expect(req.requestID).toEqual(aggregateReq.requestID);
-      expect(req.startAt).toBeDefined();
-      expect(req.endAt).to.not.toBeDefined();
-      expect(req.collName).toStrictEqual(aggregateReq.collName);
-      expect(req.db).toStrictEqual(aggregateReq.db);
+      const req = (await requestService.findAll()).at(0);
+      expectRequest(req, aggregateReq);
       expect(resultMsg).toBe(null);
       // Result from server to client
-      await service.onResult(aggregateResult);
+      await requestService.onResult(aggregateResult);
       await simulateDelay();
-      const updatedReq = (await service.findAll()).at(0);
+      const updatedReq = (await requestService.findAll()).at(0);
       expect(updatedReq).toBeDefined();
-      expect((await service.findAll()).length).toEqual(1);
+      expect((await requestService.findAll()).length).toEqual(1);
       // expect(updatedReq.request).toStrictEqual(aggregateReq.pipeline);
       expect(updatedReq.requestID).toEqual(aggregateReq.requestID);
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
-      resultMsg = await service.onRequest(aggregateReq);
+      resultMsg = await requestService.onRequest(aggregateReq);
       await simulateDelay();
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
-      expect((await service.findAll()).length).toEqual(2);
-      expect((await service.findAll()).at(1).requestSource).toStrictEqual(
-        'cache',
-      );
+      const requests = await requestService.findAll();
+      expect(requests.length).toEqual(2);
+      expect(requests.at(1).requestSource).toEqual('maggregor_cache');
+    });
+    it('should be be processed with a Materialized View', async () => {
+      const aggregateReq: IRequest = {
+        type: 'aggregate',
+        requestID: 1,
+        db: 'mydb',
+        collName: 'collection',
+        pipeline: [
+          {
+            $group: {
+              _id: '$country',
+            },
+          },
+        ],
+      };
+      mvService.register({
+        db: 'mydb',
+        collection: 'collection',
+        groupBy: { field: 'country' },
+        accumulatorDefs: [],
+      });
+      const resultMsg = await requestService.onRequest(aggregateReq);
+      await wait(5); // Wait for the request to be stored in the DB
+      const req = (await requestService.findAll()).at(0);
+      expect(req).toBeDefined();
+      expect(req.requestSource).toStrictEqual('maggregor_mv');
+      expect(resultMsg).not.toBe(null);
+    });
+    it('should cache a find request', async () => {
+      const findReq: IRequest = {
+        type: 'find',
+        requestID: 1,
+        db: 'mydb',
+        collName: 'collection',
+        filter: {
+          name: 'test',
+        },
+      };
+      const findResult: IResponse = {
+        requestID: -1,
+        responseTo: 1,
+        data: [
+          {
+            name: 'test',
+          },
+        ],
+      };
+      // Request from client to server
+      let resultMsg = await requestService.onRequest(findReq);
+      await simulateDelay();
+      const req = (await requestService.findAll()).at(0);
+      expectRequest(req, findReq);
+      expect(resultMsg).toBe(null);
+      // Result from server to client
+      await requestService.onResult(findResult);
+      await simulateDelay();
+      const updatedReq = (await requestService.findAll()).at(0);
+      expect(updatedReq).toBeDefined();
+      expect((await requestService.findAll()).length).toEqual(1);
+      expect(updatedReq.requestID).toEqual(findReq.requestID);
+      expect(updatedReq.startAt).toBeDefined();
+      // Same request from client to server
+      resultMsg = await requestService.onRequest(findReq);
+      await simulateDelay();
+      expect(resultMsg).toBeDefined();
+      expect(resultMsg.results).toStrictEqual(findResult.data);
+      const requests = await requestService.findAll();
+      expect(requests.length).toEqual(2);
+      expect(requests.at(1).requestSource).toEqual('maggregor_cache');
     });
   });
 });

@@ -8,12 +8,15 @@ import { MsgResult } from '../mongodb-proxy/protocol';
 import { IRequest } from './request.interface';
 import { LoggerService } from '../logger/logger.service';
 import { CacheService } from '../cache-request/cache.service';
+import { MaterializedViewService } from '../materialized-view/materialized-view.service';
 @Injectable()
 export class RequestService implements MongoDBProxyListener {
   constructor(
     @InjectModel(Request.name) private readonly requestModel: Model<Request>,
     @Inject(LoggerService) private readonly logger: LoggerService,
     @Inject(CacheService) private readonly cacheService: CacheService,
+    @Inject(MaterializedViewService)
+    private readonly mvService: MaterializedViewService,
   ) {
     this.logger.setContext('Requests');
   }
@@ -54,45 +57,63 @@ export class RequestService implements MongoDBProxyListener {
 
   // Event: on aggregate query from client
   async onRequest(req: IRequest): Promise<MsgResult> {
-    const reqID = req.requestID;
     let results = null;
     req.startAt = new Date();
-    if (req.db === 'admin') {
-      // We ignore admin requests (such as heartbeat, listDatabases, etc.)
+
+    // We ignore admin requests (such as heartbeat, listDatabases, etc.)
+    if (req.db === 'admin') return null;
+
+    // Attempt to answer via cache
+    if (this.cacheService.hasCachedResults(req)) {
+      results = this.cacheService.getCachedResults(req);
+      req.requestSource = 'maggregor_cache';
+    }
+    // Attempt to answer via Materialized Views
+    else if (await this.mvService.canExecute(req)) {
+      results = await this.mvService.execute(req);
+      req.requestSource = 'maggregor_mv';
+    }
+    // Finally, deleguate the request to MongoDB
+    else {
+      /**
+       * Maggregor is not able to answer the request from cache or from the
+       * Materialized Views, so we need to forward the request to MongoDB.
+       */
+      req.requestSource = 'mongodb';
+    }
+    // Save the request to the database
+    this.create(req);
+
+    this.makeAsCompleted(req);
+
+    if (req.requestSource === 'mongodb') {
+      // Forward the request to MongoDB
       return null;
     }
-    if (this.cacheService.hasCachedResults(req)) {
-      req.endAt = new Date();
-      this.logger.log(
-        `id:${reqID}: (${req.type}) Answered from cache (${ms(req)})`,
-      );
-      results = this.cacheService.getCachedResults(req);
-    }
-    req.requestSource = results ? 'cache' : 'mongodb';
-    this.create(req);
-    return !results
-      ? null
-      : {
-          db: req.db,
-          collection: req.collName,
-          results,
-          responseTo: req.requestID,
-        };
+    // Maggregor is able to answer by itself
+    return {
+      db: req.db,
+      collection: req.collName,
+      results,
+      responseTo: req.requestID,
+    } as MsgResult;
   }
 
   // Event: on result from server
   async onResult(res: IResponse): Promise<void> {
     const requestID = res.responseTo;
     const req = await this.findOneByRequestId(requestID);
-    if (!req || req.type === 'unknown') {
-      return;
-    }
-    req.endAt = new Date();
+    if (!req) return;
+    this.makeAsCompleted(req);
     this.updateOne(req);
     this.cacheService.tryCacheResults(req, res);
-    this.logger.log(
-      `id:${requestID}: (${req.type}) Answered from MongoDB (${ms(req)})`,
-    );
+  }
+
+  makeAsCompleted(req: IRequest) {
+    const id = req.requestID;
+    const src = req.requestSource;
+    req.endAt = new Date();
+    this.logger.log(`${id}: (${req.type}) Answered from ${src} (${ms(req)})`);
   }
 }
 

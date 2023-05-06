@@ -7,18 +7,24 @@ import { createCachedAccumulator } from './pipeline/accumulators';
 import { evaluateExpression, toHashExpression } from './pipeline/expressions';
 import type { Expression } from './pipeline/expressions';
 export interface MaterializedViewDefinition {
+  db: string;
+  collection: string;
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];
 }
 
 export class MaterializedView implements CollectionListener {
+  private _db: string;
+  private _collection: string;
   private groupBy: Expression;
   private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();
 
-  constructor(options: MaterializedViewDefinition) {
-    this.groupBy = options.groupBy;
-    this.definitions = options.accumulatorDefs;
+  constructor(def: MaterializedViewDefinition) {
+    this._db = def.db;
+    this._collection = def.collection;
+    this.groupBy = def.groupBy;
+    this.definitions = def.accumulatorDefs;
   }
 
   addDocument(doc: Document): void {
@@ -77,5 +83,13 @@ export class MaterializedView implements CollectionListener {
 
   getAccumulatorDefinitions(): AccumulatorDefinition[] {
     return this.definitions;
+  }
+
+  get db(): string | undefined {
+    return this._db;
+  }
+
+  get collection(): string | undefined {
+    return this._collection;
   }
 }

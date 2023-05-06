@@ -124,7 +124,9 @@ describe('RequestService', () => {
       .mockImplementation(async () => mockRequest);
 
     const result = await service.onRequest(mockRequest);
-
+    const called = createSpy.mock.calls[0][0];
+    expect(called).toHaveProperty('requestSource');
+    expect(called.requestSource).toEqual('mongodb');
     expect(createSpy).toHaveBeenCalledWith(mockRequest);
     expect(result).toBeNull();
   });

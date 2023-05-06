@@ -8,6 +8,7 @@ import { DatabaseModule } from '../database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from '@/server/modules/logger/logger.service';
 import { LoggerModule } from '../logger/logger.module';
+import { MaterializedViewService } from '../materialized-view/materialized-view.service';
 @Module({
   imports: [
     LoggerModule,
@@ -17,6 +18,11 @@ import { LoggerModule } from '../logger/logger.module';
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],
   controllers: [],
-  providers: [LoggerService, MongoDBTcpProxyService, RequestService],
+  providers: [
+    LoggerService,
+    MongoDBTcpProxyService,
+    RequestService,
+    MaterializedViewService,
+  ],
 })
 export class ProxyModule {}

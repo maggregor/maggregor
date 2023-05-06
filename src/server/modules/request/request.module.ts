@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from '../logger/logger.module';
 import { RequestController } from './request.controller';
 import { StatsController } from './stats.controller';
+import { MaterializedViewService } from '../materialized-view/materialized-view.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { StatsController } from './stats.controller';
     DatabaseModule,
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],
-  providers: [RequestService],
+  providers: [RequestService, MaterializedViewService],
   controllers: [RequestController, StatsController],
 })
 export class RequestModule {}

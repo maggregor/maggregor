@@ -16,6 +16,8 @@ describe('MaterializedView', () => {
       },
     };
     const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
       groupBy: { field: 'genre' },
       accumulatorDefs: [acc1, acc2],
     });

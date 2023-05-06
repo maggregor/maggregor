@@ -6,9 +6,12 @@ import {
   CountCachedAccumulator,
 } from '@core/pipeline/accumulators';
 
+// The definition is not used in the tests, so we can just pass an empty object.
+const NO_DEFINITION = {};
+
 describe('SumCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const sumAccumulator = new SumCachedAccumulator();
+    const sumAccumulator = new SumCachedAccumulator(NO_DEFINITION);
     expect(sumAccumulator.getCachedValue()).toBeUndefined();
     sumAccumulator.add(1);
     expect(sumAccumulator.getCachedValue()).toEqual(1);
@@ -27,7 +30,7 @@ describe('SumCachedAccumulator', () => {
 
 describe('MinCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const minAccumulator = new MinCachedAccumulator();
+    const minAccumulator = new MinCachedAccumulator(NO_DEFINITION);
     expect(minAccumulator.getCachedValue()).toBeUndefined();
     minAccumulator.add(1);
     expect(minAccumulator.getCachedValue()).toEqual(1);
@@ -46,7 +49,7 @@ describe('MinCachedAccumulator', () => {
 
 describe('MaxCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const maxAccumulator = new MaxCachedAccumulator();
+    const maxAccumulator = new MaxCachedAccumulator(NO_DEFINITION);
     expect(maxAccumulator.getCachedValue()).toBeUndefined();
     maxAccumulator.add(1);
     expect(maxAccumulator.getCachedValue()).toEqual(1);
@@ -65,7 +68,7 @@ describe('MaxCachedAccumulator', () => {
 
 describe('AvgCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const avgAccumulator = new AvgCachedAccumulator();
+    const avgAccumulator = new AvgCachedAccumulator(NO_DEFINITION);
     expect(avgAccumulator.getCachedValue()).toBeUndefined();
     avgAccumulator.add(1);
     expect(avgAccumulator.getCachedValue()).toEqual(1);
@@ -84,7 +87,7 @@ describe('AvgCachedAccumulator', () => {
 
 describe('CountCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const countAccumulator = new CountCachedAccumulator();
+    const countAccumulator = new CountCachedAccumulator(NO_DEFINITION);
     expect(countAccumulator.getCachedValue()).toEqual(0);
     countAccumulator.add(true);
     expect(countAccumulator.getCachedValue()).toEqual(1);
