@@ -7,15 +7,15 @@ import { createCachedAccumulator } from './pipeline/accumulators';
 import { evaluateExpression, toHashExpression } from './pipeline/expressions';
 import type { Expression } from './pipeline/expressions';
 export interface MaterializedViewDefinition {
-  db?: string;
-  collection?: string;
+  db: string;
+  collection: string;
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];
 }
 
 export class MaterializedView implements CollectionListener {
-  private _db: string | undefined;
-  private _collection: string | undefined;
+  private _db: string;
+  private _collection: string;
   private groupBy: Expression;
   private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();

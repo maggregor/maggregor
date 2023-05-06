@@ -7,11 +7,11 @@ import {
 } from './stages';
 import { Document } from '../index';
 
-export interface Pipeline {
-  db?: string;
-  collection?: string;
+export type Pipeline = {
+  db: string;
+  collection: string;
   stages: Stage[];
-}
+};
 
 export function executePipeline(
   pipeline: Pipeline,

@@ -1,11 +1,14 @@
 import { isEligible } from '@core/eligibility';
-import { MaterializedView } from '@core/materialized-view';
+import {
+  MaterializedView,
+  MaterializedViewDefinition,
+} from '@core/materialized-view';
 import {
   CountBasicAccumulator,
   AccumulatorDefinition,
 } from '@core/pipeline/accumulators';
 import { toHashExpression } from '@core/pipeline/expressions';
-import { createPipeline } from '@core/pipeline/pipeline';
+import { Pipeline, createPipeline } from '@core/pipeline/pipeline';
 import {
   GroupStage,
   LimitStage,
@@ -21,6 +24,18 @@ const sampleData = [
   { genre: 'drama', score: 50 },
   { genre: 'drama', score: 60 },
 ];
+
+const MV_DEF_MOVIE: MaterializedViewDefinition = {
+  db: 'db',
+  collection: 'collection',
+  groupBy: { field: 'genre' },
+  accumulatorDefs: [
+    {
+      operator: 'sum',
+      expression: { field: 'score' },
+    },
+  ],
+};
 
 describe('isEligible', () => {
   test('should return true if the pipeline is eligible', () => {
@@ -52,15 +67,7 @@ describe('isEligible', () => {
   });
 
   test('should return false if the pipeline is not eligible', () => {
-    const mv = new MaterializedView({
-      groupBy: { field: 'yes' },
-      accumulatorDefs: [
-        {
-          operator: 'count',
-          expression: { field: 'name' },
-        },
-      ],
-    });
+    const mv = new MaterializedView(MV_DEF_MOVIE);
     const stageDefinitions: StageDefinition[] = [
       {
         type: 'group',
@@ -78,37 +85,21 @@ describe('isEligible', () => {
   });
 
   test('should return false if there is no group stage', () => {
-    const mv = new MaterializedView({
-      groupBy: { field: 'name' },
-      accumulatorDefs: [
-        {
-          operator: 'count',
-          expression: { field: 'name' },
-        },
-      ],
-    });
-    const pipeline = {
+    const mv = new MaterializedView(MV_DEF_MOVIE);
+    const pipeline: Pipeline = {
+      db: 'mydb',
+      collection: 'mycol',
       stages: [],
     };
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
   test('should return true if there is a MatchStage', () => {
-    const mv = new MaterializedView({
-      db: 'test',
-      collection: 'test',
-      groupBy: { field: 'name' },
-      accumulatorDefs: [
-        {
-          operator: 'count',
-          expression: { field: 'name' },
-        },
-      ],
-    });
+    const mv = new MaterializedView(MV_DEF_MOVIE);
     const stageDefinitions: StageDefinition[] = [
-      { type: 'match', conditions: [{ field: 'name' }] },
+      { type: 'match', conditions: [{ field: 'genre' }] },
     ];
-    const pipeline = createPipeline('test', 'test', stageDefinitions);
+    const pipeline = createPipeline('db', 'collection', stageDefinitions);
     expect(isEligible(pipeline, mv)).toEqual(true);
   });
 
@@ -132,6 +123,8 @@ describe('isEligible', () => {
       },
     ];
     const mv = new MaterializedView({
+      db: 'mydb',
+      collection: 'mycol',
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
@@ -174,6 +167,8 @@ describe('isEligible', () => {
 
   test('should not be eligible', () => {
     const mv = new MaterializedView({
+      db: 'test',
+      collection: 'test',
       groupBy: { field: 'noname' },
       accumulatorDefs: [
         {
@@ -195,21 +190,6 @@ describe('isEligible', () => {
       },
     ];
     const pipeline = createPipeline('mydb', 'mycol', stageDefinitions);
-    expect(isEligible(pipeline, mv)).toEqual(false);
-  });
-
-  test('should not be eligible - no group stage', () => {
-    const mv = new MaterializedView({
-      groupBy: { field: 'name' },
-      accumulatorDefs: [
-        {
-          operator: 'count',
-          expression: { field: 'name' },
-        },
-      ],
-    });
-    const stages = [];
-    const pipeline = createPipeline('mydb', 'mycol', stages);
     expect(isEligible(pipeline, mv)).toEqual(false);
   });
 
@@ -252,6 +232,8 @@ describe('isEligible', () => {
       },
     ];
     const mv = new MaterializedView({
+      db: 'mydb',
+      collection: 'mycol',
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
@@ -278,6 +260,8 @@ describe('isEligible', () => {
       },
     };
     const mv = new MaterializedView({
+      db: 'test',
+      collection: 'test',
       groupBy: { field: 'genre' },
       accumulatorDefs: [acc1, acc2],
     });

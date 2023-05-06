@@ -249,6 +249,8 @@ it('with match stage and MV', () => {
     },
   ]);
   const mv = new MaterializedView({
+    db: 'mydb',
+    collection: 'mycol',
     groupBy: { field: 'genre' },
     accumulatorDefs: [
       {

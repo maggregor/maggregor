@@ -37,7 +37,7 @@ abstract class AbstractCachedAccumulator
 export class SumCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
 
-  constructor(definition?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('sum', definition);
   }
 
@@ -56,7 +56,7 @@ export class AvgCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
   private __count = 0;
 
-  constructor(definition?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('avg', definition);
   }
 
@@ -81,7 +81,7 @@ export class MinCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
 
-  constructor(definition?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('min', definition);
   }
 
@@ -116,7 +116,7 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
   private values: Map<number, number> = new Map();
 
-  constructor(definition?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('max', definition);
   }
 
@@ -150,7 +150,7 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
 export class CountCachedAccumulator extends AbstractCachedAccumulator {
   protected __cachedValue = 0;
 
-  constructor(definition?: Omit<AccumulatorDefinition, 'operator'>) {
+  constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('count', definition);
   }
 
