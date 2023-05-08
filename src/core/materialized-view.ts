@@ -85,6 +85,11 @@ export class MaterializedView implements CollectionListener {
     return this.definitions;
   }
 
+  /**
+   * Builds an expression based on the input Expression object.
+   * @param expression - The input Expression object.
+   * @returns A MongoDB expression or value.
+   */
   buildExpression(expression: Expression): any {
     if (expression.field) {
       return `$${expression.field}`;
@@ -96,7 +101,6 @@ export class MaterializedView implements CollectionListener {
       if (Array.isArray(expression.value)) {
         return {
           [operator]: expression.value.map((arg) => {
-            // Utilisez une assertion de type pour assurer que 'arg' est de type 'Expression'
             return this.buildExpression(arg as Expression);
           }),
         };
@@ -110,7 +114,10 @@ export class MaterializedView implements CollectionListener {
     return expression.value;
   }
 
-  // Modifiez la méthode buildMongoAggregatePipeline comme suit
+  /**
+   * Builds a MongoDB aggregation pipeline using the accumulator definitions.
+   * @returns A MongoDB aggregation pipeline.
+   */
   buildMongoAggregatePipeline(): any {
     const accumulators = this.getAccumulatorDefinitions();
     const accumulatorsOutput: Record<string, any> = {};
