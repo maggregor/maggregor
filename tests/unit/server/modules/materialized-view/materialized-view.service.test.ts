@@ -8,6 +8,7 @@ import {
 } from '@/core/materialized-view';
 import { Pipeline } from '@/core/pipeline/pipeline';
 import { IRequest } from '@/server/modules/request/request.interface';
+import { Expression } from 'mongoose';
 
 const MV_DEF: MaterializedViewDefinition = {
   db: 'test',
@@ -123,5 +124,64 @@ describe('MaterializedViewService', () => {
     expect(
       await service.createPipelineFromRequest([{ wrong: {} }] as any),
     ).toBe(null);
+  });
+
+  describe('buildMongoAggregatePipeline', async () => {
+    it('should return a pipeline - 1', async () => {
+      const mv = new MaterializedView(MV_DEF);
+      const pipeline = mv.buildMongoAggregatePipeline();
+      expect(pipeline).toEqual([{ $group: { _id: '$country' } }]);
+    });
+    it('should return a pipeline - 2', async () => {
+      const mv = new MaterializedView({
+        db: 'test',
+        collection: 'test',
+        groupBy: { field: 'country' },
+        accumulatorDefs: [
+          {
+            operator: 'sum',
+            outputFieldName: 'mySum',
+            expression: { field: 'age' },
+          },
+        ],
+      });
+      const pipeline = mv.buildMongoAggregatePipeline();
+      expect(pipeline).toEqual([
+        {
+          $group: {
+            _id: '$country',
+
+            mySum: {
+              $sum: '$age',
+            },
+          },
+        },
+      ]);
+    });
+    test('buildExpression', () => {
+      const mv = new MaterializedView(MV_DEF);
+
+      const expression1: Expression = { field: 'age' };
+      expect(mv.buildExpression(expression1)).toBe('$age');
+
+      const expression2: Expression = {
+        operator: 'add',
+        value: [{ field: 'age' }, { field: 'income' }],
+      };
+      expect(mv.buildExpression(expression2)).toEqual({
+        $add: ['$age', '$income'],
+      });
+
+      const expression3: Expression = {
+        operator: 'multiply',
+        value: {
+          operator: 'add',
+          value: [{ field: 'age' }, { field: 'income' }],
+        },
+      };
+      expect(mv.buildExpression(expression3)).toEqual({
+        $multiply: [{ $add: ['$age', '$income'] }],
+      });
+    });
   });
 });

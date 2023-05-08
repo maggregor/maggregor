@@ -85,6 +85,52 @@ export class MaterializedView implements CollectionListener {
     return this.definitions;
   }
 
+  buildExpression(expression: Expression): any {
+    if (expression.field) {
+      return `$${expression.field}`;
+    }
+
+    if (expression.operator) {
+      const operator = `$${expression.operator}`;
+
+      if (Array.isArray(expression.value)) {
+        return {
+          [operator]: expression.value.map((arg) => {
+            // Utilisez une assertion de type pour assurer que 'arg' est de type 'Expression'
+            return this.buildExpression(arg as Expression);
+          }),
+        };
+      }
+
+      return {
+        [operator]: [this.buildExpression(expression.value as Expression)],
+      };
+    }
+
+    return expression.value;
+  }
+
+  // Modifiez la méthode buildMongoAggregatePipeline comme suit
+  buildMongoAggregatePipeline(): any {
+    const accumulators = this.getAccumulatorDefinitions();
+    const accumulatorsOutput: Record<string, any> = {};
+
+    accumulators.forEach((acc) => {
+      accumulatorsOutput[acc.outputFieldName] = {
+        [`$${acc.operator}`]: this.buildExpression(acc.expression),
+      };
+    });
+
+    return [
+      {
+        $group: {
+          _id: this.buildExpression(this.groupBy),
+          ...accumulatorsOutput,
+        },
+      },
+    ];
+  }
+
   get db(): string | undefined {
     return this._db;
   }
