@@ -19,7 +19,8 @@ interface CollectionChangeListener {
 @Injectable()
 export class ListenerService extends EventEmitter {
   private client: MongoClient;
-  private changeStreams = new Map<string, CollectionChangeListener>(); // Map of CollectionChangeListener objects
+  private _isConnected = false;
+  private changeStreams = new Map<string, CollectionChangeListener>();
 
   constructor(
     @Inject(ConfigService) private readonly configService: ConfigService,
@@ -45,6 +46,7 @@ export class ListenerService extends EventEmitter {
             serverSelectionTimeoutMS: 1000,
           },
         );
+        this._isConnected = true;
         this.logger.success('Successfully connected to MongoDB instance');
         return;
       } catch (error) {
@@ -111,6 +113,44 @@ export class ListenerService extends EventEmitter {
     if (collectionChangeListener.listeners.size === 0) {
       collectionChangeListener.stream.close();
       this.changeStreams.delete(key);
+    }
+  }
+
+  /**
+   * Check if the connection to MongoDB is established.
+   * @returns A boolean representing the connection status.
+   */
+  public isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  /**
+   * Execute an aggregation pipeline on a given database and collection.
+   * @param dbName The name of the MongoDB database.
+   * @param collectionName The name of the MongoDB collection.
+   * @param pipeline The aggregation pipeline to execute.
+   * @returns An array of documents returned by the aggregation pipeline.
+   */
+  public async executeAggregatePipeline(
+    dbName: string,
+    collectionName: string,
+    pipeline: any[],
+  ): Promise<any[]> {
+    if (!this.isConnected) {
+      throw new Error('MongoDB connection is not established');
+    }
+
+    const db = this.client.db(dbName);
+    const collection = db.collection(collectionName);
+
+    try {
+      const results = await collection.aggregate(pipeline).toArray();
+      return results;
+    } catch (error) {
+      this.logger.error(
+        `Error executing aggregate pipeline on ${collectionName}: ${error.message}`,
+      );
+      throw error;
     }
   }
 }

@@ -51,7 +51,7 @@ export async function loadTestData(
   logger.debug(`Loaded ${opts.totalDocs} documents`);
 }
 
-export async function startMongoServer() {
+export async function startMongoServer(): Promise<MongoMemoryReplSet> {
   const server = await MongoMemoryReplSet.create({
     replSet: { count: 1 },
     instanceOpts: [{ storageEngine: 'wiredTiger' }],

@@ -26,25 +26,35 @@ describe('MaterializedViewService', () => {
 
   test('findEligibleMV', async () => {
     const spyEligbility = vitest.spyOn(eligibility, 'isEligible');
+    vitest
+      .spyOn(service, 'loadMaterializedView')
+      .mockImplementation(() => null);
     const mockPipeline = [] as any;
     spyEligbility.mockReturnValue(true);
     //
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     //
-    service.register(MV_DEF);
+    await service.register(MV_DEF);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(1);
     spyEligbility.mockReturnValue(false);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(2);
     //
-    service.register({ ...MV_DEF, db: 'test2' });
-    service.register({ ...MV_DEF, collection: 'test2' });
+    await service.register({ ...MV_DEF, db: 'test2' });
+    await service.register({ ...MV_DEF, collection: 'test2' });
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(5);
     //
     spyEligbility.mockReturnValue(true);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(3);
     expect(spyEligbility).toHaveBeenCalledTimes(8);
+    // Ensure when an error is thrown, the MV is not considered eligible
+    await service.register({ ...MV_DEF, db: 'test3' });
+    vitest.spyOn(service, 'loadMaterializedView').mockImplementation(() => {
+      throw new Error();
+    });
+    await service.register({ ...MV_DEF, db: 'test4' });
+    expect(await service.findEligibleMV(mockPipeline)).toHaveLength(4);
   });
 
   test('canExecute', async () => {

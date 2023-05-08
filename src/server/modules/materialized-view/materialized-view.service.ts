@@ -13,15 +13,35 @@ import {
   MaterializedView,
   MaterializedViewDefinition,
 } from '@/core/materialized-view';
+import { ListenerService } from '../mongodb-listener/listener.service';
+
+export enum MaterializedViewState {
+  LOADING,
+  LOADED,
+  FAILED,
+}
 
 @Injectable()
 export class MaterializedViewService {
-  private readonly mvs: MaterializedView[] = [];
+  private readonly mvs: Map<MaterializedView, MaterializedViewState> =
+    new Map();
 
-  constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
+  constructor(
+    @Inject(ListenerService) private readonly listenerService: ListenerService,
+    @Inject(LoggerService) private readonly logger: LoggerService,
+  ) {}
 
   async register(definition: MaterializedViewDefinition): Promise<void> {
-    this.mvs.push(new MaterializedView(definition));
+    const materializedView = new MaterializedView(definition);
+    this.mvs.set(materializedView, MaterializedViewState.LOADING);
+
+    try {
+      await this.loadMaterializedView(materializedView);
+      this.mvs.set(materializedView, MaterializedViewState.LOADED);
+    } catch (error) {
+      this.mvs.set(materializedView, MaterializedViewState.FAILED);
+      this.logger.error(`Failed to load materialized view ${materializedView}`);
+    }
   }
 
   /**
@@ -31,7 +51,20 @@ export class MaterializedViewService {
    */
   async findEligibleMV(pipeline: Pipeline): Promise<MaterializedView[]> {
     if (!pipeline) return null;
-    return this.mvs.filter((mv) => isEligible(pipeline, mv));
+    return Array.from(this.mvs.keys()).filter((mv) =>
+      this.isEligibleMV(mv, pipeline),
+    );
+  }
+
+  isEligibleMV(
+    materializedView: MaterializedView,
+    pipeline: Pipeline,
+  ): boolean {
+    const viewState = this.mvs.get(materializedView);
+    if (viewState !== MaterializedViewState.LOADED) {
+      return false;
+    }
+    return isEligible(pipeline, materializedView);
   }
 
   /**
@@ -83,5 +116,34 @@ export class MaterializedViewService {
     }
     // Create a pipeline from the stages
     return createPipeline(req.db, req.collName, stages);
+  }
+
+  async loadMaterializedView(
+    materializedView: MaterializedView,
+  ): Promise<void> {
+    const pipeline = materializedView.buildMongoAggregatePipeline();
+    const dbName = materializedView.db;
+    const collectionName = materializedView.collection;
+    if (!dbName || !collectionName) {
+      throw new Error('Database and collection names must be provided.');
+    }
+
+    const results = await this.listenerService.executeAggregatePipeline(
+      dbName,
+      collectionName,
+      pipeline,
+    );
+
+    results?.forEach((doc) => {
+      materializedView.addDocument(doc);
+    });
+  }
+
+  async createMaterializedView(
+    definition: MaterializedViewDefinition,
+  ): Promise<MaterializedView> {
+    const materializedView = new MaterializedView(definition);
+    await this.loadMaterializedView(materializedView);
+    return materializedView;
   }
 }

@@ -11,7 +11,7 @@ describe('RequestService (integration)', () => {
   let mvService: MaterializedViewService;
 
   beforeAll(async () => {
-    const module = await createMaggregorModule();
+    const module = await createMaggregorModule({ listenerMocked: true });
     requestService = module.get<RequestService>(RequestService);
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
   });
@@ -221,7 +221,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      mvService.register({
+      await mvService.register({
         db: 'mydb',
         collection: 'collection',
         groupBy: { field: 'country' },

@@ -11,6 +11,7 @@ import { ListenerService } from '@/server/modules/mongodb-listener/listener.serv
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
+import { ModuleMetadata } from '@nestjs/common';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -109,8 +110,10 @@ export async function createCacheServiceWithMockDeps(
 }
 
 // Request service with real dependencies (for integration tests)
-export async function createMaggregorModule(): Promise<TestingModule> {
-  const app: TestingModule = await Test.createTestingModule({
+export async function createMaggregorModule(config?: {
+  listenerMocked: boolean;
+}): Promise<TestingModule> {
+  const moduleConfig: ModuleMetadata = {
     imports: [
       LoggerModule,
       DatabaseModule,
@@ -123,16 +126,21 @@ export async function createMaggregorModule(): Promise<TestingModule> {
       ConfigService,
       CacheService,
       MaterializedViewService,
-      {
-        provide: ListenerService,
-        useValue: {
-          subscribeToCollectionChanges: () => null,
-          unsubscribeFromCollectionChanges: () => null,
-        },
-      },
     ],
-  }).compile();
-  return app;
+  };
+  if (config?.listenerMocked) {
+    moduleConfig.providers.push({
+      provide: ListenerService,
+      useValue: {
+        subscribeToCollectionChanges: () => null,
+        unsubscribeFromCollectionChanges: () => null,
+        executeAggregatePipeline: () => null,
+      },
+    });
+  } else {
+    moduleConfig.providers.push(ListenerService);
+  }
+  return Test.createTestingModule(moduleConfig).compile();
 }
 
 export async function createMaterializedViewService() {
@@ -140,6 +148,14 @@ export async function createMaterializedViewService() {
     imports: [LoggerModule],
     providers: [
       MaterializedViewService,
+      {
+        provide: ListenerService,
+        useValue: {
+          subscribeToCollectionChanges: () => null,
+          unsubscribeFromCollectionChanges: () => null,
+          executeAggregatePipeline: () => null,
+        },
+      },
       {
         provide: ConfigService,
         useValue: {},
