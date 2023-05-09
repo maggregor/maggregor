@@ -16,6 +16,7 @@ export type TestConfigServiceOptions = {
   env: {
     [key: string]: string | number;
   };
+  listenerServiceUseValue?: any;
 };
 
 // Proxy service with injected dependencies mocked
@@ -90,7 +91,7 @@ export async function createCacheServiceWithMockDeps(
       CacheService,
       {
         provide: ListenerService,
-        useValue: {
+        useValue: config.listenerServiceUseValue || {
           subscribeToCollectionChanges: () => null,
           unsubscribeFromCollectionChanges: () => null,
         },

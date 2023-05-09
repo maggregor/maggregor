@@ -59,7 +59,7 @@ export class CacheService {
     });
   }
 
-  private handleCollectionChange(db: string, collection: string) {
+  public handleCollectionChange(db: string, collection: string) {
     this.logger.debug(
       `CacheService: Received change on collection ${collection} in database ${db}`,
     );
