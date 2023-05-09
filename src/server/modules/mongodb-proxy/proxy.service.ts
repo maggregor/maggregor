@@ -85,14 +85,26 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
   init() {
     const createServerCallback = async (socket: net.Socket) => {
-      const proxySocket = tls.connect(
-        this.options.targetPort,
-        this.options.targetHost,
-        { servername: this.options.targetHost, rejectUnauthorized: false },
-        () => {
-          this.logger.success('Connected to target server');
-        },
-      );
+      const connectOptions: net.NetConnectOpts = {
+        port: this.options.targetPort,
+        host: this.options.targetHost,
+      };
+
+      const connectionListener = () => {
+        this.logger.success('Connected to target server');
+      };
+
+      const proxySocket = this.sslOptions
+        ? tls.connect(
+            {
+              ...connectOptions,
+              servername: this.options.targetHost,
+              rejectUnauthorized: false,
+            },
+            connectionListener,
+          )
+        : net.connect(connectOptions, connectionListener);
+
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new RequestInterceptor(socket);
       aggregateInterceptor.registerHook((hook) =>
