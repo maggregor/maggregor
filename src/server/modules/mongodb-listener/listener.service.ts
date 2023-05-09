@@ -31,11 +31,12 @@ export class ListenerService extends EventEmitter {
   }
 
   /**
-   * Connect to the MongoDB instance specified in the configuration file
+   * Connects to the MongoDB instance specified in the configuration file.
+   * The method will keep retrying the connection indefinitely until successful.
+   * @private
    */
   private async connectToMongoDB() {
-    let retries = 3;
-    while (retries) {
+    while (true) {
       try {
         // Attempt to connect to the MongoDB instance
         this.client = await MongoClient.connect(
@@ -45,20 +46,27 @@ export class ListenerService extends EventEmitter {
             serverSelectionTimeoutMS: 1000,
           },
         );
+
+        // Listen for the 'close' event on the MongoClient instance
+        this.client.on('close', () => {
+          this.logger.warn('MongoDB connection lost');
+          this.emit('end');
+          this.connectToMongoDB();
+        });
+
+        // Listen for the 'reconnect' event on the MongoClient instance
+        this.client.on('reconnect', () => {
+          this.logger.success('Reconnected to MongoDB instance');
+          this.emit('connection');
+        });
+
         this.logger.success('Successfully connected to MongoDB instance');
         return;
       } catch (error) {
-        retries--;
-        if (!retries) {
-          this.logger.error(
-            `Failed to connect to MongoDB instance: ${error.message}`,
-          );
-        } else {
-          this.logger.warn(
-            'Failed to connect: retrying to connect to MongoDB in 1 second...',
-          );
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
+        this.logger.warn(
+          `Failed to connect: retrying to connect to MongoDB in 1 second... Error: ${error.message}`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   }
@@ -103,12 +111,11 @@ export class ListenerService extends EventEmitter {
   public async unsubscribeFromCollectionChanges(
     dbName: string,
     collectionName: string,
-    callback: (change: any) => void,
   ) {
     const key = `${dbName}.${collectionName}`;
     const collectionChangeListener = this.changeStreams.get(key);
-    collectionChangeListener.listeners.delete(callback);
-    if (collectionChangeListener.listeners.size === 0) {
+
+    if (collectionChangeListener) {
       collectionChangeListener.stream.close();
       this.changeStreams.delete(key);
     }

@@ -1,6 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import { Inject, Injectable } from '@nestjs/common';
 import * as net from 'net';
+import * as tls from 'tls';
 import { EventEmitter } from 'events';
 import {
   RequestInterceptor,
@@ -14,6 +15,7 @@ import {
 } from './interceptors/response.interceptor';
 import { RequestService } from '../request/request.service';
 import { LoggerService } from '../logger/logger.service';
+import fs from 'fs';
 
 /**
  * Options for the TcpProxy instance
@@ -67,6 +69,7 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
+  private sslOptions: tls.SecureContextOptions | null;
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
@@ -81,8 +84,15 @@ export class MongoDBTcpProxyService extends EventEmitter {
   }
 
   init() {
-    this.server = net.createServer(async (socket) => {
-      const proxySocket = new net.Socket();
+    const createServerCallback = async (socket: net.Socket) => {
+      const proxySocket = tls.connect(
+        this.options.targetPort,
+        this.options.targetHost,
+        { servername: this.options.targetHost, rejectUnauthorized: false },
+        () => {
+          this.logger.success('Connected to target server');
+        },
+      );
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new RequestInterceptor(socket);
       aggregateInterceptor.registerHook((hook) =>
@@ -99,9 +109,16 @@ export class MongoDBTcpProxyService extends EventEmitter {
       // Handle errors
       proxySocket.on('error', handleError);
       socket.on('error', handleError);
-      // Connect the new socket to the target server
-      proxySocket.connect(this.options.targetPort, this.options.targetHost);
-    });
+    };
+    if (this.sslOptions) {
+      this.server = tls.createServer(this.sslOptions, createServerCallback);
+    } else {
+      this.server = net.createServer(createServerCallback);
+    }
+
+    const mode = this.sslOptions ? 'SSL' : 'non-SSL';
+    this.logger.log(`Proxy running in ${mode} mode`);
+
     return this;
   }
 
@@ -171,6 +188,21 @@ export class MongoDBTcpProxyService extends EventEmitter {
       listenHost,
       listenPort,
     };
+
+    const useSSL = config.get('USE_SSL') === 'true';
+    if (useSSL) {
+      const sslKeyPath = config.get('SSL_KEY_PATH');
+      const sslCertPath = config.get('SSL_CERT_PATH');
+      if (!sslKeyPath || !sslCertPath) {
+        throw new Error('SSL key and certificate paths must be provided');
+      }
+      this.sslOptions = {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath),
+      };
+    } else {
+      this.sslOptions = null;
+    }
   }
 }
 

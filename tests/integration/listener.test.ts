@@ -43,7 +43,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
     await service.subscribeToCollectionChanges('test', 'test', callback);
-    await service.unsubscribeFromCollectionChanges('test', 'test', callback);
+    await service.unsubscribeFromCollectionChanges('test', 'test');
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await wait(10);
     expect(callback).not.toHaveBeenCalled();
