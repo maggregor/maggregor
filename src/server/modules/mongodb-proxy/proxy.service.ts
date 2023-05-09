@@ -90,20 +90,13 @@ export class MongoDBTcpProxyService extends EventEmitter {
         host: this.options.targetHost,
       };
 
-      const connectionListener = () => {
-        this.logger.success('Connected to target server');
-      };
-
       const proxySocket = this.sslOptions
-        ? tls.connect(
-            {
-              ...connectOptions,
-              servername: this.options.targetHost,
-              rejectUnauthorized: false,
-            },
-            connectionListener,
-          )
-        : net.connect(connectOptions, connectionListener);
+        ? tls.connect({
+            ...connectOptions,
+            servername: this.options.targetHost,
+            rejectUnauthorized: false,
+          })
+        : net.connect(connectOptions);
 
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new RequestInterceptor(socket);
@@ -119,8 +112,8 @@ export class MongoDBTcpProxyService extends EventEmitter {
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
       proxySocket.pipe(resultInterceptor).pipe(socket);
       // Handle errors
-      proxySocket.on('error', handleError);
-      socket.on('error', handleError);
+      proxySocket.on('error', (error: Error) => this.handleError(error));
+      socket.on('error', (error: Error) => this.handleError(error));
     };
     if (this.sslOptions) {
       this.server = tls.createServer(this.sslOptions, createServerCallback);
@@ -216,16 +209,11 @@ export class MongoDBTcpProxyService extends EventEmitter {
       this.sslOptions = null;
     }
   }
-}
 
-function handleError(err: Error) {
-  // Ignore disconnection errors
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - Code is not in the type definition
-  if (err.code === 'ECONNRESET') {
-    return;
+  private handleError(err: Error) {
+    if (err.message.includes('ECONNRESET')) return;
+    this.logger.error(err.message);
   }
-  console.error(err);
 }
 
 interface MongoDBConnectionInfo {
@@ -264,22 +252,4 @@ function parseMongoDBConnectionString(
     password,
     replicaSet,
   };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createStreamLogger(name: string) {
-  return new Transform({
-    transform: async (chunk, encoding, callback) => {
-      try {
-        console.debug(name, JSON.stringify(decodeMessage(chunk)));
-      } catch (e) {
-        console.debug(
-          name,
-          "Can't decode message, opcode:",
-          chunk.readUInt32LE(0),
-        );
-      }
-      callback(null, chunk);
-    },
-  });
 }
