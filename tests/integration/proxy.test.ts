@@ -2,14 +2,13 @@ import { TestingModule } from '@nestjs/testing';
 import { MongoDBTcpProxyService } from '@server/modules/mongodb-proxy/proxy.service';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
-import { ConfigService } from '@nestjs/config';
-import { startMongoServer } from 'tests/e2e/utils';
+import { startMongoServer, wait } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
-import * as SSLFixtures from '../__utils__/ssl/fixtures';
-import fs from 'fs';
+import { LoggerService } from '@/server/modules/logger/logger.service';
 
 describe('MongoDBTcpProxyService: with mongodb-memory-server without interception', () => {
   let service: MongoDBTcpProxyService;
+  let loggerService: LoggerService;
   let mongodbClient: MongoClient;
   let mongodbServer: MongoMemoryReplSet;
 
@@ -21,6 +20,7 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
       },
     });
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
+    loggerService = await app.resolve<LoggerService>(LoggerService);
     mongodbClient = await MongoClient.connect(
       `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
     );
@@ -46,5 +46,17 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     expect(docs.length).toBe(1);
     expect(docs[0]._id).toBe('USA');
     expect(docs[0].sumAge).toBe(40);
+  });
+
+  test('Do not log error when a client disconnects', async () => {
+    vitest.spyOn(console, 'log').mockImplementation(() => null);
+    vitest.spyOn(console, 'error').mockImplementation(() => null);
+
+    service.handleError(new Error('ECONNRESET'));
+    expect((console.error as any).mock.calls.length).toBe(0);
+    service.handleError(new Error('An error occurred'));
+    expect((console.error as any).mock.calls.length).toBe(1);
+
+    vitest.restoreAllMocks();
   });
 });

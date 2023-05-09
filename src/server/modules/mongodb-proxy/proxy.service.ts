@@ -7,8 +7,6 @@ import {
   RequestInterceptor,
   RequestInterceptorHook,
 } from './interceptors/request.interceptor';
-import { Transform } from 'stream';
-import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
@@ -210,7 +208,7 @@ export class MongoDBTcpProxyService extends EventEmitter {
     }
   }
 
-  private handleError(err: Error) {
+  public handleError(err: Error) {
     if (err.message.includes('ECONNRESET')) return;
     this.logger.error(err.message);
   }
