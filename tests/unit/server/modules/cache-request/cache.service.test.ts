@@ -1,7 +1,6 @@
 import { CacheService } from '@/server/modules/cache-request/cache.service';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { IRequest } from '@/server/modules/request/request.interface';
-import * as Cache from '@core/cache';
 import {
   createCacheServiceWithMockDeps,
   createMockRequest,
