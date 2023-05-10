@@ -4,15 +4,22 @@ import { config } from 'dotenv';
 import chalk from 'chalk';
 import logger from '../__utils__/logger';
 import axios from 'axios';
+import path from 'path';
 
 config({ path: '.env.test' });
 
-type MProcessParams = { port?: number; httpPort?: number; targetUri?: string };
+type MProcessParams = {
+  port?: number;
+  httpPort?: number;
+  targetUri?: string;
+  ssl?: boolean;
+};
 
 const defaultParams: MProcessParams = {
   httpPort: parseInt(process.env.HTTP_PORT),
   port: parseInt(process.env.PROXY_PORT),
   targetUri: process.env.MONGODB_TARGET_URI,
+  ssl: false,
 };
 
 export class MaggregorProcess {
@@ -36,6 +43,19 @@ export class MaggregorProcess {
     if (process.env.PNPM_HOME === undefined) {
       throw new Error('process.env.PNPM_HOME is undefined');
     }
+    if (this.params.ssl) {
+      this.debug('Using SSL');
+      process.env.USE_SSL = 'true';
+      const sslDir = path.join(__dirname, '..', '__utils__', 'ssl');
+      process.env.SSL_KEY_PATH = `${sslDir}/key.pem`;
+      process.env.SSL_CERT_PATH = `${sslDir}/cert.pem`;
+      this.debug(`SSL_KEY_PATH=${process.env.SSL_KEY_PATH}`);
+      this.debug(`SSL_CERT_PATH=${process.env.SSL_CERT_PATH}`);
+    } else {
+      process.env.USE_SSL = 'false';
+      delete process.env.SSL_KEY_PATH;
+      delete process.env.SSL_CERT_PATH;
+    }
     this.process = spawn(`${process.env.PNPM_HOME}/pnpm`, ['preview'], {
       // Must to be detached=true to kill the process tree
       detached: true,
@@ -52,7 +72,10 @@ export class MaggregorProcess {
   }
 
   getUri() {
-    return `mongodb://localhost:${this.params.port}`;
+    const url = new URL(process.env.MONGODB_TARGET_URI);
+    url.hostname = 'localhost';
+    url.port = this.params.port.toString();
+    return url.toString();
   }
 
   getHttpUri() {
@@ -74,6 +97,11 @@ export class MaggregorProcess {
 
   async clearDatabase() {
     await axios.delete(`${this.getHttpUri()}/requests`);
+  }
+
+  async countRequests() {
+    const data = await axios.get(`${this.getHttpUri()}/requests/stats/count`);
+    return data;
   }
 
   async processAlreadyStarted(): Promise<boolean> {

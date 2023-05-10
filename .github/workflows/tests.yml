@@ -51,3 +51,6 @@ jobs:
       - name: E2E Tests
         run: |
           pnpm test:e2e
+        env:
+          TEST_ATLAS_USERNAME: ${{ secrets.TEST_ATLAS_USERNAME }}
+          TEST_ATLAS_PASSWORD: ${{ secrets.TEST_ATLAS_PASSWORD }}

@@ -200,7 +200,7 @@ describe('RequestService (integration)', () => {
       expect(updatedReq.startAt).toBeDefined();
       // Same request from client to server
       resultMsg = await requestService.onRequest(aggregateReq);
-      await simulateDelay();
+      await wait(50);
       expect(resultMsg).toBeDefined();
       expect(resultMsg.results).toStrictEqual(aggregateResult.data);
       const requests = await requestService.findAll();
