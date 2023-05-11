@@ -20,7 +20,7 @@ on:
       - 47-create-and-publish-a-docker-image-on-release
 
 permissions:
-  packages: admin
+  packages: write
 
 env:
   REGISTRY: ghcr.io
