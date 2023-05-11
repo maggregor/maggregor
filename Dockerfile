@@ -3,12 +3,13 @@ FROM node:19-alpine
 WORKDIR /app
 
 COPY package.json ./
+COPY pnpm-lock.yaml ./
 
 # Install pnpm
 RUN npm install -g pnpm
 
 # Install dependencies
-RUN pnpm install
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 COPY . .
 
