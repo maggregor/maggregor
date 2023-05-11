@@ -19,9 +19,6 @@ on:
     branches:
       - 47-create-and-publish-a-docker-image-on-release
 
-permissions:
-  packages: write
-
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -42,7 +39,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.DOCKER_GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
