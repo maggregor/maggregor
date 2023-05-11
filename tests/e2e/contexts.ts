@@ -2,9 +2,10 @@ import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess } from './setup-maggregor';
 import { startMongoServer, loadTestData, healthCheck } from './utils';
+import logger from 'tests/__utils__/logger';
 
 const testAtlasUrl = process.env.TEST_ATLAS_URL;
-
+logger.warn('testAtlasUrl:', testAtlasUrl);
 if (!testAtlasUrl) {
   throw new Error(
     'E2E Tests cannot run on Mongo Atlas without the TEST_ATLAS_URL env variable.',
