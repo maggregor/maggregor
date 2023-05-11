@@ -10,14 +10,9 @@
 name: Create and publish a Docker image
 
 # This workflow will be triggered after a new release is published by the release.yml workflow.
-# on:
-#   release:
-#     types: [published]
-
 on:
-  push:
-    branches:
-      - 47-create-and-publish-a-docker-image-on-release
+  release:
+    types: [published]
 
 env:
   REGISTRY: ghcr.io
