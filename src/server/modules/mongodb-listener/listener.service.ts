@@ -54,13 +54,8 @@ export class ListenerService extends EventEmitter {
           this.connectToMongoDB();
         });
 
-        // Listen for the 'reconnect' event on the MongoClient instance
-        this.client.on('reconnect', () => {
-          this.logger.success('Reconnected to MongoDB instance');
-          this.emit('connection');
-        });
-
         this.logger.success('Successfully connected to MongoDB instance');
+        this.emit('connection');
         return;
       } catch (error) {
         this.logger.warn(

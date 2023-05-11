@@ -48,4 +48,20 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await wait(10);
     expect(callback).not.toHaveBeenCalled();
   });
+
+  test('should reconnect after MongoDB connection loss', async () => {
+    const emit = vitest.spyOn(service, 'emit');
+    const loggerSpyWarn = vitest.spyOn(service['logger'], 'warn');
+    const loggerSpySuccess = vitest.spyOn(service['logger'], 'success');
+
+    service['client'].emit('close');
+    await wait(100);
+    expect(emit).toHaveBeenCalledWith('end');
+    expect(loggerSpyWarn.mock.lastCall).toMatch(/connection lost/);
+    await wait(2000);
+    expect(emit).toHaveBeenCalledWith('connection');
+    expect(loggerSpySuccess.mock.lastCall).toMatch(/connected/);
+
+    loggerSpyWarn.mockRestore();
+  });
 });
