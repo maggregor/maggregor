@@ -19,6 +19,9 @@ on:
     branches:
       - 47-create-and-publish-a-docker-image-on-release
 
+permissions:
+  packages: admin
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
