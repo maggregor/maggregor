@@ -46,7 +46,7 @@ export class MaggregorProcess {
     if (this.params.ssl) {
       this.debug('Using SSL');
       process.env.USE_SSL = 'true';
-      const sslDir = path.join(__dirname, '..', '__utils__', 'ssl');
+      const sslDir = path.resolve(__dirname, '../__utils__/ssl');
       process.env.SSL_KEY_PATH = `${sslDir}/key.pem`;
       process.env.SSL_CERT_PATH = `${sslDir}/cert.pem`;
       this.debug(`SSL_KEY_PATH=${process.env.SSL_KEY_PATH}`);

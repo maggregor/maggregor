@@ -1,7 +1,7 @@
 import { MongoDBTcpProxyService } from '@server/modules/mongodb-proxy/proxy.service';
 import { createProxyServiceWithMockDeps } from '../../utils';
-import * as SSLFixtures from '../../../../__utils__/ssl/fixtures';
 import fs from 'fs';
+import path from 'path';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -60,26 +60,20 @@ test('should throw an error if USE_SSL is true but SSL_KEY_PATH or SSL_CERT_PATH
 });
 
 test('should initialize with SSL options when USE_SSL is true and SSL key and certificate paths are provided', async () => {
-  fs.readFileSync = vitest.fn().mockImplementation((path) => {
-    if (path.includes('key')) {
-      return SSLFixtures.dummyPrivateKey;
-    }
-    if (path.includes('cert')) {
-      return SSLFixtures.dummyCertificate;
-    }
-  });
+  const spyReadFileSync = vitest.spyOn(fs, 'readFileSync');
+  const sslDir = path.resolve(__dirname, '../../../../__utils__/ssl');
   const opts = {
     env: {
       PROXY_PORT: 4010,
       USE_SSL: 'true',
-      SSL_KEY_PATH: '/path/to/ssl_key.pem',
-      SSL_CERT_PATH: '/path/to/ssl_cert.pem',
+      SSL_KEY_PATH: `${sslDir}/key.pem`,
+      SSL_CERT_PATH: `${sslDir}/cert.pem`,
     },
   };
 
   const service = await createProxyServiceWithMockDeps(opts);
   expect(service).toBeDefined();
   expect(service).toBeInstanceOf(MongoDBTcpProxyService);
-  expect(fs.readFileSync).toHaveBeenCalledWith(opts.env.SSL_KEY_PATH);
-  expect(fs.readFileSync).toHaveBeenCalledWith(opts.env.SSL_CERT_PATH);
+  expect(spyReadFileSync).toHaveBeenCalledWith(opts.env.SSL_KEY_PATH);
+  expect(spyReadFileSync).toHaveBeenCalledWith(opts.env.SSL_CERT_PATH);
 });
