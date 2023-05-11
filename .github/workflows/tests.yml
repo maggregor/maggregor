@@ -50,7 +50,6 @@ jobs:
 
       - name: E2E Tests
         run: |
-          echo url ${{ secrets.TEST_ATLAS_URL }}
           pnpm test:e2e
         env:
           TEST_ATLAS_URL: ${{ secrets.TEST_ATLAS_URL }}
