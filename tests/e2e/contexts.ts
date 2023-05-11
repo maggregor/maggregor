@@ -42,7 +42,7 @@ export const contexts: Context[] = [
     type: 'remote',
     name: 'Remote on shared MongoDB Atlas v6.0.0',
     ssl: true,
-    externalMongoUri: `mongodb://${testAtlasUsername}:${testAtlasPassword}@ac-edqjyiy-shard-00-02.puyjt1x.mongodb.net:27017/?ssl=true&replicaSet=atlas-9duftq-shard-0`,
+    externalMongoUri: `mongodb://${testAtlasUsername}:${testAtlasPassword}@ac-edqjyiy-shard-00-02.puyjt1x.mongodb.net:27017/?ssl=true&replicaSet=atlas-9duftq-shard-0&retryWrites=true&w=majority`,
   } as RemoteContext,
   {
     type: 'local',
