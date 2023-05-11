@@ -3,12 +3,11 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess } from './setup-maggregor';
 import { startMongoServer, loadTestData, healthCheck } from './utils';
 
-const testAtlasUsername = process.env.TEST_ATLAS_USERNAME;
-const testAtlasPassword = process.env.TEST_ATLAS_PASSWORD;
+const testAtlasUrl = process.env.TEST_ATLAS_URL;
 
-if (!testAtlasUsername || !testAtlasPassword) {
+if (!testAtlasUrl) {
   throw new Error(
-    'E2E Tests cannot run on Mongo Atlas without TEST_ATLAS_USERNAME and TEST_ATLAS_PASSWORD variables.',
+    'E2E Tests cannot run on Mongo Atlas without the TEST_ATLAS_URL env variable.',
   );
 }
 
@@ -42,7 +41,7 @@ export const contexts: Context[] = [
     type: 'remote',
     name: 'Remote on shared MongoDB Atlas v6.0.0',
     ssl: true,
-    externalMongoUri: `mongodb://${testAtlasUsername}:${testAtlasPassword}@ac-edqjyiy-shard-00-02.puyjt1x.mongodb.net:27017/?ssl=true&replicaSet=atlas-9duftq-shard-0&retryWrites=true&w=majority`,
+    externalMongoUri: testAtlasUrl,
   } as RemoteContext,
   {
     type: 'local',

@@ -58,10 +58,34 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await wait(100);
     expect(emit).toHaveBeenCalledWith('end');
     expect(loggerSpyWarn.mock.lastCall).toMatch(/connection lost/);
-    await wait(2000);
+    await wait(3000);
     expect(emit).toHaveBeenCalledWith('connection');
     expect(loggerSpySuccess.mock.lastCall).toMatch(/connected/);
 
     loggerSpyWarn.mockRestore();
+  });
+
+  describe('ListenerService: Automatic reconnection to MongoDB', () => {
+    let service: ListenerService;
+    let mongodbServer: MongoMemoryReplSet;
+
+    beforeAll(async () => {
+      service = await createListenerService({
+        env: {
+          MONGODB_TARGET_URI: 'mongodb://127.0.0.1:27018',
+        },
+      });
+    });
+    afterAll(async () => {
+      await mongodbServer?.stop();
+    });
+
+    test('should try to reconnect until MongoDB is up', async () => {
+      const spyOnConnect = vitest.spyOn(service, 'emit');
+      expect(spyOnConnect).not.toHaveBeenCalled();
+      mongodbServer = await startMongoServer({ port: 27018 });
+      await wait(2000);
+      expect(spyOnConnect).toHaveBeenCalledTimes(1);
+    });
   });
 });

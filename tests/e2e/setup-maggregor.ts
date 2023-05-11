@@ -99,11 +99,6 @@ export class MaggregorProcess {
     await axios.delete(`${this.getHttpUri()}/requests`);
   }
 
-  async countRequests() {
-    const data = await axios.get(`${this.getHttpUri()}/requests/stats/count`);
-    return data;
-  }
-
   async processAlreadyStarted(): Promise<boolean> {
     const timeout = 300;
     const { port } = this.params;
