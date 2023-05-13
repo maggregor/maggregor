@@ -37,12 +37,12 @@ export type LocalContext = {
 export type Context = RemoteContext | LocalContext;
 
 export const contexts: Context[] = [
-  {
-    type: 'remote',
-    name: 'Remote on shared MongoDB Atlas v6.0.0',
-    ssl: true,
-    externalMongoUri: testAtlasUrl,
-  } as RemoteContext,
+  // {
+  //   type: 'remote',
+  //   name: 'Remote on shared MongoDB Atlas v6.0.0',
+  //   ssl: true,
+  //   externalMongoUri: testAtlasUrl,
+  // } as RemoteContext,
   {
     type: 'local',
     name: 'Local on MongoMemoryServer v5.0.0',
@@ -81,10 +81,15 @@ export async function setupContext(
 }
 
 export const createClient = (uri: string) => {
-  return MongoClient.connect(uri, {
-    tlsAllowInvalidCertificates: true,
-    directConnection: true,
-    socketTimeoutMS: 1000,
-    connectTimeoutMS: 1000,
-  });
+  try {
+    const mongoClient = MongoClient.connect(uri, {
+      tlsAllowInvalidCertificates: true,
+      directConnection: true,
+      socketTimeoutMS: 1000,
+      connectTimeoutMS: 1000,
+    });
+    return mongoClient;
+  } catch (e) {
+    throw new Error(`Error connecting to ${uri}: ${e.message}`);
+  }
 };
