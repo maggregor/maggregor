@@ -16,6 +16,7 @@ export type TestConfigServiceOptions = {
   env: {
     [key: string]: string | number;
   };
+  listenerServiceUseValue?: any;
 };
 
 // Proxy service with injected dependencies mocked
@@ -90,7 +91,7 @@ export async function createCacheServiceWithMockDeps(
       CacheService,
       {
         provide: ListenerService,
-        useValue: {
+        useValue: config.listenerServiceUseValue || {
           subscribeToCollectionChanges: () => null,
           unsubscribeFromCollectionChanges: () => null,
         },
@@ -109,7 +110,9 @@ export async function createCacheServiceWithMockDeps(
 }
 
 // Request service with real dependencies (for integration tests)
-export async function createMaggregorModule(): Promise<TestingModule> {
+export async function createMaggregorModule(
+  config?: TestConfigServiceOptions,
+): Promise<TestingModule> {
   const app: TestingModule = await Test.createTestingModule({
     imports: [
       LoggerModule,
@@ -120,8 +123,16 @@ export async function createMaggregorModule(): Promise<TestingModule> {
     ],
     providers: [
       RequestService,
-      ConfigService,
+      {
+        provide: ConfigService,
+        useValue: {
+          get: (key: string) => {
+            return config?.env[key] || null;
+          },
+        },
+      },
       CacheService,
+      MongoDBTcpProxyService,
       MaterializedViewService,
       {
         provide: ListenerService,

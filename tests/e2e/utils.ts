@@ -51,11 +51,15 @@ export async function loadTestData(
   logger.debug(`Loaded ${opts.totalDocs} documents`);
 }
 
-export async function startMongoServer() {
-  const server = await MongoMemoryReplSet.create({
+export async function startMongoServer(opts?: { port?: number }) {
+  const config = {
     replSet: { count: 1 },
     instanceOpts: [{ storageEngine: 'wiredTiger' }],
-  });
+  } as any;
+  if (opts?.port) {
+    config.instanceOpts[0].port = opts.port;
+  }
+  const server = await MongoMemoryReplSet.create(config);
   return server;
 }
 

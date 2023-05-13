@@ -1,43 +1,22 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { TestingModule } from '@nestjs/testing';
 import { MongoDBTcpProxyService } from '@server/modules/mongodb-proxy/proxy.service';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
-import { RequestService } from '@server/modules/request/request.service';
-import { ConfigService } from '@nestjs/config';
-import { LoggerModule } from '@/server/modules/logger/logger.module';
+import { startMongoServer } from 'tests/e2e/utils';
+import { createMaggregorModule } from 'tests/unit/server/utils';
 
 describe('MongoDBTcpProxyService: with mongodb-memory-server without interception', () => {
   let service: MongoDBTcpProxyService;
   let mongodbClient: MongoClient;
-  let mongodbServer: MongoMemoryServer;
+  let mongodbServer: MongoMemoryReplSet;
 
   beforeAll(async () => {
-    mongodbServer = await MongoMemoryServer.create();
-    const app: TestingModule = await Test.createTestingModule({
-      imports: [LoggerModule],
-      providers: [
-        MongoDBTcpProxyService,
-        {
-          provide: RequestService,
-          useValue: {
-            onAggregateQueryFromClient: () => {
-              return null;
-            },
-          },
-        },
-        {
-          // TODO: Improve the way to mock the ConfigService
-          provide: ConfigService,
-          useValue: {
-            get: (key: string) => {
-              if (key === 'MONGODB_TARGET_URI') {
-                return mongodbServer.getUri();
-              }
-            },
-          },
-        },
-      ],
-    }).compile();
+    mongodbServer = await startMongoServer();
+    const app: TestingModule = await createMaggregorModule({
+      env: {
+        MONGODB_TARGET_URI: mongodbServer.getUri(),
+      },
+    });
     service = app.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
     mongodbClient = await MongoClient.connect(
       `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
@@ -66,8 +45,15 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     expect(docs[0].sumAge).toBe(40);
   });
 
-  test('Simple aggregate query with group and match', async () => {
-    // Placeholder expect for futur tests
-    expect(true).toBe(true);
+  test('Do not log error when a client disconnects', async () => {
+    vitest.spyOn(console, 'log').mockImplementation(() => null);
+    vitest.spyOn(console, 'error').mockImplementation(() => null);
+
+    service.handleError(new Error('ECONNRESET'));
+    expect((console.error as any).mock.calls.length).toBe(0);
+    service.handleError(new Error('An error occurred'));
+    expect((console.error as any).mock.calls.length).toBe(1);
+
+    vitest.restoreAllMocks();
   });
 });
