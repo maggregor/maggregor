@@ -115,7 +115,7 @@ export class MaterializedView implements CollectionListener {
    * @param expression - The input Expression object.
    * @returns A MongoDB expression or value.
    */
-  buildExpression(expression: Expression): any {
+  buildAsMongoExpression(expression: Expression): any {
     if (expression.field) {
       return `$${expression.field}`;
     }
@@ -126,13 +126,15 @@ export class MaterializedView implements CollectionListener {
       if (Array.isArray(expression.value)) {
         return {
           [operator]: expression.value.map((arg) => {
-            return this.buildExpression(arg as Expression);
+            return this.buildAsMongoExpression(arg as Expression);
           }),
         };
       }
 
       return {
-        [operator]: [this.buildExpression(expression.value as Expression)],
+        [operator]: [
+          this.buildAsMongoExpression(expression.value as Expression),
+        ],
       };
     }
 
@@ -143,31 +145,31 @@ export class MaterializedView implements CollectionListener {
    * Builds a MongoDB aggregation pipeline using the accumulator definitions.
    * @returns A MongoDB aggregation pipeline.
    */
-  buildMongoAggregatePipeline(): any {
+  buildAsMongoAggregatePipeline(): any {
     const accumulators = this.getAccumulatorDefinitions();
     const accumulatorsOutput: Record<string, any> = {};
 
     accumulators.forEach((acc) => {
       accumulatorsOutput[acc.outputFieldName] = {
-        [`$${acc.operator}`]: this.buildExpression(acc.expression),
+        [`$${acc.operator}`]: this.buildAsMongoExpression(acc.expression),
       };
     });
 
     return [
       {
         $group: {
-          _id: this.buildExpression(this.groupBy),
+          _id: this.buildAsMongoExpression(this.groupBy),
           ...accumulatorsOutput,
         },
       },
     ];
   }
 
-  get db(): string | undefined {
+  get db(): string {
     return this._db;
   }
 
-  get collection(): string | undefined {
+  get collection(): string {
     return this._collection;
   }
 }

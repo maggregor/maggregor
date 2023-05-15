@@ -125,12 +125,9 @@ export class MaterializedViewService {
   async loadMaterializedView(
     materializedView: MaterializedView,
   ): Promise<void> {
-    const pipeline = materializedView.buildMongoAggregatePipeline();
+    const pipeline = materializedView.buildAsMongoAggregatePipeline();
     const dbName = materializedView.db;
     const collectionName = materializedView.collection;
-    if (!dbName || !collectionName) {
-      throw new Error('Database and collection names must be provided.');
-    }
 
     const results = await this.listenerService.executeAggregatePipeline(
       dbName,

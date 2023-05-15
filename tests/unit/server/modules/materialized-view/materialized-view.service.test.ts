@@ -139,7 +139,7 @@ describe('MaterializedViewService', () => {
   describe('buildMongoAggregatePipeline', async () => {
     it('should return a pipeline - 1', async () => {
       const mv = new MaterializedView(MV_DEF);
-      const pipeline = mv.buildMongoAggregatePipeline();
+      const pipeline = mv.buildAsMongoAggregatePipeline();
       expect(pipeline).toEqual([{ $group: { _id: '$country' } }]);
     });
     it('should return a pipeline - 2', async () => {
@@ -155,7 +155,7 @@ describe('MaterializedViewService', () => {
           },
         ],
       });
-      const pipeline = mv.buildMongoAggregatePipeline();
+      const pipeline = mv.buildAsMongoAggregatePipeline();
       expect(pipeline).toEqual([
         {
           $group: {
@@ -168,29 +168,51 @@ describe('MaterializedViewService', () => {
         },
       ]);
     });
-    test('buildExpression', () => {
-      const mv = new MaterializedView(MV_DEF);
-
-      const expression1: Expression = { field: 'age' };
-      expect(mv.buildExpression(expression1)).toBe('$age');
-
-      const expression2: Expression = {
-        operator: 'add',
-        value: [{ field: 'age' }, { field: 'income' }],
-      };
-      expect(mv.buildExpression(expression2)).toEqual({
-        $add: ['$age', '$income'],
+    describe('buildExpression', () => {
+      test('should build with a field reference', () => {
+        const mv = new MaterializedView(MV_DEF);
+        const e: Expression = { field: 'age' };
+        expect(mv.buildAsMongoExpression(e)).toBe('$age');
       });
-
-      const expression3: Expression = {
-        operator: 'multiply',
-        value: {
+      test('should build with a add and multiply functions and two field references', () => {
+        const mv = new MaterializedView(MV_DEF);
+        const e: Expression = {
           operator: 'add',
           value: [{ field: 'age' }, { field: 'income' }],
-        },
-      };
-      expect(mv.buildExpression(expression3)).toEqual({
-        $multiply: [{ $add: ['$age', '$income'] }],
+        };
+        expect(mv.buildAsMongoExpression(e)).toEqual({
+          $add: ['$age', '$income'],
+        });
+        const e2: Expression = {
+          operator: 'multiply',
+          value: {
+            operator: 'add',
+            value: [{ field: 'age' }, { field: 'income' }],
+          },
+        };
+        expect(mv.buildAsMongoExpression(e2)).toEqual({
+          $multiply: [{ $add: ['$age', '$income'] }],
+        });
+      });
+      test('should return undefined if the expression is not correct', () => {
+        const mv = new MaterializedView(MV_DEF);
+        expect(mv.buildAsMongoExpression({} as any)).toBeUndefined();
+      });
+      test('should return a add expression with a field reference and a value', () => {
+        const mv = new MaterializedView(MV_DEF);
+        expect(
+          mv.buildAsMongoExpression({
+            operator: 'add',
+            value: [
+              {
+                field: 'age',
+              },
+              { value: 1 },
+            ],
+          }),
+        ).toEqual({
+          $add: ['$age', 1],
+        });
       });
     });
   });

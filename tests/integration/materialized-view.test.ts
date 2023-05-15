@@ -1,4 +1,4 @@
-import { startMongoServer, wait } from 'tests/e2e/utils';
+import { startMongoServer } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
