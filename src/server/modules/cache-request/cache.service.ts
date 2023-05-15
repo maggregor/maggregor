@@ -53,13 +53,18 @@ export class CacheService {
     }
     this.withCache(req, (key, collection, db) => {
       this.__cache.set(key, collection, db, res.data);
-      this.listener.subscribeToCollectionChanges(db, collection, () => {
-        this.logger.debug(
-          `CacheService: Received change on collection ${collection} in database ${db}`,
-        );
-        this.__cache.invalidateCollection(db, collection);
-      });
+      this.listener.subscribeToCollectionChanges(db, collection, () =>
+        this.handleCollectionChange(db, collection),
+      );
     });
+  }
+
+  public handleCollectionChange(db: string, collection: string) {
+    this.logger.debug(
+      `CacheService: Received change on collection ${collection} in database ${db}`,
+    );
+    this.listener.unsubscribeFromCollectionChanges(db, collection);
+    this.__cache.invalidateCollection(db, collection);
   }
 
   /**

@@ -43,9 +43,49 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
     await service.subscribeToCollectionChanges('test', 'test', callback);
-    await service.unsubscribeFromCollectionChanges('test', 'test', callback);
+    await service.unsubscribeFromCollectionChanges('test', 'test');
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await wait(10);
     expect(callback).not.toHaveBeenCalled();
+  });
+
+  test('should reconnect after MongoDB connection loss', async () => {
+    const emit = vitest.spyOn(service, 'emit');
+    const loggerSpyWarn = vitest.spyOn(service['logger'], 'warn');
+    const loggerSpySuccess = vitest.spyOn(service['logger'], 'success');
+
+    service['client'].emit('close');
+    await wait(100);
+    expect(emit).toHaveBeenCalledWith('end');
+    expect(loggerSpyWarn.mock.lastCall).toMatch(/connection lost/);
+    await wait(3000);
+    expect(emit).toHaveBeenCalledWith('connection');
+    expect(loggerSpySuccess.mock.lastCall).toMatch(/connected/);
+
+    loggerSpyWarn.mockRestore();
+  });
+
+  describe('ListenerService: Automatic reconnection to MongoDB', () => {
+    let service: ListenerService;
+    let mongodbServer: MongoMemoryReplSet;
+
+    beforeAll(async () => {
+      service = await createListenerService({
+        env: {
+          MONGODB_TARGET_URI: 'mongodb://127.0.0.1:27018',
+        },
+      });
+    });
+    afterAll(async () => {
+      await mongodbServer?.stop();
+    });
+
+    test('should try to reconnect until MongoDB is up', async () => {
+      const spyOnConnect = vitest.spyOn(service, 'emit');
+      expect(spyOnConnect).not.toHaveBeenCalled();
+      mongodbServer = await startMongoServer({ port: 27018 });
+      await wait(2000);
+      expect(spyOnConnect).toHaveBeenCalledTimes(1);
+    });
   });
 });

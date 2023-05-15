@@ -1,19 +1,19 @@
 import { ConfigService } from '@nestjs/config';
 import { Inject, Injectable } from '@nestjs/common';
 import * as net from 'net';
+import * as tls from 'tls';
 import { EventEmitter } from 'events';
 import {
   RequestInterceptor,
   RequestInterceptorHook,
 } from './interceptors/request.interceptor';
-import { Transform } from 'stream';
-import { decodeMessage } from './protocol/protocol';
 import {
   ReplyInterceptor,
   ReplyInterceptorHook,
 } from './interceptors/response.interceptor';
 import { RequestService } from '../request/request.service';
 import { LoggerService } from '../logger/logger.service';
+import fs from 'fs';
 
 /**
  * Options for the TcpProxy instance
@@ -67,6 +67,7 @@ export interface TcpProxyEvents {
 export class MongoDBTcpProxyService extends EventEmitter {
   private server: net.Server;
   private options: MongoDBProxyOptions;
+  private sslOptions: tls.SecureContextOptions | null;
 
   constructor(
     @Inject(RequestService) private readonly requestService: RequestService,
@@ -81,8 +82,12 @@ export class MongoDBTcpProxyService extends EventEmitter {
   }
 
   init() {
-    this.server = net.createServer(async (socket) => {
-      const proxySocket = new net.Socket();
+    const createServerCallback = async (socket: net.Socket) => {
+      const connectOptions: net.NetConnectOpts = {
+        port: this.options.targetPort,
+        host: this.options.targetHost,
+      };
+      const proxySocket = net.connect(connectOptions);
       // Setup aggregate interceptor (client -> proxy)
       const aggregateInterceptor = new RequestInterceptor(socket);
       aggregateInterceptor.registerHook((hook) =>
@@ -97,11 +102,18 @@ export class MongoDBTcpProxyService extends EventEmitter {
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
       proxySocket.pipe(resultInterceptor).pipe(socket);
       // Handle errors
-      proxySocket.on('error', handleError);
-      socket.on('error', handleError);
-      // Connect the new socket to the target server
-      proxySocket.connect(this.options.targetPort, this.options.targetHost);
-    });
+      proxySocket.on('error', (error: Error) => this.handleError(error));
+      socket.on('error', (error: Error) => this.handleError(error));
+    };
+    if (this.sslOptions) {
+      this.server = tls.createServer(this.sslOptions, createServerCallback);
+    } else {
+      this.server = net.createServer(createServerCallback);
+    }
+
+    const mode = this.sslOptions ? 'SSL' : 'non-SSL';
+    this.logger.log(`Proxy running in ${mode} mode`);
+
     return this;
   }
 
@@ -171,17 +183,27 @@ export class MongoDBTcpProxyService extends EventEmitter {
       listenHost,
       listenPort,
     };
-  }
-}
 
-function handleError(err: Error) {
-  // Ignore disconnection errors
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore - Code is not in the type definition
-  if (err.code === 'ECONNRESET') {
-    return;
+    const useSSL = config.get('USE_SSL') === 'true';
+    if (useSSL) {
+      const sslKeyPath = config.get('SSL_KEY_PATH');
+      const sslCertPath = config.get('SSL_CERT_PATH');
+      if (!sslKeyPath || !sslCertPath) {
+        throw new Error('SSL key and certificate paths must be provided');
+      }
+      this.sslOptions = {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath),
+      };
+    } else {
+      this.sslOptions = null;
+    }
   }
-  console.error(err);
+
+  public handleError(err: Error) {
+    if (err.message.includes('ECONNRESET')) return;
+    this.logger.error(err.message);
+  }
 }
 
 interface MongoDBConnectionInfo {
@@ -220,22 +242,4 @@ function parseMongoDBConnectionString(
     password,
     replicaSet,
   };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createStreamLogger(name: string) {
-  return new Transform({
-    transform: async (chunk, encoding, callback) => {
-      try {
-        console.debug(name, JSON.stringify(decodeMessage(chunk)));
-      } catch (e) {
-        console.debug(
-          name,
-          "Can't decode message, opcode:",
-          chunk.readUInt32LE(0),
-        );
-      }
-      callback(null, chunk);
-    },
-  });
 }

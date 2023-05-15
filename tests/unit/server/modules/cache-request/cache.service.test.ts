@@ -138,5 +138,35 @@ describe('CacheService', () => {
         expect(canCache).toBe(true);
       });
     });
+
+    describe('handleCollectionChange', () => {
+      it('should unsubscribe from the changes and invalidate the cache for the specified collection', async () => {
+        const subscribeToCollectionChanges = vitest.fn();
+        const unsubscribeFromCollectionChanges = vitest.fn();
+        const service = await createCacheServiceWithMockDeps({
+          env: {},
+          listenerServiceUseValue: {
+            subscribeToCollectionChanges,
+            unsubscribeFromCollectionChanges,
+          },
+        });
+        service.tryCacheResults(
+          createMockRequest({
+            type: 'find',
+            db: 'testDb',
+            collName: 'testColl',
+            pipeline: [{ $match: { city: 'Los Angeles' } }],
+          }),
+          createMockResponse({
+            data: [{ name: 'John', city: 'Los Angeles' }],
+          }),
+        );
+        expect(subscribeToCollectionChanges).toHaveBeenCalledTimes(1);
+        expect(unsubscribeFromCollectionChanges).toHaveBeenCalledTimes(0);
+        service.handleCollectionChange('testDb', 'testColl');
+        expect(subscribeToCollectionChanges).toHaveBeenCalledTimes(1);
+        expect(unsubscribeFromCollectionChanges).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 });

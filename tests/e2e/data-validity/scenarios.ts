@@ -1,4 +1,5 @@
 import type { MongoClient } from 'mongodb';
+import { wait } from '../utils';
 export interface E2EScenarios {
   name: string;
   // Will run the request on MongoDB and Maggregor asynchronously
@@ -184,11 +185,14 @@ export default [
       // Count documents before insert
       const res1 = await c.aggregate([{ $count: 'count' }]).toArray();
       const inserted = await c.insertOne({ name: 'John Doe' });
+      await wait(500); // Wait for cache invalidation
       // Count documents after insert
       const res2 = await c.aggregate([{ $count: 'count' }]).toArray();
       await c.deleteOne({ _id: inserted.insertedId });
+      await wait(500); // Wait for cache invalidation
       // Count documents after delete
       const res3 = await c.aggregate([{ $count: 'count' }]).toArray();
+
       return [res1, res2, res3];
     },
   },
