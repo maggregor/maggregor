@@ -11,7 +11,10 @@ describe('RequestService (integration)', () => {
   let mvService: MaterializedViewService;
 
   beforeAll(async () => {
-    const module = await createMaggregorModule({ listenerMocked: true });
+    const module = await createMaggregorModule({
+      listenerServiceUseValue: true,
+      env: {},
+    });
     requestService = module.get<RequestService>(RequestService);
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
   });

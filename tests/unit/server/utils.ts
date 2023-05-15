@@ -1,10 +1,10 @@
 import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { RequestService } from '@/server/modules/request/request.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
-import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CacheService } from '@/server/modules/cache-request/cache.service';
 import { DatabaseModule } from '@/server/modules/database/database.module';
 import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
@@ -118,6 +118,7 @@ export async function createMaggregorModule(
     imports: [
       LoggerModule,
       DatabaseModule,
+      ConfigModule,
       MongooseModule.forFeature([
         { name: Request.name, schema: RequestSchema },
       ]),
@@ -128,7 +129,7 @@ export async function createMaggregorModule(
         provide: ConfigService,
         useValue: {
           get: (key: string) => {
-            return config?.env[key] || null;
+            return config.env[key];
           },
         },
       },

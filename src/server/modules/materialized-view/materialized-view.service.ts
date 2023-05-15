@@ -15,12 +15,7 @@ import {
 } from '@/core/materialized-view';
 import { ListenerService } from '../mongodb-listener/listener.service';
 
-export enum MaterializedViewState {
-  LOADING,
-  LOADED,
-  FAILED,
-}
-
+export type MaterializedViewState = 'LOADING' | 'LOADED' | 'FAILED';
 @Injectable()
 export class MaterializedViewService {
   private readonly mvs: Map<MaterializedView, MaterializedViewState> =
@@ -33,15 +28,23 @@ export class MaterializedViewService {
 
   async register(definition: MaterializedViewDefinition): Promise<void> {
     const materializedView = new MaterializedView(definition);
-    this.mvs.set(materializedView, MaterializedViewState.LOADING);
+    this.mvs.set(materializedView, 'LOADING');
 
     try {
       await this.loadMaterializedView(materializedView);
-      this.mvs.set(materializedView, MaterializedViewState.LOADED);
+      this.mvs.set(materializedView, 'LOADED');
     } catch (error) {
-      this.mvs.set(materializedView, MaterializedViewState.FAILED);
+      this.mvs.set(materializedView, 'FAILED');
       this.logger.error(`Failed to load materialized view ${materializedView}`);
     }
+  }
+
+  state(mv: MaterializedView): MaterializedViewState {
+    return this.mvs.get(mv);
+  }
+
+  async getMaterializedViews(): Promise<MaterializedView[]> {
+    return Array.from(this.mvs.keys());
   }
 
   /**
@@ -61,7 +64,7 @@ export class MaterializedViewService {
     pipeline: Pipeline,
   ): boolean {
     const viewState = this.mvs.get(materializedView);
-    if (viewState !== MaterializedViewState.LOADED) {
+    if (viewState !== 'LOADED') {
       return false;
     }
     return isEligible(pipeline, materializedView);
