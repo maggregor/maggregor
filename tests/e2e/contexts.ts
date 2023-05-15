@@ -3,14 +3,6 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess } from './setup-maggregor';
 import { startMongoServer, loadTestData, healthCheck } from './utils';
 
-const testAtlasUrl = process.env.TEST_ATLAS_URL;
-
-if (!testAtlasUrl || testAtlasUrl === '') {
-  throw new Error(
-    'E2E Tests cannot run on Mongo Atlas without the TEST_ATLAS_URL env variable.',
-  );
-}
-
 export type CommonContext = {
   type: string;
   name: string;
