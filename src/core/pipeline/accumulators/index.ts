@@ -44,8 +44,8 @@ export interface CachedAccumulator extends Accumulator, CollectionListener {
 
 export type AccumulatorDefinition = {
   operator: AccumulatorOperator;
-  outputFieldName?: string;
-  expression?: Expression;
+  outputFieldName: string;
+  expression: Expression;
 };
 
 export function createBasicAccumulator(

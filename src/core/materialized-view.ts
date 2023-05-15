@@ -55,22 +55,47 @@ export class MaterializedView implements CollectionListener {
   }
 
   /**
-   * _id is the groupBy expression
-   * Each accumulator is a field in the document
+   * Returns the data in the materialized view as an array of objects
+   * Each object has the groupBy field and the accumulator fields
+   * By default the field names are hashes of the expression that defines the data
    *
    * @returns
    */
-  getView(): Document[] {
-    const accumulatorHashes = this.getAccumulatorHashes();
+  getView(opts?: { useFieldHashes: boolean }): Document[] {
+    const useFieldHashes = opts?.useFieldHashes ?? true;
+    const hashes = this.getAccumulatorHashes();
+    const accumulatorDefs = this.getAccumulatorDefinitions();
     return Array.from(this.results.entries()).map(([key, value]) => {
+      const groupByKey = useFieldHashes
+        ? toHashExpression(this.groupBy)
+        : '_id';
       const obj: Document = {
-        [toHashExpression(this.groupBy)]: JSON.parse(key),
+        [groupByKey]: JSON.parse(key),
       };
       value.forEach((a, i) => {
-        obj[accumulatorHashes[i]] = a.getCachedValue();
+        let accKey: string;
+        if (useFieldHashes) {
+          accKey = hashes[i];
+        } else {
+          accKey = accumulatorDefs[i].outputFieldName;
+        }
+        obj[accKey] = a.getCachedValue();
       });
       return obj;
     });
+  }
+
+  initialize(results: any[]) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i] as any;
+      const id = result._id;
+      const accumulators = this.definitions.map((d) => {
+        const acc = createCachedAccumulator(d);
+        acc.__init(result[d.outputFieldName]);
+        return acc;
+      });
+      this.results.set(JSON.stringify(id), accumulators);
+    }
   }
 
   getAccumulatorHashes(): string[] {

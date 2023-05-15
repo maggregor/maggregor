@@ -31,6 +31,7 @@ const MV_DEF_MOVIE: MaterializedViewDefinition = {
   groupBy: { field: 'genre' },
   accumulatorDefs: [
     {
+      outputFieldName: 'sumScore',
       operator: 'sum',
       expression: { field: 'score' },
     },
@@ -45,6 +46,7 @@ describe('isEligible', () => {
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'count',
           expression: { field: 'name' },
         },
@@ -128,6 +130,7 @@ describe('isEligible', () => {
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'avg',
           expression: { field: 'score' },
         },
@@ -144,6 +147,7 @@ describe('isEligible', () => {
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'count',
           expression: { field: 'name' },
         },
@@ -172,6 +176,7 @@ describe('isEligible', () => {
       groupBy: { field: 'noname' },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'count',
           expression: { field: 'name' },
         },
@@ -200,6 +205,7 @@ describe('isEligible', () => {
       groupBy: { field: 'name' },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'count',
           expression: { field: 'name' },
         },
@@ -237,6 +243,7 @@ describe('isEligible', () => {
       groupBy: { operator: 'gt', value: [{ field: 'score' }, { value: 10 }] },
       accumulatorDefs: [
         {
+          outputFieldName: 'count',
           operator: 'avg',
           expression: { field: 'score' },
         },
@@ -249,10 +256,12 @@ describe('isEligible', () => {
 
   test('MaterializedView', () => {
     const acc1: AccumulatorDefinition = {
+      outputFieldName: 'score',
       operator: 'sum',
       expression: { field: 'score' },
     };
     const acc2: AccumulatorDefinition = {
+      outputFieldName: 'score',
       operator: 'sum',
       expression: {
         operator: 'add',
@@ -355,6 +364,7 @@ describe('isEligible', () => {
         },
         accumulatorDefs: [
           {
+            outputFieldName: 'count',
             operator: 'avg',
             expression: { field: 'score' },
           },
@@ -377,6 +387,7 @@ describe('isEligible', () => {
         groupBy: { field: 'genre' },
         accumulatorDefs: [
           {
+            outputFieldName: 'count',
             operator: 'count',
             expression: { field: 'genre' },
           },

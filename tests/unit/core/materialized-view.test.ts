@@ -3,12 +3,14 @@ import type { AccumulatorDefinition } from '@core/pipeline/accumulators';
 import { toHashExpression } from '@core/pipeline/expressions';
 
 describe('MaterializedView', () => {
-  it('should correctly calculate accumulators and group by expression', () => {
+  it('should correctly calculate accumulators after many add documents', () => {
     const acc1: AccumulatorDefinition = {
+      outputFieldName: 'sum',
       operator: 'sum',
       expression: { field: 'score' },
     };
     const acc2: AccumulatorDefinition = {
+      outputFieldName: 'sumPlus10',
       operator: 'sum',
       expression: {
         operator: 'add',
@@ -49,6 +51,53 @@ describe('MaterializedView', () => {
         [groupByExprHash]: 'begaudeau',
         [fieldName1]: 1998,
         [fieldName2]: 2018,
+      },
+    ]);
+  });
+  it('should correctly calculate accumulators after initialization', () => {
+    const acc1: AccumulatorDefinition = {
+      outputFieldName: 'sumScore',
+      operator: 'sum',
+      expression: { field: 'score' },
+    };
+    const acc2: AccumulatorDefinition = {
+      outputFieldName: 'sumScorePlusTen',
+      operator: 'sum',
+      expression: {
+        operator: 'add',
+        value: [{ field: 'score' }, { value: 10 }],
+      },
+    };
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'genre' },
+      accumulatorDefs: [acc1, acc2],
+    });
+
+    mv.initialize([
+      {
+        _id: 'action',
+        sumScore: 10000,
+        sumScorePlusTen: 42,
+      },
+      {
+        _id: 'drama',
+        sumScore: 5000,
+        sumScorePlusTen: 24,
+      },
+    ]);
+
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'action',
+        sumScore: 10000,
+        sumScorePlusTen: 42,
+      },
+      {
+        _id: 'drama',
+        sumScore: 5000,
+        sumScorePlusTen: 24,
       },
     ]);
   });

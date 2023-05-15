@@ -35,7 +35,8 @@ export class MaterializedViewService {
       this.mvs.set(materializedView, 'LOADED');
     } catch (error) {
       this.mvs.set(materializedView, 'FAILED');
-      this.logger.error(`Failed to load materialized view ${materializedView}`);
+      console.error(error);
+      this.logger.error(`Failed to load materialized view: ${error}`);
     }
   }
 
@@ -137,9 +138,7 @@ export class MaterializedViewService {
       pipeline,
     );
 
-    results?.forEach((doc) => {
-      materializedView.addDocument(doc);
-    });
+    materializedView.initialize(results);
   }
 
   async createMaterializedView(

@@ -144,7 +144,7 @@ export async function createMaggregorModule(
       useValue: {
         subscribeToCollectionChanges: () => null,
         unsubscribeFromCollectionChanges: () => null,
-        executeAggregatePipeline: () => null,
+        executeAggregatePipeline: () => [],
       },
     });
   } else {

@@ -43,7 +43,7 @@ describe('MaterializedViews (integration)', () => {
       ]);
     let mvs = await mvService.getMaterializedViews();
     expect(mvs.length).toBe(0);
-    mvService.register({
+    await mvService.register({
       db: 'test',
       collection: 'test',
       groupBy: {
@@ -59,14 +59,23 @@ describe('MaterializedViews (integration)', () => {
         },
       ],
     });
-    await wait(1000);
     mvs = await mvService.getMaterializedViews();
     const mv = mvs[0];
     expect(mv).toBeDefined();
     expect(mvs.length).toBe(1);
     expect(mvService.state(mv)).toBe('LOADED');
-  });
-  it('test', () => {
-    expect(1).toBe(1);
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'test',
+        total: 30,
+      },
+    ]);
+    mv.addDocument({ name: 'test', amount: 30 });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'test',
+        total: 60,
+      },
+    ]);
   });
 });
