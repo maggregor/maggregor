@@ -40,6 +40,10 @@ export class MaterializedViewService {
     }
   }
 
+  async removeAll(): Promise<void> {
+    this.mvs.clear();
+  }
+
   state(mv: MaterializedView): MaterializedViewState {
     return this.mvs.get(mv);
   }

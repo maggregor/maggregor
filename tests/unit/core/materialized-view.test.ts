@@ -101,4 +101,65 @@ describe('MaterializedView', () => {
       },
     ]);
   });
+  it('should correctly calculate avg accumulator after initialization', () => {
+    const acc1: AccumulatorDefinition = {
+      outputFieldName: 'avgScore',
+      operator: 'avg',
+      expression: { field: 'score' },
+    };
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'genre' },
+      accumulatorDefs: [acc1],
+    });
+
+    mv.initialize([
+      {
+        _id: 'action',
+        avgScore_count: 10,
+        avgScore_sum: 10000,
+      },
+      {
+        _id: 'drama',
+        avgScore_count: 1,
+        avgScore_sum: 5000,
+      },
+    ]);
+
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'action',
+        avgScore: 1000,
+      },
+      {
+        _id: 'drama',
+        avgScore: 5000,
+      },
+    ]);
+    mv.addDocument({ genre: 'action', score: 10 });
+    mv.addDocument({ genre: 'drama', score: 100 });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'action',
+        avgScore: 910,
+      },
+      {
+        _id: 'drama',
+        avgScore: 2550,
+      },
+    ]);
+    mv.deleteDocument({ genre: 'action', score: 1000 });
+    mv.deleteDocument({ genre: 'drama', score: 5000 });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      {
+        _id: 'action',
+        avgScore: 901,
+      },
+      {
+        _id: 'drama',
+        avgScore: 100,
+      },
+    ]);
+  });
 });

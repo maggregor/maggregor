@@ -1,4 +1,10 @@
-import type { CachedAccumulator, Value, AccumulatorDefinition } from '.';
+import type {
+  CachedAccumulator,
+  Value,
+  AccumulatorDefinition,
+  InitConfig,
+  AvgInitConfig,
+} from '.';
 import { evaluateExpression } from '../expressions';
 import { BaseAccumulator } from './common';
 import type { Document } from '@core/index';
@@ -11,10 +17,7 @@ abstract class AbstractCachedAccumulator
 
   abstract add(val: Value): void;
   abstract delete(val: Value): void;
-
-  __init(value: Value): void {
-    this.__cachedValue = value;
-  }
+  abstract initialize(config: InitConfig): void;
 
   addDocument(doc: Document): void {
     this.expression && this.add(evaluateExpression(this.expression, doc));
@@ -50,6 +53,10 @@ export class SumCachedAccumulator extends AbstractCachedAccumulator {
   delete(val: number): void {
     this.__cachedValue && (this.__cachedValue -= val);
   }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
+  }
 }
 
 export class AvgCachedAccumulator extends AbstractCachedAccumulator {
@@ -74,6 +81,11 @@ export class AvgCachedAccumulator extends AbstractCachedAccumulator {
 
   getCachedValue(): number | undefined {
     return this.__cachedValue && this.__cachedValue / this.__count;
+  }
+
+  initialize(config: AvgInitConfig): void {
+    this.__cachedValue = config.sum;
+    this.__count = config.count;
   }
 }
 
@@ -110,6 +122,10 @@ export class MinCachedAccumulator extends AbstractCachedAccumulator {
       }
     }
   }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
+  }
 }
 
 export class MaxCachedAccumulator extends AbstractCachedAccumulator {
@@ -145,6 +161,10 @@ export class MaxCachedAccumulator extends AbstractCachedAccumulator {
       }
     }
   }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
+  }
 }
 
 export class CountCachedAccumulator extends AbstractCachedAccumulator {
@@ -160,5 +180,9 @@ export class CountCachedAccumulator extends AbstractCachedAccumulator {
 
   delete(val: boolean): void {
     val && this.__cachedValue--;
+  }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
   }
 }

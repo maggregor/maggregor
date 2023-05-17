@@ -91,7 +91,14 @@ export class MaterializedView implements CollectionListener {
       const id = result._id;
       const accumulators = this.definitions.map((d) => {
         const acc = createCachedAccumulator(d);
-        acc.__init(result[d.outputFieldName]);
+        if (acc.operator === 'avg') {
+          acc.initialize({
+            count: result[d.outputFieldName + '_count'],
+            sum: result[d.outputFieldName + '_sum'],
+          });
+        } else {
+          acc.initialize(result[d.outputFieldName]);
+        }
         return acc;
       });
       this.results.set(JSON.stringify(id), accumulators);
@@ -150,9 +157,18 @@ export class MaterializedView implements CollectionListener {
     const accumulatorsOutput: Record<string, any> = {};
 
     accumulators.forEach((acc) => {
-      accumulatorsOutput[acc.outputFieldName] = {
-        [`$${acc.operator}`]: this.buildAsMongoExpression(acc.expression),
-      };
+      if (acc.operator === 'avg') {
+        accumulatorsOutput[acc.outputFieldName + '_sum'] = {
+          $sum: this.buildAsMongoExpression(acc.expression),
+        };
+        accumulatorsOutput[acc.outputFieldName + '_count'] = {
+          $sum: 1,
+        };
+      } else {
+        accumulatorsOutput[acc.outputFieldName] = {
+          [`$${acc.operator}`]: this.buildAsMongoExpression(acc.expression),
+        };
+      }
     });
 
     return [
