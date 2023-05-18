@@ -93,22 +93,26 @@ describe('AvgCachedAccumulator', () => {
 describe('CountCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
     const countAccumulator = new CountCachedAccumulator(BASE_DEF);
-    expect(countAccumulator.getCachedValue()).toEqual(0);
+    assertCount(0);
+    function assertCount(expectedCachedValue: number) {
+      expect(countAccumulator.getCachedValue()).toEqual(expectedCachedValue);
+      expect(countAccumulator.isFaulty()).toBe(false);
+    }
     countAccumulator.add(true);
-    expect(countAccumulator.getCachedValue()).toEqual(1);
+    assertCount(1);
     countAccumulator.add(true);
-    expect(countAccumulator.getCachedValue()).toEqual(2);
+    assertCount(2);
     countAccumulator.add(false);
-    expect(countAccumulator.getCachedValue()).toEqual(2);
+    assertCount(2);
     countAccumulator.add(true);
-    expect(countAccumulator.getCachedValue()).toEqual(3);
+    assertCount(3);
     countAccumulator.delete(true);
-    expect(countAccumulator.getCachedValue()).toEqual(2);
+    assertCount(2);
     countAccumulator.delete(false);
-    expect(countAccumulator.getCachedValue()).toEqual(2);
+    assertCount(2);
     countAccumulator.delete(true);
-    expect(countAccumulator.getCachedValue()).toEqual(1);
+    assertCount(1);
     countAccumulator.delete(true);
-    expect(countAccumulator.getCachedValue()).toEqual(0);
+    assertCount(0);
   });
 });

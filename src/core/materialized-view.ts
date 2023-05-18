@@ -19,12 +19,26 @@ export class MaterializedView implements CollectionListener {
   private groupBy: Expression;
   private definitions: AccumulatorDefinition[];
   private results = new Map<string, CachedAccumulator[]>();
+  private faulty = false;
 
   constructor(def: MaterializedViewDefinition) {
     this._db = def.db;
     this._collection = def.collection;
     this.groupBy = def.groupBy;
     this.definitions = def.accumulatorDefs;
+  }
+
+  private updateFaultyStatus(accumulators?: CachedAccumulator[]): void {
+    if (this.faulty) {
+      // We will check if any accumulators in the global results are faulty
+      // If so, we will mark this materialized view as faulty
+      const allAccumulators = Array.from(this.results.values()).flat();
+      this.faulty = allAccumulators.some((a) => a.isFaulty());
+    } else {
+      // If the materialized view is not faulty, we will check if any of the accumulators
+      // for this group are faulty
+      this.faulty = accumulators?.some((a) => a.isFaulty());
+    }
   }
 
   addDocument(doc: Document): void {
@@ -38,6 +52,8 @@ export class MaterializedView implements CollectionListener {
     }
     const accumulators = this.results.get(groupByValueString);
     accumulators?.forEach((a) => a.addDocument(doc));
+
+    this.updateFaultyStatus(accumulators);
   }
 
   deleteDocument(doc: Document): void {
@@ -48,6 +64,8 @@ export class MaterializedView implements CollectionListener {
     }
     const accumulators = this.results.get(groupByValueString);
     accumulators?.forEach((a) => a.deleteDocument(doc));
+
+    this.updateFaultyStatus(accumulators);
   }
 
   updateDocument(oldDoc: Document, newDoc: Document): void {
@@ -187,5 +205,9 @@ export class MaterializedView implements CollectionListener {
 
   get collection(): string {
     return this._collection;
+  }
+
+  isFaulty(): boolean {
+    return this.faulty;
   }
 }
