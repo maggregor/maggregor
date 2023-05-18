@@ -45,6 +45,7 @@ export type InitConfig = number | AvgInitConfig;
 export interface CachedAccumulator extends Accumulator, CollectionListener {
   add(val: Value): void;
   delete(val: Value): void;
+  isFaulty(): boolean;
   initialize(config: InitConfig): void;
   getCachedValue(): Value;
 }

@@ -6,13 +6,16 @@ import {
   CountCachedAccumulator,
 } from '@core/pipeline/accumulators';
 
-// The definition is not used in the tests, so we can just pass an empty object.
-const NO_DEFINITION = {};
+// The definition is not used in the tests, so we can just pass in a dummy value
+const BASE_DEF = {
+  outputFieldName: 'test',
+  expression: null,
+};
 
 describe('SumCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const sumAccumulator = new SumCachedAccumulator(NO_DEFINITION);
-    expect(sumAccumulator.getCachedValue()).toBeUndefined();
+    const sumAccumulator = new SumCachedAccumulator(BASE_DEF);
+    expect(sumAccumulator.getCachedValue()).toBe(0);
     sumAccumulator.add(1);
     expect(sumAccumulator.getCachedValue()).toEqual(1);
     sumAccumulator.add(2);
@@ -30,26 +33,27 @@ describe('SumCachedAccumulator', () => {
 
 describe('MinCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const minAccumulator = new MinCachedAccumulator(NO_DEFINITION);
+    const minAccumulator = new MinCachedAccumulator(BASE_DEF);
     expect(minAccumulator.getCachedValue()).toBeUndefined();
-    minAccumulator.add(1);
-    expect(minAccumulator.getCachedValue()).toEqual(1);
-    minAccumulator.add(2);
-    expect(minAccumulator.getCachedValue()).toEqual(1);
     minAccumulator.add(3);
-    expect(minAccumulator.getCachedValue()).toEqual(1);
-    minAccumulator.delete(2);
-    expect(minAccumulator.getCachedValue()).toEqual(1);
-    minAccumulator.delete(1);
     expect(minAccumulator.getCachedValue()).toEqual(3);
+    minAccumulator.add(2);
+    expect(minAccumulator.getCachedValue()).toEqual(2);
+    minAccumulator.add(3);
+    expect(minAccumulator.getCachedValue()).toEqual(2);
     minAccumulator.delete(3);
-    expect(minAccumulator.getCachedValue()).toBeUndefined();
+    expect(minAccumulator.getCachedValue()).toEqual(2);
+    minAccumulator.delete(4);
+    expect(minAccumulator.getCachedValue()).toEqual(2);
+    minAccumulator.delete(2);
+    expect(minAccumulator.isFaulty()).toBe(true);
+    expect(minAccumulator.getCachedValue()).toBeNull();
   });
 });
 
 describe('MaxCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const maxAccumulator = new MaxCachedAccumulator(NO_DEFINITION);
+    const maxAccumulator = new MaxCachedAccumulator(BASE_DEF);
     expect(maxAccumulator.getCachedValue()).toBeUndefined();
     maxAccumulator.add(1);
     expect(maxAccumulator.getCachedValue()).toEqual(1);
@@ -62,13 +66,14 @@ describe('MaxCachedAccumulator', () => {
     maxAccumulator.delete(1);
     expect(maxAccumulator.getCachedValue()).toEqual(3);
     maxAccumulator.delete(3);
-    expect(maxAccumulator.getCachedValue()).toBeUndefined();
+    expect(maxAccumulator.isFaulty()).toBe(true);
+    expect(maxAccumulator.getCachedValue()).toBeNull();
   });
 });
 
 describe('AvgCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const avgAccumulator = new AvgCachedAccumulator(NO_DEFINITION);
+    const avgAccumulator = new AvgCachedAccumulator(BASE_DEF);
     expect(avgAccumulator.getCachedValue()).toBeUndefined();
     avgAccumulator.add(1);
     expect(avgAccumulator.getCachedValue()).toEqual(1);
@@ -87,7 +92,7 @@ describe('AvgCachedAccumulator', () => {
 
 describe('CountCachedAccumulator', () => {
   it('should update the cached value correctly', () => {
-    const countAccumulator = new CountCachedAccumulator(NO_DEFINITION);
+    const countAccumulator = new CountCachedAccumulator(BASE_DEF);
     expect(countAccumulator.getCachedValue()).toEqual(0);
     countAccumulator.add(true);
     expect(countAccumulator.getCachedValue()).toEqual(1);
