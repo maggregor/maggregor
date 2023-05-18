@@ -68,6 +68,9 @@ describe('MaxCachedAccumulator', () => {
     maxAccumulator.delete(3);
     expect(maxAccumulator.isFaulty()).toBe(true);
     expect(maxAccumulator.getCachedValue()).toBeNull();
+    maxAccumulator.initialize(42);
+    expect(maxAccumulator.getCachedValue()).toEqual(42);
+    expect(maxAccumulator.isFaulty()).toBe(false);
   });
 });
 
@@ -114,5 +117,7 @@ describe('CountCachedAccumulator', () => {
     assertCount(1);
     countAccumulator.delete(true);
     assertCount(0);
+    countAccumulator.initialize(42);
+    assertCount(42);
   });
 });

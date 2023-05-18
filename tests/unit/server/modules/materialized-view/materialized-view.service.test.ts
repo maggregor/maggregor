@@ -114,6 +114,12 @@ describe('MaterializedViewService', () => {
     expect(result).toEqual(expectedResult);
   });
 
+  test('createMaterializedView', async () => {
+    const mv = await service.createMaterializedView(MV_DEF);
+    expect(mv).toBeInstanceOf(MaterializedView);
+    expect(mv.db).toBe(MV_DEF.db);
+    expect(mv.collection).toBe(MV_DEF.collection);
+  });
   test('createPipelineFromRequest', async () => {
     // Test with empty pipeline
     expect(

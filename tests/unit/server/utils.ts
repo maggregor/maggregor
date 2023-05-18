@@ -163,7 +163,7 @@ export async function createMaterializedViewService() {
         useValue: {
           subscribeToCollectionChanges: () => null,
           unsubscribeFromCollectionChanges: () => null,
-          executeAggregatePipeline: () => null,
+          executeAggregatePipeline: () => [],
         },
       },
       {
