@@ -231,7 +231,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      await mvService.addToCreationQueue({
+      await mvService.createMaterializedView({
         db: 'mydb',
         collection: 'collection',
         groupBy: { field: 'country' },

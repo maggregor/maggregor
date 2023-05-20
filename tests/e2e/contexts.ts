@@ -1,13 +1,20 @@
 import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
-import { MaggregorProcess } from './setup-maggregor';
-import { startMongoServer, loadTestData, healthCheck } from './utils';
+import { MaggregorProcess, startMaggregor } from './setup-maggregor';
+import {
+  startMongoServer,
+  loadTestData,
+  healthCheck,
+  startRedisServer,
+} from './utils';
+import RedisMemoryServer from 'redis-memory-server';
 
 export type CommonContext = {
   type: string;
   name: string;
   ssl?: boolean;
   maggregor?: MaggregorProcess;
+  redis?: RedisMemoryServer;
   maggreUri?: string;
   maggreClient?: MongoClient;
   mongoUri?: string;
@@ -52,10 +59,13 @@ export async function setupContext(
   } else if (ctx.type === 'remote') {
     ctx.mongoUri = ctx.externalMongoUri;
   }
-  ctx.maggregor = await new MaggregorProcess({
+  ctx.redis = await startRedisServer();
+  ctx.maggregor = await startMaggregor({
     targetUri: ctx.mongoUri,
     ssl: ctx.ssl,
-  }).start();
+    port: 4100,
+    redisPort: await ctx.redis.getPort(),
+  });
   ctx.maggreUri = ctx.maggregor.getUri();
   ctx.maggreClient = await createClient(ctx.maggreUri);
   ctx.mongoClient = await createClient(ctx.mongoUri);

@@ -24,7 +24,7 @@ export async function runBenchmarks(
   opts: RunnerOptions,
 ) {
   mongodb = await startMongoServer();
-  maggregor = await startMaggregor({ targetUri: mongodb.getUri() });
+  maggregor = await startMaggregor({ targetUri: mongodb.getUri(), port: 4200 });
   const totalScenarios = scenarios.length;
   let totalScenariosSuccessed = 0;
   for (const s of scenarios) {

@@ -10,7 +10,10 @@ export type MaterializedViewJobData = {
   definition: MaterializedViewDefinition;
 };
 
-@Processor({ name: BM_QUEUE_NAME })
+@Processor(
+  { name: BM_QUEUE_NAME },
+  { concurrency: 4, limiter: { max: 1, duration: 10000 } },
+)
 export class MaterializedViewJobProcessor extends WorkerHost {
   constructor(
     @Inject(MaterializedViewService)
@@ -21,18 +24,13 @@ export class MaterializedViewJobProcessor extends WorkerHost {
     this.logger.setContext('MaterializedViewJobProcessor');
   }
   @OnWorkerEvent('failed')
-  onFailed(job: Job<MaterializedViewJobData>): void {
-    this.logger.error(`Job ${job.id} failed: ${job.failedReason}`);
-  }
-
-  @OnWorkerEvent('ready')
-  onReady(): void {
-    this.logger.log(`Ready to process a new create materialized view job...`);
+  onFailed(job: Job, error: Error): void {
+    this.logger.error(`Job failed: ${error}`);
   }
 
   @OnWorkerEvent('completed')
-  onCompleted(): void {
-    this.logger.log(`Job completed: Materialized view created`);
+  onCompleted(job: Job): void {
+    this.logger.log(`Job ${job.id} completed: Materialized view created`);
   }
 
   async process(job: Job<MaterializedViewJobData>): Promise<any> {

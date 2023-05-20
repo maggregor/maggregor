@@ -1,24 +1,23 @@
 import { ChildProcess, spawn } from 'child_process';
 import waitPort from 'wait-port';
-import { config } from 'dotenv';
 import chalk from 'chalk';
 import logger from '../__utils__/logger';
 import axios from 'axios';
 import path from 'path';
 
-config({ path: '.env.test' });
-
 type MProcessParams = {
   port?: number;
   httpPort?: number;
   targetUri?: string;
+  redisPort?: number;
   ssl?: boolean;
 };
 
 const defaultParams: MProcessParams = {
-  httpPort: parseInt(process.env.HTTP_PORT),
-  port: parseInt(process.env.PROXY_PORT),
-  targetUri: process.env.MONGODB_TARGET_URI,
+  httpPort: parseInt(process.env.HTTP_PORT || '3000'),
+  port: parseInt(process.env.PROXY_PORT || '4100'),
+  targetUri: process.env.MONGODB_TARGET_URI || 'mongodb://localhost:27017',
+  redisPort: parseInt(process.env.REDIS_PORT || '6379'),
   ssl: false,
 };
 
@@ -32,6 +31,8 @@ export class MaggregorProcess {
       this.params.targetUri || process.env.MONGODB_TARGET_URI;
     process.env.PROXY_PORT = this.params.port.toString();
     process.env.HTTP_PORT = this.params.httpPort.toString();
+    process.env.REDIS_PORT = this.params.redisPort.toString();
+    process.env.REDIS_HOST = 'localhost';
   }
 
   async start() {
@@ -100,7 +101,7 @@ export class MaggregorProcess {
   }
 
   async processAlreadyStarted(): Promise<boolean> {
-    const timeout = 300;
+    const timeout = 100;
     const { port } = this.params;
     return (await waitPort({ port, timeout, output: 'silent' })).open;
   }

@@ -27,27 +27,13 @@ export class MaterializedViewService {
     @Inject(LoggerService) private readonly logger: LoggerService,
     @InjectQueue(BM_QUEUE_NAME)
     private queue: Queue,
-  ) {
-    // setTimeout(() => {
-    //   this.addToCreationQueue({
-    //     db: 'test',
-    //     collection: 'test',
-    //     groupBy: { field: 'country' },
-    //     accumulatorDefs: [
-    //       {
-    //         operator: 'sum',
-    //         outputFieldName: 'sumPopulation',
-    //         expression: { field: 'population' },
-    //       },
-    //     ],
-    //   });
-    // }, 3000);
-  }
+  ) {}
 
   async addToCreationQueue(
     definition: MaterializedViewDefinition,
   ): Promise<Job> {
     try {
+      this.logger.log('Adding materialized view job to queue.');
       const job = await this.queue.add('create', {
         definition,
       });
