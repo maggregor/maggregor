@@ -21,6 +21,7 @@ export class ListenerService extends EventEmitter {
   private client: MongoClient;
   private _isConnected = false;
   private changeStreams = new Map<string, CollectionChangeListener>();
+  private url: string;
 
   constructor(
     @Inject(ConfigService) private readonly configService: ConfigService,
@@ -28,6 +29,7 @@ export class ListenerService extends EventEmitter {
   ) {
     super();
     this.logger.setContext('MongoDBListenerService');
+    this.url = this.configService.get<string>('MONGODB_TARGET_URI');
     this.connectToMongoDB(); // Connect to the MongoDB instance
   }
 
@@ -40,13 +42,10 @@ export class ListenerService extends EventEmitter {
     while (true) {
       try {
         // Attempt to connect to the MongoDB instance
-        this.client = await MongoClient.connect(
-          this.configService.get('MONGODB_TARGET_URI'),
-          {
-            connectTimeoutMS: 1000,
-            serverSelectionTimeoutMS: 1000,
-          },
-        );
+        this.client = await MongoClient.connect(this.url, {
+          connectTimeoutMS: 1000,
+          serverSelectionTimeoutMS: 1000,
+        });
         this._isConnected = true;
 
         // Listen for the 'close' event on the MongoClient instance

@@ -2,18 +2,24 @@ import { RequestService } from '@server/modules/request/request.service';
 import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
-import { simulateDelay, wait } from 'tests/e2e/utils';
+import { simulateDelay, startRedisServer, wait } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
+import RedisMemoryServer from 'redis-memory-server';
 
 describe('RequestService (integration)', () => {
   let requestService: RequestService;
   let mvService: MaterializedViewService;
+  let redis: RedisMemoryServer;
 
   beforeAll(async () => {
+    redis = await startRedisServer();
     const module = await createMaggregorModule({
       listenerServiceUseValue: true,
-      env: {},
+      env: {
+        REDIS_HOST: await redis.getHost(),
+        REDIS_PORT: await redis.getPort(),
+      },
     });
     requestService = module.get<RequestService>(RequestService);
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
@@ -25,6 +31,7 @@ describe('RequestService (integration)', () => {
 
   afterAll(async () => {
     await requestService?.deleteAll();
+    await redis.stop();
   });
 
   const expectRequest = (actual: Request, request: Request) => {
@@ -224,7 +231,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      await mvService.register({
+      await mvService.addToCreationQueue({
         db: 'mydb',
         collection: 'collection',
         groupBy: { field: 'country' },

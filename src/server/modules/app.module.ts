@@ -3,12 +3,26 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from './database/database.module';
 import { RequestModule } from './request/request.module';
 import { ProxyModule } from './mongodb-proxy/proxy.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { CacheModule } from './cache-request/cache.module';
+import { BullModule } from '@nestjs/bullmq';
+import { MaterializedViewModule } from './materialized-view/materialized-view.module';
 
 @Module({
   imports: [
+    // Setup the queue module
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST', 'localhost'),
+          port: configService.get<number>('REDIS_PORT', 6379),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    // Setup the configuration module
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -28,18 +42,14 @@ import { CacheModule } from './cache-request/cache.module';
       validationOptions: {
         abortEarly: true,
       },
-      envFilePath:
-        process.env.NODE_ENV === 'production'
-          ? '.env.prod'
-          : process.env.NODE_ENV === 'test'
-          ? '.env.test'
-          : '.env',
+      envFilePath: ['.env.local', '.env'],
     }),
     DatabaseModule,
     RequestModule,
     ProxyModule,
     ListenerModule,
     CacheModule,
+    MaterializedViewModule,
   ],
 })
 export class AppModule {}

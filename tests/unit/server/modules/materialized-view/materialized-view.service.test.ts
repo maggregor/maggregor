@@ -9,6 +9,7 @@ import {
 import { Pipeline } from '@/core/pipeline/pipeline';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { Expression } from 'mongoose';
+import { wait } from 'tests/e2e/utils';
 
 const MV_DEF: MaterializedViewDefinition = {
   db: 'test',
@@ -34,14 +35,14 @@ describe('MaterializedViewService', () => {
     //
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     //
-    await service.register(MV_DEF);
+    await service.createMaterializedView(MV_DEF);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(1);
     spyEligbility.mockReturnValue(false);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(2);
     //
-    await service.register({ ...MV_DEF, db: 'test2' });
-    await service.register({ ...MV_DEF, collection: 'test2' });
+    await service.createMaterializedView({ ...MV_DEF, db: 'test2' });
+    await service.createMaterializedView({ ...MV_DEF, collection: 'test2' });
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(5);
     //
@@ -49,11 +50,11 @@ describe('MaterializedViewService', () => {
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(3);
     expect(spyEligbility).toHaveBeenCalledTimes(8);
     // Ensure when an error is thrown, the MV is not considered eligible
-    await service.register({ ...MV_DEF, db: 'test3' });
+    await service.createMaterializedView({ ...MV_DEF, db: 'test3' });
     vitest.spyOn(service, 'loadMaterializedView').mockImplementation(() => {
       throw new Error();
     });
-    await service.register({ ...MV_DEF, db: 'test4' });
+    await service.createMaterializedView({ ...MV_DEF, db: 'test4' });
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(4);
   });
 

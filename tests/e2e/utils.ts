@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import logger from '../__utils__/logger';
+import { RedisMemoryServer } from 'redis-memory-server';
 
 export type LoadTestDataOptions = {
   collection?: string;
@@ -62,6 +63,11 @@ export async function startMongoServer(opts?: {
     config.instanceOpts[0].port = opts.port;
   }
   const server = await MongoMemoryReplSet.create(config);
+  return server;
+}
+
+export async function startRedisServer(): Promise<RedisMemoryServer> {
+  const server = await RedisMemoryServer.create();
   return server;
 }
 

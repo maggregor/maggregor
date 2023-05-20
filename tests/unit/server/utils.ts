@@ -1,3 +1,4 @@
+import { MaterializedViewModule } from '@/server/modules/materialized-view/materialized-view.module';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { RequestService } from '@/server/modules/request/request.service';
@@ -12,6 +13,9 @@ import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 import { ModuleMetadata } from '@nestjs/common';
+import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
+import { BullModule, getQueueToken } from '@nestjs/bullmq';
+import { BM_QUEUE_NAME } from '@/consts';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -118,25 +122,30 @@ export async function createMaggregorModule(
     imports: [
       LoggerModule,
       DatabaseModule,
-      ConfigModule,
+      MaterializedViewModule,
+      BullModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => {
+          return {
+            connection: {
+              host: configService.get<string>('REDIS_HOST', 'localhost'),
+              port: configService.get<number>('REDIS_PORT', 6379),
+            },
+          };
+        },
+        inject: [ConfigService],
+      }),
+      ConfigModule.forRoot({
+        isGlobal: true,
+        ignoreEnvFile: true,
+        load: [() => config?.env],
+      }),
       MongooseModule.forFeature([
         { name: Request.name, schema: RequestSchema },
       ]),
+      ListenerModule,
     ],
-    providers: [
-      RequestService,
-      {
-        provide: ConfigService,
-        useValue: {
-          get: (key: string) => {
-            return config.env[key];
-          },
-        },
-      },
-      CacheService,
-      MongoDBTcpProxyService,
-      MaterializedViewService,
-    ],
+    providers: [RequestService, CacheService, MongoDBTcpProxyService],
   };
   if (config?.listenerServiceUseValue) {
     moduleConfig.providers.push({
@@ -155,7 +164,23 @@ export async function createMaggregorModule(
 
 export async function createMaterializedViewService() {
   const app: TestingModule = await Test.createTestingModule({
-    imports: [LoggerModule],
+    imports: [
+      ConfigModule,
+      LoggerModule,
+      BullModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          connection: {
+            host: configService.get<string>('REDIS_HOST', 'localhost'),
+            port: configService.get<number>('REDIS_PORT', 6379),
+          },
+        }),
+        inject: [ConfigService],
+      }),
+      BullModule.registerQueue({
+        name: BM_QUEUE_NAME,
+      }),
+    ],
     providers: [
       MaterializedViewService,
       {
@@ -171,7 +196,12 @@ export async function createMaterializedViewService() {
         useValue: {},
       },
     ],
-  }).compile();
+  })
+    .overrideProvider(getQueueToken(BM_QUEUE_NAME))
+    .useValue({
+      add: () => null,
+    })
+    .compile();
   return app.get<MaterializedViewService>(MaterializedViewService);
 }
 

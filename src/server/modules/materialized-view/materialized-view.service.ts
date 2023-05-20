@@ -14,42 +14,62 @@ import {
   MaterializedViewDefinition,
 } from '@/core/materialized-view';
 import { ListenerService } from '../mongodb-listener/listener.service';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Job, Queue } from 'bullmq';
+import { BM_QUEUE_NAME } from '@/consts';
 
-export type MaterializedViewState = 'LOADING' | 'LOADED' | 'FAILED';
 @Injectable()
 export class MaterializedViewService {
-  private readonly mvs: Map<MaterializedView, MaterializedViewState> =
-    new Map();
+  private readonly mvs: Array<MaterializedView> = [];
 
   constructor(
     @Inject(ListenerService) private readonly listenerService: ListenerService,
     @Inject(LoggerService) private readonly logger: LoggerService,
-  ) {}
+    @InjectQueue(BM_QUEUE_NAME)
+    private queue: Queue,
+  ) {
+    // setTimeout(() => {
+    //   this.addToCreationQueue({
+    //     db: 'test',
+    //     collection: 'test',
+    //     groupBy: { field: 'country' },
+    //     accumulatorDefs: [
+    //       {
+    //         operator: 'sum',
+    //         outputFieldName: 'sumPopulation',
+    //         expression: { field: 'population' },
+    //       },
+    //     ],
+    //   });
+    // }, 3000);
+  }
 
-  async register(definition: MaterializedViewDefinition): Promise<void> {
-    const materializedView = new MaterializedView(definition);
-    this.mvs.set(materializedView, 'LOADING');
-
+  async addToCreationQueue(
+    definition: MaterializedViewDefinition,
+  ): Promise<Job> {
     try {
-      await this.loadMaterializedView(materializedView);
-      this.mvs.set(materializedView, 'LOADED');
+      const job = await this.queue.add('create', {
+        definition,
+      });
+      return job;
     } catch (error) {
-      this.mvs.set(materializedView, 'FAILED');
-      console.error(error);
-      this.logger.error(`Failed to load materialized view: ${error}`);
+      this.logger.error(
+        `Failed to add materialized view job to queue: ${error}`,
+      );
+      throw error;
     }
   }
 
   async removeAll(): Promise<void> {
-    this.mvs.clear();
+    this.mvs.length = 0;
   }
 
-  state(mv: MaterializedView): MaterializedViewState {
-    return this.mvs.get(mv);
+  getCreationJob(id: string): Promise<Job> {
+    return this.queue.getJob(id);
   }
 
-  async getMaterializedViews(): Promise<MaterializedView[]> {
-    return Array.from(this.mvs.keys());
+  getMaterializedViews(): MaterializedView[] {
+    return this.mvs;
   }
 
   /**
@@ -59,19 +79,13 @@ export class MaterializedViewService {
    */
   async findEligibleMV(pipeline: Pipeline): Promise<MaterializedView[]> {
     if (!pipeline) return null;
-    return Array.from(this.mvs.keys()).filter((mv) =>
-      this.isEligibleMV(mv, pipeline),
-    );
+    return this.mvs.filter((mv) => this.isEligibleMV(mv, pipeline));
   }
 
   isEligibleMV(
     materializedView: MaterializedView,
     pipeline: Pipeline,
   ): boolean {
-    const viewState = this.mvs.get(materializedView);
-    if (viewState !== 'LOADED') {
-      return false;
-    }
     return isEligible(pipeline, materializedView);
   }
 
@@ -146,7 +160,13 @@ export class MaterializedViewService {
     definition: MaterializedViewDefinition,
   ): Promise<MaterializedView> {
     const materializedView = new MaterializedView(definition);
-    await this.loadMaterializedView(materializedView);
-    return materializedView;
+    try {
+      await this.loadMaterializedView(materializedView);
+      this.mvs.push(materializedView);
+      return materializedView;
+    } catch (error) {
+      this.logger.error(`Failed to create materialized view: ${error}`);
+      return null;
+    }
   }
 }
