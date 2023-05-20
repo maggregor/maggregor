@@ -1,7 +1,7 @@
 /**
- * This script is used to run a MongoDB instance for testing purposes.
+ * This script is used to run a Redis instance for testing purposes.
  *
- * Run this script with `ts-node scripts/run-mongodb.ts`.
+ * Run this script with `ts-node scripts/run-redis.ts`.
  */
 
 import RedisMemoryServer from 'redis-memory-server';

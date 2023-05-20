@@ -147,18 +147,6 @@ export async function createMaggregorModule(
     ],
     providers: [RequestService, CacheService, MongoDBTcpProxyService],
   };
-  if (config?.listenerServiceUseValue) {
-    moduleConfig.providers.push({
-      provide: ListenerService,
-      useValue: {
-        subscribeToCollectionChanges: () => null,
-        unsubscribeFromCollectionChanges: () => null,
-        executeAggregatePipeline: () => [],
-      },
-    });
-  } else {
-    moduleConfig.providers.push(ListenerService);
-  }
   return Test.createTestingModule(moduleConfig).compile();
 }
 

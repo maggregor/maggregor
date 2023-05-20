@@ -56,7 +56,7 @@ describe('MaterializedViews (integration)', () => {
       ]);
     let mvs = mvService.getMaterializedViews();
     expect(mvs.length).toBe(0);
-    const job = await mvService.addToCreationQueue({
+    await mvService.createMaterializedView({
       db: 'test',
       collection: 'test',
       groupBy: {
@@ -72,8 +72,6 @@ describe('MaterializedViews (integration)', () => {
         },
       ],
     });
-    await wait(1000);
-    expect(await job.getState()).toBe('waiting');
     mvs = mvService.getMaterializedViews();
     const mv = mvs[0];
     expect(mv).toBeDefined();
@@ -113,7 +111,7 @@ describe('MaterializedViews (integration)', () => {
       ]);
     let mvs = mvService.getMaterializedViews();
     expect(mvs.length).toBe(0);
-    const job = await mvService.addToCreationQueue({
+    await mvService.createMaterializedView({
       db: 'test',
       collection: 'test',
       groupBy: {
@@ -129,8 +127,6 @@ describe('MaterializedViews (integration)', () => {
         },
       ],
     });
-    expect(await job.getState()).toBe('waiting');
-    await wait(1000);
     mvs = mvService.getMaterializedViews();
     const mv = mvs[0];
     expect(mv).toBeDefined();

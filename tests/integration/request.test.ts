@@ -6,16 +6,17 @@ import { simulateDelay, startRedisServer, wait } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 import RedisMemoryServer from 'redis-memory-server';
+import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 
 describe('RequestService (integration)', () => {
   let requestService: RequestService;
   let mvService: MaterializedViewService;
+  let listenerService: ListenerService;
   let redis: RedisMemoryServer;
 
   beforeAll(async () => {
     redis = await startRedisServer();
     const module = await createMaggregorModule({
-      listenerServiceUseValue: true,
       env: {
         REDIS_HOST: await redis.getHost(),
         REDIS_PORT: await redis.getPort(),
@@ -23,6 +24,11 @@ describe('RequestService (integration)', () => {
     });
     requestService = module.get<RequestService>(RequestService);
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
+    listenerService = module.get<ListenerService>(ListenerService);
+    // Mock listener service methods
+    listenerService.executeAggregatePipeline = vitest.fn().mockReturnValue([]);
+    listenerService.subscribeToCollectionChanges = vitest.fn();
+    listenerService.unsubscribeFromCollectionChanges = vitest.fn();
   });
 
   beforeEach(async () => {
@@ -217,7 +223,7 @@ describe('RequestService (integration)', () => {
       expect(requests.length).toEqual(2);
       expect(requests.at(1).requestSource).toEqual('maggregor_cache');
     });
-    it('should be be processed with a Materialized View', async () => {
+    it('should be processed with a Materialized View', async () => {
       const aggregateReq: IRequest = {
         type: 'aggregate',
         requestID: 1,
@@ -239,6 +245,7 @@ describe('RequestService (integration)', () => {
       });
       const resultMsg = await requestService.onRequest(aggregateReq);
       await wait(5); // Wait for the request to be stored in the DB
+      expect(mvService.getMaterializedViews().length).toEqual(1);
       const req = (await requestService.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.requestSource).toStrictEqual('maggregor_mv');
