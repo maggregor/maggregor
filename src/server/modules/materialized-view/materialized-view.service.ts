@@ -14,9 +14,9 @@ import {
   MaterializedViewDefinition,
 } from '@/core/materialized-view';
 import { ListenerService } from '../mongodb-listener/listener.service';
-import { InjectQueue } from '@nestjs/bullmq';
 import { Job, Queue } from 'bullmq';
 import { BM_QUEUE_NAME } from '@/consts';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class MaterializedViewService {
@@ -72,6 +72,10 @@ export class MaterializedViewService {
     materializedView: MaterializedView,
     pipeline: Pipeline,
   ): boolean {
+    if (!materializedView || !pipeline) return false;
+    // Ignore faulty materialized views
+    if (materializedView.isFaulty()) return false;
+    // Check if the materialized view is eligible for the pipeline
     return isEligible(pipeline, materializedView);
   }
 

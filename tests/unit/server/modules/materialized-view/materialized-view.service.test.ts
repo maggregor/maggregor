@@ -9,7 +9,6 @@ import {
 import { Pipeline } from '@/core/pipeline/pipeline';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { Expression } from 'mongoose';
-import { wait } from 'tests/e2e/utils';
 
 const MV_DEF: MaterializedViewDefinition = {
   db: 'test',

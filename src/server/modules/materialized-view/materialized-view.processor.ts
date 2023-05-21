@@ -1,5 +1,10 @@
 import { Inject } from '@nestjs/common';
-import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import {
+  OnQueueCompleted,
+  OnQueueError,
+  Process,
+  Processor,
+} from '@nestjs/bull';
 import { MaterializedViewService } from './materialized-view.service';
 import { LoggerService } from '../logger/logger.service';
 import { MaterializedViewDefinition } from '@/core/materialized-view';
@@ -10,29 +15,26 @@ export type MaterializedViewJobData = {
   definition: MaterializedViewDefinition;
 };
 
-@Processor(
-  { name: BM_QUEUE_NAME },
-  { concurrency: 4, limiter: { max: 1, duration: 10000 } },
-)
-export class MaterializedViewJobProcessor extends WorkerHost {
+@Processor({ name: BM_QUEUE_NAME })
+export class MaterializedViewJobProcessor {
   constructor(
     @Inject(MaterializedViewService)
     private readonly mvService: MaterializedViewService,
     @Inject(LoggerService) private readonly logger: LoggerService,
   ) {
-    super();
     this.logger.setContext('MaterializedViewJobProcessor');
   }
-  @OnWorkerEvent('failed')
-  onFailed(job: Job, error: Error): void {
+  @OnQueueError()
+  onFailed(error: Error): void {
     this.logger.error(`Job failed: ${error}`);
   }
 
-  @OnWorkerEvent('completed')
-  onCompleted(job: Job): void {
-    this.logger.log(`Job ${job.id} completed: Materialized view created`);
+  @OnQueueCompleted()
+  onCompleted(): void {
+    this.logger.log(`Job completed: Materialized view created`);
   }
 
+  @Process('create')
   async process(job: Job<MaterializedViewJobData>): Promise<any> {
     try {
       const definition = job.data.definition;

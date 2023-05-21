@@ -14,8 +14,9 @@ import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 import { ModuleMetadata } from '@nestjs/common';
 import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
-import { BullModule, getQueueToken } from '@nestjs/bullmq';
+import { BullModule, getQueueToken } from '@nestjs/bull';
 import { BM_QUEUE_NAME } from '@/consts';
+import { MaterializedViewJobProcessor } from '@/server/modules/materialized-view/materialized-view.processor';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -127,7 +128,7 @@ export async function createMaggregorModule(
         imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => {
           return {
-            connection: {
+            redis: {
               host: configService.get<string>('REDIS_HOST', 'localhost'),
               port: configService.get<number>('REDIS_PORT', 6379),
             },
@@ -158,7 +159,7 @@ export async function createMaterializedViewService() {
       BullModule.forRootAsync({
         imports: [ConfigModule],
         useFactory: async (configService: ConfigService) => ({
-          connection: {
+          redis: {
             host: configService.get<string>('REDIS_HOST', 'localhost'),
             port: configService.get<number>('REDIS_PORT', 6379),
           },

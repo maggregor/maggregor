@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.4.0",
-    "@nestjs/bullmq": "^1.1.0",
+    "@nestjs/bull": "^0.6.3",
     "@nestjs/common": "^9.4.0",
     "@nestjs/config": "^2.3.1",
     "@nestjs/core": "^9.4.0",

@@ -1,4 +1,4 @@
-import { BullModule } from '@nestjs/bullmq';
+import { BullModule } from '@nestjs/bull';
 import { Global, Module } from '@nestjs/common';
 import { LoggerModule } from '../logger/logger.module';
 import { MaterializedViewService } from './materialized-view.service';

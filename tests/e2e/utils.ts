@@ -68,6 +68,7 @@ export async function startMongoServer(opts?: {
 
 export async function startRedisServer(): Promise<RedisMemoryServer> {
   const server = await RedisMemoryServer.create();
+  server.start();
   return server;
 }
 

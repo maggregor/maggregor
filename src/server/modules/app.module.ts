@@ -6,8 +6,8 @@ import { ProxyModule } from './mongodb-proxy/proxy.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from 'joi';
 import { CacheModule } from './cache-request/cache.module';
-import { BullModule } from '@nestjs/bullmq';
 import { MaterializedViewModule } from './materialized-view/materialized-view.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { MaterializedViewModule } from './materialized-view/materialized-view.mo
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        connection: {
+        redis: {
           host: configService.get<string>('REDIS_HOST', 'localhost'),
           port: configService.get<number>('REDIS_PORT', 6379),
         },

@@ -6,6 +6,41 @@ import { createClient } from 'tests/e2e/contexts';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { MongoClient } from 'mongodb';
 import RedisMemoryServer from 'redis-memory-server';
+import { MaterializedViewDefinition } from '@/core/materialized-view';
+
+const MV_DEF_SUM: MaterializedViewDefinition = {
+  db: 'test',
+  collection: 'test',
+  groupBy: {
+    field: 'name',
+  },
+  accumulatorDefs: [
+    {
+      operator: 'sum',
+      outputFieldName: 'amountTotal',
+      expression: {
+        field: 'amount',
+      },
+    },
+  ],
+};
+
+const MV_DEF_AVG: MaterializedViewDefinition = {
+  db: 'test',
+  collection: 'test',
+  groupBy: {
+    field: 'name',
+  },
+  accumulatorDefs: [
+    {
+      operator: 'avg',
+      outputFieldName: 'amountAvg',
+      expression: {
+        field: 'amount',
+      },
+    },
+  ],
+};
 
 describe('MaterializedViews (integration)', () => {
   let mvService: MaterializedViewService;
@@ -24,6 +59,7 @@ describe('MaterializedViews (integration)', () => {
         REDIS_PORT: await redis.getPort(),
       },
     });
+    await module.init();
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
     mvProxy = module.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
     client = await createClient(mongodbServer.getUri());
@@ -32,66 +68,6 @@ describe('MaterializedViews (integration)', () => {
   beforeEach(async () => {
     await mvService?.removeAll();
     await client.db('test').dropDatabase();
-  });
-
-  afterAll(async () => {
-    mvProxy.stop();
-    await mongodbServer.stop();
-    await redis.stop();
-  });
-
-  it('should create a new materialized view', async () => {
-    await client
-      .db('test')
-      .collection('test')
-      .insertMany([
-        {
-          name: 'test',
-          amount: 10,
-        },
-        {
-          name: 'test',
-          amount: 20,
-        },
-      ]);
-    let mvs = mvService.getMaterializedViews();
-    expect(mvs.length).toBe(0);
-    await mvService.createMaterializedView({
-      db: 'test',
-      collection: 'test',
-      groupBy: {
-        field: 'name',
-      },
-      accumulatorDefs: [
-        {
-          operator: 'sum',
-          outputFieldName: 'total',
-          expression: {
-            field: 'amount',
-          },
-        },
-      ],
-    });
-    mvs = mvService.getMaterializedViews();
-    const mv = mvs[0];
-    expect(mv).toBeDefined();
-    expect(mvs.length).toBe(1);
-    expect(mv.getView({ useFieldHashes: false })).toEqual([
-      {
-        _id: 'test',
-        total: 30,
-      },
-    ]);
-    mv.addDocument({ name: 'test', amount: 30 });
-    expect(mv.getView({ useFieldHashes: false })).toEqual([
-      {
-        _id: 'test',
-        total: 60,
-      },
-    ]);
-  });
-  it('should create a new materialized view an avg accumulator', async () => {
-    const client = await createClient(mongodbServer.getUri());
     await client
       .db('test')
       .collection('test')
@@ -109,34 +85,60 @@ describe('MaterializedViews (integration)', () => {
           amount: 20,
         },
       ]);
+  });
+
+  afterAll(async () => {
+    mvProxy.stop();
+    await mongodbServer.stop();
+    await redis.stop();
+  });
+
+  it('should create a new materialized view', async () => {
     let mvs = mvService.getMaterializedViews();
     expect(mvs.length).toBe(0);
-    await mvService.createMaterializedView({
-      db: 'test',
-      collection: 'test',
-      groupBy: {
-        field: 'name',
-      },
-      accumulatorDefs: [
-        {
-          operator: 'avg',
-          outputFieldName: 'avg',
-          expression: {
-            field: 'amount',
-          },
-        },
-      ],
-    });
+    await mvService.createMaterializedView(MV_DEF_SUM);
     mvs = mvService.getMaterializedViews();
     const mv = mvs[0];
     expect(mv).toBeDefined();
     expect(mvs.length).toBe(1);
+    // Materialized view should be correctly initialized
     const view = mv.getView({ useFieldHashes: false });
-    expect(view.find((v) => v._id === 'test').avg).toBe(15);
-    expect(view.find((v) => v._id === 'mytest').avg).toBe(20);
+    expect(view.find((v) => v._id === 'test').amountTotal).toBe(30);
+    expect(view.find((v) => v._id === 'mytest').amountTotal).toBe(20);
     mv.addDocument({ name: 'test', amount: 30 });
+    // Materialized view should be correctly recalculated
     const updatedView = mv.getView({ useFieldHashes: false });
-    expect(updatedView.find((v) => v._id === 'test').avg).toBe(20);
-    expect(updatedView.find((v) => v._id === 'mytest').avg).toBe(20);
+    expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(60);
+    expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+  });
+  it('should create a new materialized view an avg accumulator', async () => {
+    let mvs = mvService.getMaterializedViews();
+    expect(mvs.length).toBe(0);
+    await mvService.createMaterializedView(MV_DEF_AVG);
+    mvs = mvService.getMaterializedViews();
+    const mv = mvs[0];
+    expect(mv).toBeDefined();
+    expect(mvs.length).toBe(1);
+    // Materialized view should be correctly initialized
+    const view = mv.getView({ useFieldHashes: false });
+    expect(view.find((v) => v._id === 'test').amountAvg).toBe(15);
+    expect(view.find((v) => v._id === 'mytest').amountAvg).toBe(20);
+    mv.addDocument({ name: 'test', amount: 30 });
+    // Materialized view should be correctly recalculated
+    const updatedView = mv.getView({ useFieldHashes: false });
+    expect(updatedView.find((v) => v._id === 'test').amountAvg).toBe(20);
+    expect(updatedView.find((v) => v._id === 'mytest').amountAvg).toBe(20);
+  });
+
+  describe('when a mv is added to the creation queue', () => {
+    it('should create a new materialized view', async () => {
+      const job = await mvService.addToCreationQueue(MV_DEF_SUM);
+      expect(job).toBeDefined();
+      expect(job.getState()).resolves.toBe('active');
+      await wait(250); // Wait for the job to be processed
+      const mvs = mvService.getMaterializedViews();
+      expect(mvs.length).toBe(1);
+      expect(job.getState()).resolves.toBe('completed');
+    });
   });
 });
