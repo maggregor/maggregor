@@ -50,6 +50,13 @@ export class MaterializedViewService {
     this.mvs.length = 0;
   }
 
+  async delete(mv: MaterializedView): Promise<void> {
+    const index = this.mvs.indexOf(mv);
+    if (index > -1) {
+      this.mvs.splice(index, 1);
+    }
+  }
+
   getCreationJob(id: string): Promise<Job> {
     return this.queue.getJob(id);
   }
@@ -68,15 +75,16 @@ export class MaterializedViewService {
     return this.mvs.filter((mv) => this.isEligibleMV(mv, pipeline));
   }
 
-  isEligibleMV(
-    materializedView: MaterializedView,
-    pipeline: Pipeline,
-  ): boolean {
-    if (!materializedView || !pipeline) return false;
+  isEligibleMV(mv: MaterializedView, pipeline: Pipeline): boolean {
+    if (!mv || !pipeline) return false;
     // Ignore faulty materialized views
-    if (materializedView.isFaulty()) return false;
+    if (mv.isFaulty()) {
+      this.delete(mv);
+      this.logger.debug(`Faulty materialized view: ${mv.db} was removed.`);
+      return false;
+    }
     // Check if the materialized view is eligible for the pipeline
-    return isEligible(pipeline, materializedView);
+    return isEligible(pipeline, mv);
   }
 
   /**

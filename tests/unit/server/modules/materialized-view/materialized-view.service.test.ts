@@ -120,6 +120,27 @@ describe('MaterializedViewService', () => {
     expect(mv.db).toBe(MV_DEF.db);
     expect(mv.collection).toBe(MV_DEF.collection);
   });
+  test('delete', async () => {
+    expect(service.getMaterializedViews()).toHaveLength(0);
+    const mv = await service.createMaterializedView(MV_DEF);
+    expect(service.getMaterializedViews()).toHaveLength(1);
+    const mv2 = await service.createMaterializedView(MV_DEF);
+    expect(service.getMaterializedViews()).toHaveLength(2);
+    await service.delete(mv);
+    expect(service.getMaterializedViews()).toHaveLength(1);
+    await service.delete(mv2);
+    expect(service.getMaterializedViews()).toHaveLength(0);
+  });
+  describe('isEligibleMV', async () => {
+    it('should return false if the MV is faulty', async () => {
+      const pipeline = { db: 'db', collection: 'col', stages: [] } as any;
+      const deleteMock = vitest.spyOn(service, 'delete').mockReturnValue(null);
+      const mv = { isFaulty: () => true } as any;
+      const eligible = service.isEligibleMV(mv, pipeline);
+      expect(eligible).toBe(false);
+      expect(deleteMock).toHaveBeenCalledWith(mv);
+    });
+  });
   test('createPipelineFromRequest', async () => {
     // Test with empty pipeline
     expect(
