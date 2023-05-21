@@ -3,12 +3,13 @@ FROM node:19-alpine
 WORKDIR /app
 
 COPY package.json ./
+COPY pnpm-lock.yaml ./
 
 # Install pnpm
 RUN npm install -g pnpm
 
 # Install dependencies
-RUN pnpm install
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 COPY . .
 
@@ -21,6 +22,9 @@ ENV MONGODB_METADATA_URI=
 
 # Build the app
 RUN pnpm build
+
+# Link the image to the github repo
+LABEL org.opencontainers.image.source="https://github.com/maggregor/maggregor"
 
 # Run the builded app
 ENTRYPOINT [ "node", "dist/src/main.js" ]
