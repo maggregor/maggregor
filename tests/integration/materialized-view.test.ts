@@ -6,7 +6,12 @@ import { createClient } from 'tests/e2e/contexts';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { MongoClient } from 'mongodb';
 import RedisMemoryServer from 'redis-memory-server';
-import { MaterializedViewDefinition } from '@/core/materialized-view';
+import {
+  MaterializedView,
+  MaterializedViewDefinition,
+} from '@/core/materialized-view';
+import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
+import { nextTick } from 'node:process';
 
 const MV_DEF_SUM: MaterializedViewDefinition = {
   db: 'test',
@@ -48,6 +53,7 @@ describe('MaterializedViews (integration)', () => {
   let mvProxy: MongoDBTcpProxyService;
   let client: MongoClient;
   let redis: RedisMemoryServer;
+  let listenerService: ListenerService;
   beforeAll(async () => {
     mongodbServer = await startMongoServer();
     redis = await startRedisServer();
@@ -62,6 +68,7 @@ describe('MaterializedViews (integration)', () => {
     await module.init();
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
     mvProxy = module.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
+    listenerService = module.get<ListenerService>(ListenerService);
     client = await createClient(mongodbServer.getUri());
   });
 
@@ -139,6 +146,77 @@ describe('MaterializedViews (integration)', () => {
       const mvs = mvService.getMaterializedViews();
       expect(mvs.length).toBe(1);
       expect(job.getState()).resolves.toBe('completed');
+    });
+  });
+
+  describe('Materialized View listen changes', () => {
+    let mv: MaterializedView;
+    beforeEach(async () => {
+      await mvService.createMaterializedView(MV_DEF_SUM);
+      const mvs = mvService.getMaterializedViews();
+      mv = mvs[0];
+      expect(mv).toBeDefined();
+      expect(mvs.length).toBe(1);
+      // Materialized view should be correctly initialized
+      const view = mv.getView({ useFieldHashes: false });
+      expect(view.find((v) => v._id === 'test').amountTotal).toBe(30);
+      expect(view.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+      // Wait for the next tick to ensure that the listener is correctly registered
+      await new Promise((resolve) => nextTick(resolve));
+    });
+
+    afterAll(async () => {
+      mv.removeAllListeners();
+      await client.db('test').dropCollection('test');
+      await client.db('test').createCollection('test');
+      mvService.removeAll();
+    });
+
+    it('on insert is correctly recomputed', async () => {
+      const changeEvent = new Promise((resolve) => mv.on('change', resolve));
+      await client
+        .db('test')
+        .collection('test')
+        .insertOne({ name: 'test', amount: 30 });
+      await changeEvent;
+      // Materialized view should be correctly recalculated
+      const updatedView = mv.getView({ useFieldHashes: false });
+      expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(60);
+      expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+    });
+
+    it('on update is correctly recomputed', async () => {
+      const initialView = mv.getView({ useFieldHashes: false });
+      expect(initialView.find((v) => v._id === 'test').amountTotal).toBe(30);
+      expect(initialView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+      await client
+        .db('test')
+        .collection('test')
+        .insertOne({ name: 'test', amount: 30 });
+      await client
+        .db('test')
+        .collection('test')
+        .updateOne({ name: 'test', amount: 30 }, { $set: { amount: 42 } });
+      await wait(250); // Wait for the materialized view to be updated
+      // Materialized view should be correctly recalculated
+      const updatedView = mv.getView({ useFieldHashes: false });
+      expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(72);
+      expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+    });
+
+    it('on delete is correctly recomputed', async () => {
+      const initialView = mv.getView({ useFieldHashes: false });
+      expect(initialView.find((v) => v._id === 'test').amountTotal).toBe(30);
+      expect(initialView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+      const changeEvent = new Promise((resolve) => mv.on('change', resolve));
+      await client.db('test').collection('test').deleteMany({
+        name: 'test',
+      });
+      await changeEvent;
+      // Materialized view should be correctly recalculated
+      const updatedView = mv.getView({ useFieldHashes: false });
+      expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(0);
+      expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
     });
   });
 });

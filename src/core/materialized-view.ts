@@ -6,6 +6,7 @@ import type {
 import { createCachedAccumulator } from './pipeline/accumulators';
 import { evaluateExpression, toHashExpression } from './pipeline/expressions';
 import type { Expression } from './pipeline/expressions';
+import EventEmitter from 'events';
 export interface MaterializedViewDefinition {
   db: string;
   collection: string;
@@ -13,7 +14,10 @@ export interface MaterializedViewDefinition {
   accumulatorDefs: AccumulatorDefinition[];
 }
 
-export class MaterializedView implements CollectionListener {
+export class MaterializedView
+  extends EventEmitter
+  implements CollectionListener
+{
   private _db: string;
   private _collection: string;
   private groupBy: Expression;
@@ -22,6 +26,7 @@ export class MaterializedView implements CollectionListener {
   private faulty = false;
 
   constructor(def: MaterializedViewDefinition) {
+    super();
     this._db = def.db;
     this._collection = def.collection;
     this.groupBy = def.groupBy;
@@ -52,7 +57,7 @@ export class MaterializedView implements CollectionListener {
     }
     const accumulators = this.results.get(groupByValueString);
     accumulators?.forEach((a) => a.addDocument(doc));
-
+    this.emit('change', { type: 'add', document: doc });
     this.updateFaultyStatus(accumulators);
   }
 
@@ -65,11 +70,18 @@ export class MaterializedView implements CollectionListener {
     const accumulators = this.results.get(groupByValueString);
     accumulators?.forEach((a) => a.deleteDocument(doc));
 
+    this.emit('change', { type: 'delete', document: doc });
     this.updateFaultyStatus(accumulators);
   }
 
   updateDocument(oldDoc: Document, newDoc: Document): void {
-    this.updateDocument(oldDoc, newDoc);
+    this.deleteDocument(oldDoc);
+    this.addDocument(newDoc);
+    this.emit('change', {
+      type: 'update',
+      oldDocument: oldDoc,
+      newDocument: newDoc,
+    });
   }
 
   /**

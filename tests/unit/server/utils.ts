@@ -16,7 +16,6 @@ import { ModuleMetadata } from '@nestjs/common';
 import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
 import { BullModule, getQueueToken } from '@nestjs/bull';
 import { BM_QUEUE_NAME } from '@/consts';
-import { MaterializedViewJobProcessor } from '@/server/modules/materialized-view/materialized-view.processor';
 
 export type TestConfigServiceOptions = {
   env: {

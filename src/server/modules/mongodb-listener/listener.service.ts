@@ -79,11 +79,23 @@ export class ListenerService extends EventEmitter {
   ) {
     // Check if a CollectionChangeListener object already exists for this collection
     let collectionChangeListener = this.changeStreams.get(collectionName);
+
     if (!collectionChangeListener) {
       // Create a new CollectionChangeListener object for this collection
       const db = this.client.db(dbName);
       const collection: Collection = db.collection(collectionName);
-      const stream: ChangeStream = collection.watch();
+      const collections = await db
+        .listCollections({ name: collectionName })
+        .toArray();
+      if (collections.length === 0) {
+        throw new Error("Collection doesn't exist");
+      }
+      await db.command({ collMod: collectionName, recordPreImages: true });
+
+      const stream: ChangeStream = collection.watch([], {
+        fullDocument: 'updateLookup',
+        fullDocumentBeforeChange: 'whenAvailable',
+      });
       const listeners: Set<(change: any) => void> = new Set();
       collectionChangeListener = { stream, listeners, dbName };
       const key = `${db.databaseName}.${collectionName}`;

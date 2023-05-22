@@ -17,6 +17,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
       },
     });
     mongodbClient = await MongoClient.connect(mongodbServer.getUri());
+    await mongodbClient.db('test').createCollection('test');
   });
   afterAll(async () => {
     await mongodbServer.stop();
@@ -34,7 +35,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
     await collection.deleteOne({ city: 'New York' });
-    await wait(10);
+    await wait(100); // wait for the change event to be emitted
     expect(callback).toHaveBeenCalledTimes(3);
   });
 

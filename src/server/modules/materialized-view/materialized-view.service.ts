@@ -161,6 +161,25 @@ export class MaterializedViewService {
     try {
       await this.loadMaterializedView(materializedView);
       this.mvs.push(materializedView);
+      await this.listenerService.subscribeToCollectionChanges(
+        materializedView.db,
+        materializedView.collection,
+        async (change) => {
+          if (change.operationType === 'insert') {
+            materializedView.addDocument(change.fullDocument);
+            this.logger.debug('Materialized view updated: insert');
+          } else if (change.operationType === 'update') {
+            materializedView.updateDocument(
+              change.fullDocumentBeforeChange,
+              change.fullDocument,
+            );
+            this.logger.debug('Materialized view updated: update');
+          } else if (change.operationType === 'delete') {
+            materializedView.deleteDocument(change.fullDocumentBeforeChange);
+            this.logger.debug('Materialized view updated: delete');
+          }
+        },
+      );
       return materializedView;
     } catch (error) {
       this.logger.error(`Failed to create materialized view: ${error}`);
