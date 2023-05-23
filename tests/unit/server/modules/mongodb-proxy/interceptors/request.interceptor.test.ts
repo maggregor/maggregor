@@ -6,6 +6,8 @@ import {
   encodeResults,
 } from '@server/modules/mongodb-proxy/protocol';
 import { PassThrough } from 'stream';
+import { mockedSession } from 'tests/unit/server/mocks';
+
 const EXAMPLE_MSG: MongoDBMessage = {
   header: {
     requestID: 12345,
@@ -32,7 +34,10 @@ describe('AggregateInterceptor', () => {
   let interceptor: RequestInterceptor;
 
   beforeEach(() => {
-    interceptor = new RequestInterceptor({ write: vi.fn() } as any);
+    interceptor = new RequestInterceptor(
+      { write: vi.fn() } as any,
+      mockedSession,
+    );
   });
 
   test('Hook is called', async () => {

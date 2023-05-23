@@ -2,6 +2,7 @@ import { RequestService } from '@/server/modules/request/request.service';
 import { createRequestServiceWithMockDeps } from '../../utils';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { MsgResult } from '@/server/modules/mongodb-proxy/protocol';
+import { mockedSession } from '../../mocks';
 
 describe('RequestService', () => {
   let service: RequestService;
@@ -33,9 +34,9 @@ describe('RequestService', () => {
     };
 
     vitest
-      .spyOn(service, 'findOneByRequestId')
+      .spyOn(service, 'findOne')
       .mockImplementation(async () => mockRequest);
-    const result = await service.findOneByRequestId(1);
+    const result = await service.findOne('1');
     expect(result).toEqual(mockRequest);
   });
 
@@ -55,15 +56,15 @@ describe('RequestService', () => {
 
   it('should delete a request by requestID', async () => {
     const mockRequest: any = {
-      _id: '1',
+      _id: 'reqId',
       requestID: 1,
       type: 'find',
     };
 
     vitest
-      .spyOn(service, 'deleteByRequestID')
+      .spyOn(service, 'deleteById')
       .mockImplementation(async () => mockRequest);
-    const result = await service.deleteByRequestID(1);
+    const result = await service.deleteById('reqId');
     expect(result).toEqual(mockRequest);
   });
 
@@ -87,7 +88,8 @@ describe('RequestService', () => {
 
   it('should return appropriate result for onRequest', async () => {
     const mockRequest: IRequest = {
-      requestID: 1,
+      id: '1',
+      mongoRequestID: 1,
       type: 'find',
       db: 'test_db',
       collName: 'test_collection',
@@ -106,13 +108,14 @@ describe('RequestService', () => {
       .spyOn(service, 'onRequest')
       .mockImplementation(async () => mockMsgResult);
 
-    const result = await service.onRequest(mockRequest);
+    const result = await service.onRequest(mockRequest, mockedSession);
     expect(result).toEqual(mockMsgResult);
   });
 
   it('should handle onRequest correctly', async () => {
     const mockRequest: IRequest = {
-      requestID: 1,
+      id: '1',
+      mongoRequestID: 1,
       type: 'find',
       db: 'test_db',
       collName: 'test_collection',
@@ -123,7 +126,7 @@ describe('RequestService', () => {
       .spyOn(service, 'create')
       .mockImplementation(async () => mockRequest);
 
-    const result = await service.onRequest(mockRequest);
+    const result = await service.onRequest(mockRequest, mockedSession);
     const called = createSpy.mock.calls[0][0];
     expect(called).toHaveProperty('requestSource');
     expect(called.requestSource).toEqual('mongodb');
