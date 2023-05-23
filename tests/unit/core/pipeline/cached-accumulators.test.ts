@@ -29,6 +29,12 @@ describe('SumCachedAccumulator', () => {
     sumAccumulator.delete(3);
     expect(sumAccumulator.getCachedValue()).toEqual(0);
   });
+  it('should initialize the cached value correctly', () => {
+    const sumAccumulator = new SumCachedAccumulator(BASE_DEF);
+    expect(sumAccumulator.getCachedValue()).toBe(0);
+    sumAccumulator.initialize(42);
+    expect(sumAccumulator.getCachedValue()).toEqual(42);
+  });
 });
 
 describe('MinCachedAccumulator', () => {
@@ -48,6 +54,13 @@ describe('MinCachedAccumulator', () => {
     minAccumulator.delete(2);
     expect(minAccumulator.isFaulty()).toBe(true);
     expect(minAccumulator.getCachedValue()).toBeNull();
+  });
+  it('should initialize the cached value correctly', () => {
+    const minAccumulator = new MinCachedAccumulator(BASE_DEF);
+    expect(minAccumulator.getCachedValue()).toBeUndefined();
+    minAccumulator.initialize(42);
+    expect(minAccumulator.getCachedValue()).toEqual(42);
+    expect(minAccumulator.isFaulty()).toBe(false);
   });
 });
 
@@ -91,6 +104,12 @@ describe('AvgCachedAccumulator', () => {
     avgAccumulator.delete(3);
     expect(avgAccumulator.getCachedValue()).toEqual(0);
   });
+  it('should initialize the cached value correctly', () => {
+    const avgAccumulator = new AvgCachedAccumulator(BASE_DEF);
+    avgAccumulator.initialize({ count: 10, sum: 420 });
+    expect(avgAccumulator.getCachedValue()).toEqual(42);
+    expect(avgAccumulator.isFaulty()).toBe(false);
+  });
 });
 
 describe('CountCachedAccumulator', () => {
@@ -117,7 +136,11 @@ describe('CountCachedAccumulator', () => {
     assertCount(1);
     countAccumulator.delete(true);
     assertCount(0);
+  });
+  it('should initialize the cached value correctly', () => {
+    const countAccumulator = new CountCachedAccumulator(BASE_DEF);
     countAccumulator.initialize(42);
-    assertCount(42);
+    expect(countAccumulator.getCachedValue()).toEqual(42);
+    expect(countAccumulator.isFaulty()).toBe(false);
   });
 });

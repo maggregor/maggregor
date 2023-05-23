@@ -36,15 +36,10 @@ export class MaterializedViewJobProcessor {
 
   @Process('create')
   async process(job: Job<MaterializedViewJobData>): Promise<any> {
-    try {
-      const definition = job.data.definition;
-      const materializedView = await this.mvService.createMaterializedView(
-        definition,
-      );
-      return materializedView;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    const definition = job.data.definition;
+    const materializedView = await this.mvService.createMaterializedView(
+      definition,
+    );
+    return materializedView;
   }
 }

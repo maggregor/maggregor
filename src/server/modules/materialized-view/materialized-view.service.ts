@@ -20,7 +20,7 @@ import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class MaterializedViewService {
-  private readonly mvs: Array<MaterializedView> = [];
+  private readonly mvs: MaterializedView[] = [];
 
   constructor(
     @Inject(ListenerService) private readonly listenerService: ListenerService,
@@ -33,7 +33,7 @@ export class MaterializedViewService {
     definition: MaterializedViewDefinition,
   ): Promise<Job> {
     try {
-      this.logger.log('Adding materialized view job to queue.');
+      this.logger.debug('Adding materialized view job to queue.');
       const job = await this.queue.add('create', {
         definition,
       });

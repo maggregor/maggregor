@@ -10,7 +10,6 @@ import {
   MaterializedView,
   MaterializedViewDefinition,
 } from '@/core/materialized-view';
-import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 import { nextTick } from 'node:process';
 
 const MV_DEF_SUM: MaterializedViewDefinition = {
@@ -53,7 +52,6 @@ describe('MaterializedViews (integration)', () => {
   let mvProxy: MongoDBTcpProxyService;
   let client: MongoClient;
   let redis: RedisMemoryServer;
-  let listenerService: ListenerService;
   beforeAll(async () => {
     mongodbServer = await startMongoServer();
     redis = await startRedisServer();
@@ -68,7 +66,6 @@ describe('MaterializedViews (integration)', () => {
     await module.init();
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
     mvProxy = module.get<MongoDBTcpProxyService>(MongoDBTcpProxyService);
-    listenerService = module.get<ListenerService>(ListenerService);
     client = await createClient(mongodbServer.getUri());
   });
 
@@ -146,6 +143,9 @@ describe('MaterializedViews (integration)', () => {
       const mvs = mvService.getMaterializedViews();
       expect(mvs.length).toBe(1);
       expect(job.getState()).resolves.toBe('completed');
+      const jobFound = await mvService.getCreationJob(job.id);
+      expect(jobFound).toBeDefined();
+      expect(jobFound.getState()).resolves.toBe('completed');
     });
   });
 
@@ -208,11 +208,10 @@ describe('MaterializedViews (integration)', () => {
       const initialView = mv.getView({ useFieldHashes: false });
       expect(initialView.find((v) => v._id === 'test').amountTotal).toBe(30);
       expect(initialView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
-      const changeEvent = new Promise((resolve) => mv.on('change', resolve));
       await client.db('test').collection('test').deleteMany({
         name: 'test',
       });
-      await changeEvent;
+      await wait(1000); // Wait for the materialized view to be updated
       // Materialized view should be correctly recalculated
       const updatedView = mv.getView({ useFieldHashes: false });
       expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(0);

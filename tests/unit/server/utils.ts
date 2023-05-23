@@ -209,6 +209,7 @@ export async function createListenerService(config: TestConfigServiceOptions) {
       },
     ],
   }).compile();
+  await app.init();
   return app.get<ListenerService>(ListenerService);
 }
 

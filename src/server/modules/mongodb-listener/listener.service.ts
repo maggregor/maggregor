@@ -59,6 +59,7 @@ export class ListenerService extends EventEmitter {
         this.emit('connection');
         return;
       } catch (error) {
+        this._isConnected = false;
         this.logger.warn(
           `Failed to connect: retrying to connect to MongoDB in 1 second... Error: ${error.message}`,
         );
@@ -149,7 +150,7 @@ export class ListenerService extends EventEmitter {
     collectionName: string,
     pipeline: any[],
   ): Promise<any[]> {
-    if (!this.isConnected) {
+    if (!this.isConnected()) {
       throw new Error('MongoDB connection is not established');
     }
 
