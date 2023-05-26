@@ -33,6 +33,7 @@ export interface Accumulator {
   outputFieldName: string;
   getHash(): string;
   equals(acc: Accumulator): boolean;
+  getDefinition(): AccumulatorDefinition;
 }
 
 export type AvgInitConfig = {

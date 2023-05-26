@@ -39,6 +39,14 @@ export abstract class BaseAccumulator implements Accumulator {
       this.operator === acc.operator
     );
   }
+
+  public getDefinition(): AccumulatorDefinition {
+    return {
+      operator: this.operator,
+      expression: this.expression,
+      outputFieldName: this.outputFieldName,
+    };
+  }
 }
 
 // TODO: Probably costly to do this every time

@@ -17,6 +17,7 @@ import { ListenerService } from '../mongodb-listener/listener.service';
 import { Job, Queue } from 'bullmq';
 import { BM_QUEUE_NAME } from '@/consts';
 import { InjectQueue } from '@nestjs/bull';
+import { convertToMaterializedViewDefinition } from './materialized-view.converter';
 
 @Injectable()
 export class MaterializedViewService {
@@ -95,7 +96,19 @@ export class MaterializedViewService {
   async canExecute(req: IRequest): Promise<boolean> {
     if (!req || req.type !== 'aggregate') return false;
     const pipeline = await this.createPipelineFromRequest(req);
-    return (await this.findEligibleMV(pipeline))?.length > 0;
+    const mvs = await this.findEligibleMV(pipeline);
+    const canExecute = mvs.length > 0;
+    if (!canExecute) {
+      this.logger.debug('No eligible materialized view found');
+      const mv = convertToMaterializedViewDefinition(pipeline);
+      if (mv !== null) {
+        this.logger.debug(
+          'A Materialized View can be created from the request',
+        );
+        this.addToCreationQueue(mv);
+      }
+    }
+    return canExecute;
   }
 
   /**
