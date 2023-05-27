@@ -51,11 +51,13 @@ export class CacheService {
     if (!this.canCache(req, res)) {
       return;
     }
-    this.withCache(req, (key, collection, db) => {
-      this.__cache.set(key, collection, db, res.data);
-      this.listener.subscribeToCollectionChanges(db, collection, () =>
-        this.handleCollectionChange(db, collection),
-      );
+    this.withCache(req, async (key, collection, db) => {
+      try {
+        this.__cache.set(key, collection, db, res.data);
+        await this.listener.subscribeToCollectionChanges(db, collection, () =>
+          this.handleCollectionChange(db, collection),
+        );
+      } catch (error) {}
     });
   }
 

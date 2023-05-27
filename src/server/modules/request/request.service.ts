@@ -110,6 +110,10 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   makeAsCompleted(req: IRequest) {
+    if (req.type === 'unknown') {
+      // We ignore unknown requests (such as heartbeat, listDatabases, etc.)
+      return;
+    }
     const id = req.requestID;
     const src = req.requestSource;
     req.endAt = new Date();

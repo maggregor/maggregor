@@ -19,5 +19,7 @@ MongoMemoryReplSet.create({
   const uri = server.getUri();
   logger.info(`MongoDB ready on: ${uri}`);
   const client = await MongoClient.connect(uri);
-  await loadTestData(client);
+  await loadTestData(client, {
+    totalDocs: 1000000,
+  });
 });

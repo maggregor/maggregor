@@ -173,7 +173,6 @@ export class MaterializedViewService {
     const materializedView = new MaterializedView(definition);
     try {
       await this.loadMaterializedView(materializedView);
-      this.mvs.push(materializedView);
       await this.listenerService.subscribeToCollectionChanges(
         materializedView.db,
         materializedView.collection,
@@ -193,6 +192,7 @@ export class MaterializedViewService {
           }
         },
       );
+      this.mvs.push(materializedView);
       return materializedView;
     } catch (error) {
       this.logger.error(`Failed to create materialized view: ${error}`);
