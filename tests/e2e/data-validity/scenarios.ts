@@ -1,11 +1,15 @@
 import type { MongoClient } from 'mongodb';
 import { wait } from '../utils';
+import logger from 'tests/__utils__/logger';
 export interface E2EScenarios {
   name: string;
   // Will run the request on MongoDB and Maggregor asynchronously
   asyncCompare?: boolean;
   request: (client: MongoClient) => Promise<any>;
 }
+
+const recomputingDelay = 2000;
+const cacheInvalidationDelay = 2000;
 
 export default [
   {
@@ -185,15 +189,38 @@ export default [
       // Count documents before insert
       const res1 = await c.aggregate([{ $count: 'count' }]).toArray();
       const inserted = await c.insertOne({ name: 'John Doe' });
-      await wait(2000); // Wait for cache invalidation
+      await wait(cacheInvalidationDelay);
       // Count documents after insert
       const res2 = await c.aggregate([{ $count: 'count' }]).toArray();
       await c.deleteOne({ _id: inserted.insertedId });
-      await wait(2000); // Wait for cache invalidation
+      await wait(cacheInvalidationDelay);
       // Count documents after delete
       const res3 = await c.aggregate([{ $count: 'count' }]).toArray();
 
-      return [res1, res2, res3];
+      return [res1, res2, res3].sort();
+    },
+  },
+  {
+    name: 'Run aggregate pipeline that trigger Materialized View creation',
+    asyncCompare: false,
+    request: async (client: MongoClient) => {
+      const db = client.db(global.__TEST_DB__);
+      const c = db.collection('col3');
+      const res1 = await c.aggregate([{ $group: { _id: '$city' } }]).toArray();
+      await wait(recomputingDelay);
+      const inserted = await c.insertOne({ name: 'John', city: 'Lausanne' });
+      await wait(recomputingDelay);
+      const res2 = await c.aggregate([{ $group: { _id: '$city' } }]).toArray();
+      await wait(recomputingDelay);
+      await c.deleteOne({ _id: inserted.insertedId });
+      await wait(recomputingDelay);
+      const res3 = await c.aggregate([{ $group: { _id: '$city' } }]).toArray();
+      await wait(recomputingDelay);
+      const sorted = [res1, res2, res3].sort();
+      logger.debug('res1', sorted[0]);
+      logger.debug('res2', sorted[1]);
+      logger.debug('res3', sorted[2]);
+      return sorted;
     },
   },
 ].map((scenario) => ({

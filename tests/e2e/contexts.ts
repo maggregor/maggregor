@@ -74,6 +74,10 @@ export async function setupContext(
     totalDocs: 1000,
     collection: 'col2',
   });
+  await loadTestData(ctx.mongoClient, {
+    totalDocs: 10,
+    collection: 'col3',
+  });
   await healthCheck(ctx.maggreClient, ctx.mongoClient);
 
   return {

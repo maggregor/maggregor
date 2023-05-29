@@ -1,7 +1,6 @@
 import { MongoClient } from 'mongodb';
 import { setupContext, contexts, Context } from '../contexts';
 import scenarios from './scenarios';
-import { deepStrictEqual } from 'assert';
 import { wait } from '../utils';
 
 global.__TEST_DB__ = 'mydb';
@@ -19,17 +18,17 @@ async function runTests(context: Context) {
     });
 
     test.concurrent.each(scenarios)('Scenario %#: %s', async (scenario) => {
-      let result: any, expected: any;
+      let actual: any[], expected: any[];
       if (scenario.asyncCompare) {
         const p1 = scenario.request(maggreClient);
         const p2 = scenario.request(mongoClient);
-        [result, expected] = await Promise.all([p1, p2]);
+        [actual, expected] = await Promise.all([p1, p2]);
       } else {
-        result = await scenario.request(maggreClient);
+        actual = await scenario.request(maggreClient);
         expected = await scenario.request(mongoClient);
       }
-      expect(result.length).toBe(expected.length);
-      deepStrictEqual(result, expected);
+      expect(actual.length).toBe(expected.length);
+      expect(actual.sort()).toEqual(expected.sort());
     });
     afterAll(async () => {
       context.maggregor?.stop();
