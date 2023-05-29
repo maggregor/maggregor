@@ -82,4 +82,23 @@ describe('MaterializedView', () => {
     mv.addDocument({ genre: 'action', score: 8 });
     expect(mv.isFaulty()).toBe(false);
   });
+
+  it('should correctly delete documents', () => {
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'country' },
+      accumulatorDefs: [],
+    });
+    mv.addDocument({ country: 'France' });
+    mv.addDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'France' },
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'France' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+  });
 });
