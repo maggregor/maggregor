@@ -1,14 +1,16 @@
-import { MaterializedView } from '@core/materialized-view';
-import type { AccumulatorDefinition } from '@core/pipeline/accumulators';
-import { toHashExpression } from '@core/pipeline/expressions';
+import { MaterializedView } from '@/core/materialized-view';
+import { AccumulatorDefinition } from '@/core/pipeline/accumulators';
+import { toHashExpression } from '@/core/pipeline/expressions';
 
 describe('MaterializedView', () => {
-  it('should correctly calculate accumulators and group by expression', () => {
+  it('should correctly calculate accumulators after many add documents', () => {
     const acc1: AccumulatorDefinition = {
+      outputFieldName: 'sum',
       operator: 'sum',
       expression: { field: 'score' },
     };
     const acc2: AccumulatorDefinition = {
+      outputFieldName: 'sumPlus10',
       operator: 'sum',
       expression: {
         operator: 'add',
@@ -51,5 +53,33 @@ describe('MaterializedView', () => {
         [fieldName2]: 2018,
       },
     ]);
+  });
+
+  it('should correctly handle faulty accumulators', () => {
+    const acc1: AccumulatorDefinition = {
+      outputFieldName: 'sumScore',
+      operator: 'sum',
+      expression: { field: 'score' },
+    };
+    const acc2: AccumulatorDefinition = {
+      outputFieldName: 'minScore',
+      operator: 'min',
+      expression: { field: 'score' },
+    };
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'genre' },
+      accumulatorDefs: [acc1, acc2],
+    });
+    expect(mv.isFaulty()).toBe(false);
+    mv.addDocument({ genre: 'action', score: 10 });
+    expect(mv.isFaulty()).toBe(false);
+    mv.deleteDocument({ genre: 'action', score: 10 });
+    expect(mv.isFaulty()).toBe(true);
+    mv.addDocument({ genre: 'action', score: 15 });
+    expect(mv.isFaulty()).toBe(true);
+    mv.addDocument({ genre: 'action', score: 8 });
+    expect(mv.isFaulty()).toBe(false);
   });
 });

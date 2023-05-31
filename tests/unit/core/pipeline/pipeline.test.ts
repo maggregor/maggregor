@@ -266,7 +266,10 @@ it('with match stage and MV', () => {
   mv.addDocument({ genre: 'drama', score: 40 });
   mv.addDocument({ genre: 'drama', score: 50 });
   mv.addDocument({ genre: 'drama', score: 60 });
-  const result = executePipeline(pipeline, mv.getView());
+  const result = executePipeline(
+    pipeline,
+    mv.getView({ useFieldHashes: true }),
+  );
   expect(result.length).toEqual(1);
   expect(result).toEqual([{ _id: 'action', avgScore: 20 }]);
 });

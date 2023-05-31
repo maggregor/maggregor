@@ -4,12 +4,13 @@ import { ListenerService } from '@/server/modules/mongodb-listener/listener.serv
 import { startMongoServer, wait } from 'tests/e2e/utils';
 import { createListenerService } from 'tests/unit/server/utils';
 
-describe('MongoDBListenerService: listen changes from the MongoDB server', () => {
+describe('ListenerService: listen changes from the MongoDB server', () => {
   let service: ListenerService;
   let mongodbClient: MongoClient;
   let mongodbServer: MongoMemoryReplSet;
 
   beforeAll(async () => {
+    vitest.resetAllMocks();
     mongodbServer = await startMongoServer();
     service = await createListenerService({
       env: {
@@ -17,6 +18,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
       },
     });
     mongodbClient = await MongoClient.connect(mongodbServer.getUri());
+    await mongodbClient.db('test').createCollection('test');
   });
   afterAll(async () => {
     await mongodbServer.stop();
@@ -31,10 +33,11 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     const db = mongodbClient.db('test');
     const collection = db.collection('test');
     await service.subscribeToCollectionChanges('test', 'test', callback);
+    await wait(200); // wait for the subscription to be effective
     await collection.insertOne({ country: 'USA', city: 'New York', age: 30 });
     await collection.updateOne({ city: 'New York' }, { $set: { age: 31 } });
     await collection.deleteOne({ city: 'New York' });
-    await wait(10);
+    await wait(200); // wait for the change event to be emitted
     expect(callback).toHaveBeenCalledTimes(3);
   });
 
@@ -54,6 +57,7 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     const loggerSpyWarn = vitest.spyOn(service['logger'], 'warn');
     const loggerSpySuccess = vitest.spyOn(service['logger'], 'success');
 
+    expect(service.isConnected()).toBe(true);
     service['client'].emit('close');
     await wait(100);
     expect(emit).toHaveBeenCalledWith('end');
@@ -61,8 +65,43 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     await wait(3000);
     expect(emit).toHaveBeenCalledWith('connection');
     expect(loggerSpySuccess.mock.lastCall).toMatch(/connected/);
+    expect(service.isConnected()).toBe(true);
 
     loggerSpyWarn.mockRestore();
+  });
+
+  test('should throw error when trying to subscribe to a non-existing collection', async () => {
+    const callback = vitest.fn();
+    await expect(
+      service.subscribeToCollectionChanges('test', 'non-existing', callback),
+    ).rejects.toThrow(/doesn\'t exist/);
+  });
+
+  test('should throw error when trying to execute an aggregation pipeline when the connection is lost', async () => {
+    const fn = service.isConnected;
+    expect(service.isConnected()).toBe(true);
+    expect(
+      service.executeAggregatePipeline('test', 'test', [
+        {
+          $match: { city: 'New York' },
+        },
+      ]),
+    ).resolves.toBeTruthy();
+    service.isConnected = vitest.fn(() => false);
+    expect(
+      service.executeAggregatePipeline('test', 'test', []),
+    ).rejects.toThrow(/not established/);
+    service.isConnected = fn;
+  });
+
+  test('should throw error when trying to execute invalid aggregation pipeline', async () => {
+    expect(
+      service.executeAggregatePipeline('test', 'test', [
+        {
+          $invalid: { city: 'New York' },
+        },
+      ]),
+    ).rejects.toThrow(/Unrecognized pipeline stage name/);
   });
 
   describe('ListenerService: Automatic reconnection to MongoDB', () => {
@@ -81,11 +120,13 @@ describe('MongoDBListenerService: listen changes from the MongoDB server', () =>
     });
 
     test('should try to reconnect until MongoDB is up', async () => {
+      expect(service.isConnected()).toBe(false);
       const spyOnConnect = vitest.spyOn(service, 'emit');
       expect(spyOnConnect).not.toHaveBeenCalled();
       mongodbServer = await startMongoServer({ port: 27018 });
       await wait(2000);
       expect(spyOnConnect).toHaveBeenCalledTimes(1);
+      expect(service.isConnected()).toBe(true);
     });
   });
 });

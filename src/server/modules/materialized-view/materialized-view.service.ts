@@ -13,15 +13,56 @@ import {
   MaterializedView,
   MaterializedViewDefinition,
 } from '@/core/materialized-view';
+import { ListenerService } from '../mongodb-listener/listener.service';
+import { Job, Queue } from 'bullmq';
+import { BM_QUEUE_NAME } from '@/consts';
+import { InjectQueue } from '@nestjs/bull';
 
 @Injectable()
 export class MaterializedViewService {
   private readonly mvs: MaterializedView[] = [];
 
-  constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
+  constructor(
+    @Inject(ListenerService) private readonly listenerService: ListenerService,
+    @Inject(LoggerService) private readonly logger: LoggerService,
+    @InjectQueue(BM_QUEUE_NAME)
+    private queue: Queue,
+  ) {}
 
-  async register(definition: MaterializedViewDefinition): Promise<void> {
-    this.mvs.push(new MaterializedView(definition));
+  async addToCreationQueue(
+    definition: MaterializedViewDefinition,
+  ): Promise<Job> {
+    try {
+      this.logger.debug('Adding materialized view job to queue.');
+      const job = await this.queue.add('create', {
+        definition,
+      });
+      return job;
+    } catch (error) {
+      this.logger.error(
+        `Failed to add materialized view job to queue: ${error}`,
+      );
+      throw error;
+    }
+  }
+
+  async removeAll(): Promise<void> {
+    this.mvs.length = 0;
+  }
+
+  async delete(mv: MaterializedView): Promise<void> {
+    const index = this.mvs.indexOf(mv);
+    if (index > -1) {
+      this.mvs.splice(index, 1);
+    }
+  }
+
+  getCreationJob(id: string): Promise<Job> {
+    return this.queue.getJob(id);
+  }
+
+  getMaterializedViews(): MaterializedView[] {
+    return this.mvs;
   }
 
   /**
@@ -31,7 +72,19 @@ export class MaterializedViewService {
    */
   async findEligibleMV(pipeline: Pipeline): Promise<MaterializedView[]> {
     if (!pipeline) return null;
-    return this.mvs.filter((mv) => isEligible(pipeline, mv));
+    return this.mvs.filter((mv) => this.isEligibleMV(mv, pipeline));
+  }
+
+  isEligibleMV(mv: MaterializedView, pipeline: Pipeline): boolean {
+    if (!mv || !pipeline) return false;
+    // Ignore faulty materialized views
+    if (mv.isFaulty()) {
+      this.delete(mv);
+      this.logger.debug(`Faulty materialized view: ${mv.db} was removed.`);
+      return false;
+    }
+    // Check if the materialized view is eligible for the pipeline
+    return isEligible(pipeline, mv);
   }
 
   /**
@@ -83,5 +136,54 @@ export class MaterializedViewService {
     }
     // Create a pipeline from the stages
     return createPipeline(req.db, req.collName, stages);
+  }
+
+  async loadMaterializedView(
+    materializedView: MaterializedView,
+  ): Promise<void> {
+    const pipeline = materializedView.buildAsMongoAggregatePipeline();
+    const dbName = materializedView.db;
+    const collectionName = materializedView.collection;
+
+    const results = await this.listenerService.executeAggregatePipeline(
+      dbName,
+      collectionName,
+      pipeline,
+    );
+
+    materializedView.initialize(results);
+  }
+
+  async createMaterializedView(
+    definition: MaterializedViewDefinition,
+  ): Promise<MaterializedView> {
+    const materializedView = new MaterializedView(definition);
+    try {
+      await this.loadMaterializedView(materializedView);
+      this.mvs.push(materializedView);
+      await this.listenerService.subscribeToCollectionChanges(
+        materializedView.db,
+        materializedView.collection,
+        async (change) => {
+          if (change.operationType === 'insert') {
+            materializedView.addDocument(change.fullDocument);
+            this.logger.debug('Materialized view updated: insert');
+          } else if (change.operationType === 'update') {
+            materializedView.updateDocument(
+              change.fullDocumentBeforeChange,
+              change.fullDocument,
+            );
+            this.logger.debug('Materialized view updated: update');
+          } else if (change.operationType === 'delete') {
+            materializedView.deleteDocument(change.fullDocumentBeforeChange);
+            this.logger.debug('Materialized view updated: delete');
+          }
+        },
+      );
+      return materializedView;
+    } catch (error) {
+      this.logger.error(`Failed to create materialized view: ${error}`);
+      return null;
+    }
   }
 }

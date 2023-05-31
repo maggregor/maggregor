@@ -35,17 +35,25 @@ export interface Accumulator {
   equals(acc: Accumulator): boolean;
 }
 
+export type AvgInitConfig = {
+  count: number;
+  sum: number;
+};
+
+export type InitConfig = number | AvgInitConfig;
+
 export interface CachedAccumulator extends Accumulator, CollectionListener {
   add(val: Value): void;
   delete(val: Value): void;
-  __init(value: Value): void;
+  isFaulty(): boolean;
+  initialize(config: InitConfig): void;
   getCachedValue(): Value;
 }
 
 export type AccumulatorDefinition = {
   operator: AccumulatorOperator;
-  outputFieldName?: string;
-  expression?: Expression;
+  outputFieldName: string;
+  expression: Expression;
 };
 
 export function createBasicAccumulator(

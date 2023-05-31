@@ -8,6 +8,7 @@ import {
 } from '@/core/materialized-view';
 import { Pipeline } from '@/core/pipeline/pipeline';
 import { IRequest } from '@/server/modules/request/request.interface';
+import { Expression } from 'mongoose';
 
 const MV_DEF: MaterializedViewDefinition = {
   db: 'test',
@@ -25,25 +26,35 @@ describe('MaterializedViewService', () => {
 
   test('findEligibleMV', async () => {
     const spyEligbility = vitest.spyOn(eligibility, 'isEligible');
+    vitest
+      .spyOn(service, 'loadMaterializedView')
+      .mockImplementation(() => null);
     const mockPipeline = [] as any;
     spyEligbility.mockReturnValue(true);
     //
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     //
-    service.register(MV_DEF);
+    await service.createMaterializedView(MV_DEF);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(1);
     spyEligbility.mockReturnValue(false);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(2);
     //
-    service.register({ ...MV_DEF, db: 'test2' });
-    service.register({ ...MV_DEF, collection: 'test2' });
+    await service.createMaterializedView({ ...MV_DEF, db: 'test2' });
+    await service.createMaterializedView({ ...MV_DEF, collection: 'test2' });
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(0);
     expect(spyEligbility).toHaveBeenCalledTimes(5);
     //
     spyEligbility.mockReturnValue(true);
     expect(await service.findEligibleMV(mockPipeline)).toHaveLength(3);
     expect(spyEligbility).toHaveBeenCalledTimes(8);
+    // Ensure when an error is thrown, the MV is not considered eligible
+    await service.createMaterializedView({ ...MV_DEF, db: 'test3' });
+    vitest.spyOn(service, 'loadMaterializedView').mockImplementation(() => {
+      throw new Error();
+    });
+    await service.createMaterializedView({ ...MV_DEF, db: 'test4' });
+    expect(await service.findEligibleMV(mockPipeline)).toHaveLength(4);
   });
 
   test('canExecute', async () => {
@@ -103,6 +114,33 @@ describe('MaterializedViewService', () => {
     expect(result).toEqual(expectedResult);
   });
 
+  test('createMaterializedView', async () => {
+    const mv = await service.createMaterializedView(MV_DEF);
+    expect(mv).toBeInstanceOf(MaterializedView);
+    expect(mv.db).toBe(MV_DEF.db);
+    expect(mv.collection).toBe(MV_DEF.collection);
+  });
+  test('delete', async () => {
+    expect(service.getMaterializedViews()).toHaveLength(0);
+    const mv = await service.createMaterializedView(MV_DEF);
+    expect(service.getMaterializedViews()).toHaveLength(1);
+    const mv2 = await service.createMaterializedView(MV_DEF);
+    expect(service.getMaterializedViews()).toHaveLength(2);
+    await service.delete(mv);
+    expect(service.getMaterializedViews()).toHaveLength(1);
+    await service.delete(mv2);
+    expect(service.getMaterializedViews()).toHaveLength(0);
+  });
+  describe('isEligibleMV', async () => {
+    it('should return false if the MV is faulty', async () => {
+      const pipeline = { db: 'db', collection: 'col', stages: [] } as any;
+      const deleteMock = vitest.spyOn(service, 'delete').mockReturnValue(null);
+      const mv = { isFaulty: () => true } as any;
+      const eligible = service.isEligibleMV(mv, pipeline);
+      expect(eligible).toBe(false);
+      expect(deleteMock).toHaveBeenCalledWith(mv);
+    });
+  });
   test('createPipelineFromRequest', async () => {
     // Test with empty pipeline
     expect(
@@ -123,5 +161,86 @@ describe('MaterializedViewService', () => {
     expect(
       await service.createPipelineFromRequest([{ wrong: {} }] as any),
     ).toBe(null);
+  });
+
+  describe('buildMongoAggregatePipeline', async () => {
+    it('should return a pipeline - 1', async () => {
+      const mv = new MaterializedView(MV_DEF);
+      const pipeline = mv.buildAsMongoAggregatePipeline();
+      expect(pipeline).toEqual([{ $group: { _id: '$country' } }]);
+    });
+    it('should return a pipeline - 2', async () => {
+      const mv = new MaterializedView({
+        db: 'test',
+        collection: 'test',
+        groupBy: { field: 'country' },
+        accumulatorDefs: [
+          {
+            operator: 'sum',
+            outputFieldName: 'mySum',
+            expression: { field: 'age' },
+          },
+        ],
+      });
+      const pipeline = mv.buildAsMongoAggregatePipeline();
+      expect(pipeline).toEqual([
+        {
+          $group: {
+            _id: '$country',
+
+            mySum: {
+              $sum: '$age',
+            },
+          },
+        },
+      ]);
+    });
+    describe('buildExpression', () => {
+      test('should build with a field reference', () => {
+        const mv = new MaterializedView(MV_DEF);
+        const e: Expression = { field: 'age' };
+        expect(mv.buildAsMongoExpression(e)).toBe('$age');
+      });
+      test('should build with a add and multiply functions and two field references', () => {
+        const mv = new MaterializedView(MV_DEF);
+        const e: Expression = {
+          operator: 'add',
+          value: [{ field: 'age' }, { field: 'income' }],
+        };
+        expect(mv.buildAsMongoExpression(e)).toEqual({
+          $add: ['$age', '$income'],
+        });
+        const e2: Expression = {
+          operator: 'multiply',
+          value: {
+            operator: 'add',
+            value: [{ field: 'age' }, { field: 'income' }],
+          },
+        };
+        expect(mv.buildAsMongoExpression(e2)).toEqual({
+          $multiply: [{ $add: ['$age', '$income'] }],
+        });
+      });
+      test('should return undefined if the expression is not correct', () => {
+        const mv = new MaterializedView(MV_DEF);
+        expect(mv.buildAsMongoExpression({} as any)).toBeUndefined();
+      });
+      test('should return a add expression with a field reference and a value', () => {
+        const mv = new MaterializedView(MV_DEF);
+        expect(
+          mv.buildAsMongoExpression({
+            operator: 'add',
+            value: [
+              {
+                field: 'age',
+              },
+              { value: 1 },
+            ],
+          }),
+        ).toEqual({
+          $add: ['$age', 1],
+        });
+      });
+    });
   });
 });
