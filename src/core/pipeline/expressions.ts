@@ -270,8 +270,6 @@ export function resolveAllExpressionFields(
   expressions: Expression[],
   doc: Document[],
 ): Expression[] {
-  // Potentially really expensive operation
-  // TODO: Optimize this, probably by looking for the first object in the array
   const allDocKeys = [...new Set(doc.flatMap((d) => Object.keys(d)))];
   const exprs = expressions;
 
@@ -298,8 +296,6 @@ function countExpressionInTree(e: Expression): number {
   }
 
   if (Array.isArray(e.value)) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore - TODO: Fix this
     return e.value.reduce(
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - TODO: Fix this

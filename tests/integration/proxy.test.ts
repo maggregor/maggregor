@@ -56,4 +56,19 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
 
     vitest.restoreAllMocks();
   });
+
+  test('Connect to the proxy', async () => {
+    const db = await MongoClient.connect(
+      `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
+      {
+        directConnection: true,
+      },
+    );
+    const collection = db.db('test').collection('test-1');
+    await collection.insertOne({ name: 'John' });
+    const docs = await collection.find().toArray();
+    expect(docs.length).toBe(1);
+    expect(docs[0].name).toBe('John');
+    await db.close();
+  });
 });

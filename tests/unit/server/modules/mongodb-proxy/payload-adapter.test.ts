@@ -15,7 +15,7 @@ describe('handlePayload', () => {
     };
     const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
-      requestID,
+      mongoRequestID: requestID,
       db: 'my-db',
       collName: 'my-collection',
       filter: { field: 'value' },
@@ -24,7 +24,7 @@ describe('handlePayload', () => {
       query: undefined,
       requestSource: null,
       type: 'find',
-    } as IRequest);
+    } as Omit<IRequest, 'id'>);
   });
 
   it('should return an aggregate request', () => {
@@ -36,7 +36,7 @@ describe('handlePayload', () => {
     };
     const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
-      requestID,
+      mongoRequestID: requestID,
       db: 'my-db',
       collName: 'my-collection',
       pipeline: [{ $match: { field: 'value' } }],
@@ -45,7 +45,7 @@ describe('handlePayload', () => {
       query: undefined,
       requestSource: null,
       type: 'aggregate',
-    } as IRequest);
+    } as Omit<IRequest, 'id'>);
   });
 
   it('should return a count request', () => {
@@ -57,7 +57,7 @@ describe('handlePayload', () => {
     };
     const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
-      requestID,
+      mongoRequestID: requestID,
       db: 'my-db',
       collName: 'my-collection',
       query: { field: 'value' },
@@ -66,7 +66,7 @@ describe('handlePayload', () => {
       pipeline: undefined,
       requestSource: null,
       type: 'count',
-    } as IRequest);
+    } as Omit<IRequest, 'id'>);
   });
 
   it('should return an unknown request', () => {
@@ -77,7 +77,7 @@ describe('handlePayload', () => {
     };
     const request = resolveRequest(requestID, payload);
     expect(request).toEqual({
-      requestID,
+      mongoRequestID: requestID,
       db: 'my-db',
       collName: undefined,
       filter: undefined,

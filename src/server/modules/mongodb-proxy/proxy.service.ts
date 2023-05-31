@@ -8,12 +8,22 @@ import {
   RequestInterceptorHook,
 } from './interceptors/request.interceptor';
 import {
-  ReplyInterceptor,
-  ReplyInterceptorHook,
+  ResponseInterceptor,
+  ResponseInterceptorHook,
 } from './interceptors/response.interceptor';
 import { RequestService } from '../request/request.service';
 import { LoggerService } from '../logger/logger.service';
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+import { IResponse } from './payload-resolver';
+import { IRequest } from '../request/request.interface';
+
+export type Session = {
+  id: string;
+  remoteAddress?: string;
+  remotePort?: number;
+  isConnected?: boolean;
+};
 
 /**
  * Options for the TcpProxy instance
@@ -42,7 +52,7 @@ export type MongoDBProxyOptions = {
  */
 export interface MongoDBProxyListener {
   onRequest: RequestInterceptorHook;
-  onResult: ReplyInterceptorHook;
+  onResponse: ResponseInterceptorHook;
 }
 
 /**
@@ -83,20 +93,26 @@ export class MongoDBTcpProxyService extends EventEmitter {
 
   init() {
     const createServerCallback = async (socket: net.Socket) => {
+      const session: Session = {
+        id: uuidv4(),
+        remoteAddress: socket.remoteAddress,
+        remotePort: socket.remotePort,
+      };
+
       const connectOptions: net.NetConnectOpts = {
         port: this.options.targetPort,
         host: this.options.targetHost,
       };
       const proxySocket = net.connect(connectOptions);
       // Setup aggregate interceptor (client -> proxy)
-      const aggregateInterceptor = new RequestInterceptor(socket);
-      aggregateInterceptor.registerHook((hook) =>
-        this.requestService.onRequest(hook),
+      const aggregateInterceptor = new RequestInterceptor(socket, session);
+      aggregateInterceptor.registerHook((request: IRequest) =>
+        this.requestService.onRequest(request, session),
       );
       // Setup result interceptor (proxy -> client)
-      const resultInterceptor = new ReplyInterceptor();
-      resultInterceptor.registerHook((hook) =>
-        this.requestService.onResult(hook),
+      const resultInterceptor = new ResponseInterceptor(session);
+      resultInterceptor.registerHook((response: IResponse) =>
+        this.requestService.onResponse(response, session),
       );
       // Setup bidirectional data flow between client, interceptors and proxy
       socket.pipe(aggregateInterceptor).pipe(proxySocket);
@@ -104,6 +120,17 @@ export class MongoDBTcpProxyService extends EventEmitter {
       // Handle errors
       proxySocket.on('error', (error: Error) => this.handleError(error));
       socket.on('error', (error: Error) => this.handleError(error));
+      // Handle socket close
+      proxySocket.on('close', () => {
+        this.logger.debug(`${session.id} disconnected`);
+        session.isConnected = false;
+        socket.end();
+      });
+      socket.on('close', () => {
+        this.logger.debug(`${session.id} disconnected`);
+        session.isConnected = false;
+        proxySocket.end();
+      });
     };
     if (this.sslOptions) {
       this.server = tls.createServer(this.sslOptions, createServerCallback);

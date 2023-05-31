@@ -3,19 +3,24 @@ import { decodeMessage, encodeResults } from '../protocol';
 import { Transform } from 'stream';
 import { MsgResult, resolveRequest } from '../payload-resolver';
 import { IRequest } from '../../request/request.interface';
+import { Session } from '../proxy.service';
 
-export type RequestInterceptorHook = (msg: IRequest) => Promise<MsgResult>;
+export type RequestInterceptorHook = (
+  msg: IRequest,
+  session: Session,
+) => Promise<MsgResult>;
 
 export class RequestInterceptor extends Transform {
   socket: net.Socket;
   hooks: RequestInterceptorHook[];
+  session: Session;
 
-  constructor(socket: net.Socket) {
+  constructor(socket: net.Socket, session: Session) {
     super();
     this.socket = socket;
+    this.session = session;
     this.hooks = [];
   }
-
   registerHook(hook: RequestInterceptorHook): void {
     hook && this.hooks.push(hook);
   }
@@ -33,14 +38,14 @@ export class RequestInterceptor extends Transform {
       const requestID = msg.header.requestID;
       const dbName = payload.$db;
 
-      if (dbName) {
+      if (dbName && this.session.isConnected) {
         const handled = resolveRequest(requestID, payload);
         let result: MsgResult;
 
         // iterate through all hooks and execute them
         // if one of them returns a result, we stop the iteration and assign the result
         for (const hook of this.hooks) {
-          result = await hook(handled);
+          result = await hook(handled, this.session);
           if (result) {
             const resultBuffer = encodeResults(result);
             this.socket.write(resultBuffer);
