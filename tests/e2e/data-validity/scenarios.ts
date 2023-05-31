@@ -184,12 +184,14 @@ export default [
       const c = db.collection('col2');
       // Count documents before insert
       const res1 = await c.aggregate([{ $count: 'count' }]).toArray();
+      await wait(1000);
       const inserted = await c.insertOne({ name: 'John Doe' });
-      await wait(3000); // Wait for cache invalidation
+      await wait(1000); // Wait for cache invalidation
       // Count documents after insert
       const res2 = await c.aggregate([{ $count: 'count' }]).toArray();
+      await wait(1000);
       await c.deleteOne({ _id: inserted.insertedId });
-      await wait(3000); // Wait for cache invalidation
+      await wait(1000); // Wait for cache invalidation
       // Count documents after delete
       const res3 = await c.aggregate([{ $count: 'count' }]).toArray();
 
