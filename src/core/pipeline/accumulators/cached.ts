@@ -1,4 +1,10 @@
-import type { CachedAccumulator, Value, AccumulatorDefinition } from '.';
+import type {
+  CachedAccumulator,
+  Value,
+  AccumulatorDefinition,
+  InitConfig,
+  AvgInitConfig,
+} from '.';
 import { evaluateExpression } from '../expressions';
 import { BaseAccumulator } from './common';
 import type { Document } from '@core/index';
@@ -11,10 +17,7 @@ abstract class AbstractCachedAccumulator
 
   abstract add(val: Value): void;
   abstract delete(val: Value): void;
-
-  __init(value: Value): void {
-    this.__cachedValue = value;
-  }
+  abstract initialize(config: InitConfig): void;
 
   addDocument(doc: Document): void {
     this.expression && this.add(evaluateExpression(this.expression, doc));
@@ -30,7 +33,15 @@ abstract class AbstractCachedAccumulator
   }
 
   getCachedValue(): Value {
+    if (this.isFaulty()) {
+      return null;
+    }
     return this.__cachedValue;
+  }
+
+  isFaulty(): boolean {
+    // By default, cached accumulators are faulty if they have not been initialized
+    return this.__cachedValue === undefined;
   }
 }
 
@@ -39,6 +50,7 @@ export class SumCachedAccumulator extends AbstractCachedAccumulator {
 
   constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('sum', definition);
+    this.__cachedValue = 0;
   }
 
   add(val: number): void {
@@ -49,6 +61,10 @@ export class SumCachedAccumulator extends AbstractCachedAccumulator {
 
   delete(val: number): void {
     this.__cachedValue && (this.__cachedValue -= val);
+  }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
   }
 }
 
@@ -75,75 +91,72 @@ export class AvgCachedAccumulator extends AbstractCachedAccumulator {
   getCachedValue(): number | undefined {
     return this.__cachedValue && this.__cachedValue / this.__count;
   }
+
+  initialize(config: AvgInitConfig): void {
+    this.__cachedValue = config.sum;
+    this.__count = config.count;
+  }
 }
 
 export class MinCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
-  private values: Map<number, number> = new Map();
+  private faulty = false;
 
   constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('min', definition);
   }
 
   add(val: number): void {
-    if (this.__cachedValue === undefined || val < this.__cachedValue) {
+    if (this.__cachedValue === undefined || val <= this.__cachedValue) {
       this.__cachedValue = val;
+      this.faulty = false;
     }
-    this.values.set(val, (this.values.get(val) || 0) + 1);
   }
 
   delete(val: number): void {
-    if (this.__cachedValue === val) {
-      this.__cachedValue = undefined;
-      this.values.delete(val);
-      for (const [value] of this.values) {
-        if (this.__cachedValue === undefined || value < this.__cachedValue) {
-          this.__cachedValue = value;
-        }
-      }
-    } else {
-      const count = this.values.get(val);
-      if (count && count > 1) {
-        this.values.set(val, count - 1);
-      } else {
-        this.values.delete(val);
-      }
+    if (!this.faulty && this.__cachedValue === val) {
+      this.faulty = true;
     }
+  }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
+    this.faulty = false;
+  }
+
+  isFaulty(): boolean {
+    return this.faulty;
   }
 }
 
 export class MaxCachedAccumulator extends AbstractCachedAccumulator {
   declare __cachedValue: number | undefined;
-  private values: Map<number, number> = new Map();
+  private faulty = false;
 
   constructor(definition: Omit<AccumulatorDefinition, 'operator'>) {
     super('max', definition);
   }
 
   add(val: number): void {
-    if (this.__cachedValue === undefined || val > this.__cachedValue) {
+    if (this.__cachedValue === undefined || val >= this.__cachedValue) {
       this.__cachedValue = val;
+      this.faulty = false;
     }
-    this.values.set(val, (this.values.get(val) || 0) + 1);
   }
 
   delete(val: number): void {
-    if (this.__cachedValue === val) {
-      this.__cachedValue = undefined;
-      this.values.delete(val);
-      for (const [value] of this.values) {
-        if (this.__cachedValue === undefined || value > this.__cachedValue) {
-          this.__cachedValue = value;
-        }
-      }
-    } else {
-      const count = this.values.get(val);
-      if (count && count > 1) {
-        this.values.set(val, count - 1);
-      } else {
-        this.values.delete(val);
-      }
+    if (!this.faulty && this.__cachedValue === val) {
+      this.faulty = true;
     }
+  }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
+    this.faulty = false;
+  }
+
+  isFaulty(): boolean {
+    return this.faulty;
   }
 }
 
@@ -160,5 +173,9 @@ export class CountCachedAccumulator extends AbstractCachedAccumulator {
 
   delete(val: boolean): void {
     val && this.__cachedValue--;
+  }
+
+  initialize(n: number): void {
+    this.__cachedValue = n;
   }
 }

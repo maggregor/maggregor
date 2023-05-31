@@ -1,7 +1,8 @@
+import { MaterializedViewModule } from '@/server/modules/materialized-view/materialized-view.module';
 import { LoggerModule } from '@/server/modules/logger/logger.module';
 import { MongoDBTcpProxyService } from '@/server/modules/mongodb-proxy/proxy.service';
 import { RequestService } from '@/server/modules/request/request.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { Request, RequestSchema } from '@server/modules/request/request.schema';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -11,6 +12,10 @@ import { ListenerService } from '@/server/modules/mongodb-listener/listener.serv
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
+import { ModuleMetadata } from '@nestjs/common';
+import { ListenerModule } from '@/server/modules/mongodb-listener/listener.module';
+import { BullModule, getQueueToken } from '@nestjs/bull';
+import { BM_QUEUE_NAME } from '@/consts';
 
 export type TestConfigServiceOptions = {
   env: {
@@ -113,50 +118,78 @@ export async function createCacheServiceWithMockDeps(
 export async function createMaggregorModule(
   config?: TestConfigServiceOptions,
 ): Promise<TestingModule> {
-  const app: TestingModule = await Test.createTestingModule({
+  const moduleConfig: ModuleMetadata = {
     imports: [
       LoggerModule,
       DatabaseModule,
+      MaterializedViewModule,
+      BullModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => {
+          return {
+            redis: {
+              host: configService.get<string>('REDIS_HOST', 'localhost'),
+              port: configService.get<number>('REDIS_PORT', 6379),
+            },
+          };
+        },
+        inject: [ConfigService],
+      }),
+      ConfigModule.forRoot({
+        isGlobal: true,
+        ignoreEnvFile: true,
+        load: [() => config?.env],
+      }),
       MongooseModule.forFeature([
         { name: Request.name, schema: RequestSchema },
       ]),
+      ListenerModule,
+    ],
+    providers: [RequestService, CacheService, MongoDBTcpProxyService],
+  };
+  return Test.createTestingModule(moduleConfig).compile();
+}
+
+export async function createMaterializedViewService() {
+  const app: TestingModule = await Test.createTestingModule({
+    imports: [
+      ConfigModule,
+      LoggerModule,
+      BullModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: async (configService: ConfigService) => ({
+          redis: {
+            host: configService.get<string>('REDIS_HOST', 'localhost'),
+            port: configService.get<number>('REDIS_PORT', 6379),
+          },
+        }),
+        inject: [ConfigService],
+      }),
+      BullModule.registerQueue({
+        name: BM_QUEUE_NAME,
+      }),
     ],
     providers: [
-      RequestService,
-      {
-        provide: ConfigService,
-        useValue: {
-          get: (key: string) => {
-            return config?.env[key] || null;
-          },
-        },
-      },
-      CacheService,
-      MongoDBTcpProxyService,
       MaterializedViewService,
       {
         provide: ListenerService,
         useValue: {
           subscribeToCollectionChanges: () => null,
           unsubscribeFromCollectionChanges: () => null,
+          executeAggregatePipeline: () => [],
         },
       },
-    ],
-  }).compile();
-  return app;
-}
-
-export async function createMaterializedViewService() {
-  const app: TestingModule = await Test.createTestingModule({
-    imports: [LoggerModule],
-    providers: [
-      MaterializedViewService,
       {
         provide: ConfigService,
         useValue: {},
       },
     ],
-  }).compile();
+  })
+    .overrideProvider(getQueueToken(BM_QUEUE_NAME))
+    .useValue({
+      add: () => null,
+    })
+    .compile();
   return app.get<MaterializedViewService>(MaterializedViewService);
 }
 
@@ -176,6 +209,7 @@ export async function createListenerService(config: TestConfigServiceOptions) {
       },
     ],
   }).compile();
+  await app.init();
   return app.get<ListenerService>(ListenerService);
 }
 

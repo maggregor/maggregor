@@ -1,6 +1,8 @@
 import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import logger from '../__utils__/logger';
+import { RedisMemoryServer } from 'redis-memory-server';
+import { RedisMemoryServerOptsT } from 'redis-memory-server/lib/RedisMemoryServer';
 
 export type LoadTestDataOptions = {
   collection?: string;
@@ -51,7 +53,9 @@ export async function loadTestData(
   logger.debug(`Loaded ${opts.totalDocs} documents`);
 }
 
-export async function startMongoServer(opts?: { port?: number }) {
+export async function startMongoServer(opts?: {
+  port?: number;
+}): Promise<MongoMemoryReplSet> {
   const config = {
     replSet: { count: 1 },
     instanceOpts: [{ storageEngine: 'wiredTiger' }],
@@ -60,6 +64,15 @@ export async function startMongoServer(opts?: { port?: number }) {
     config.instanceOpts[0].port = opts.port;
   }
   const server = await MongoMemoryReplSet.create(config);
+  return server;
+}
+
+export async function startRedisServer(
+  opts?: RedisMemoryServerOptsT,
+): Promise<RedisMemoryServer> {
+  const server = await RedisMemoryServer.create(opts);
+  server.start();
+  logger.debug(`Redis server started on port ${await server.getPort()}`);
   return server;
 }
 

@@ -19,7 +19,9 @@ interface CollectionChangeListener {
 @Injectable()
 export class ListenerService extends EventEmitter {
   private client: MongoClient;
-  private changeStreams = new Map<string, CollectionChangeListener>(); // Map of CollectionChangeListener objects
+  private _isConnected = false;
+  private changeStreams = new Map<string, CollectionChangeListener>();
+  private url: string;
 
   constructor(
     @Inject(ConfigService) private readonly configService: ConfigService,
@@ -27,6 +29,7 @@ export class ListenerService extends EventEmitter {
   ) {
     super();
     this.logger.setContext('MongoDBListenerService');
+    this.url = this.configService.get<string>('MONGODB_TARGET_URI');
     this.connectToMongoDB(); // Connect to the MongoDB instance
   }
 
@@ -39,13 +42,11 @@ export class ListenerService extends EventEmitter {
     while (true) {
       try {
         // Attempt to connect to the MongoDB instance
-        this.client = await MongoClient.connect(
-          this.configService.get('MONGODB_TARGET_URI'),
-          {
-            connectTimeoutMS: 1000,
-            serverSelectionTimeoutMS: 1000,
-          },
-        );
+        this.client = await MongoClient.connect(this.url, {
+          connectTimeoutMS: 1000,
+          serverSelectionTimeoutMS: 1000,
+        });
+        this._isConnected = true;
 
         // Listen for the 'close' event on the MongoClient instance
         this.client.on('close', () => {
@@ -58,6 +59,7 @@ export class ListenerService extends EventEmitter {
         this.emit('connection');
         return;
       } catch (error) {
+        this._isConnected = false;
         this.logger.warn(
           `Failed to connect: retrying to connect to MongoDB in 1 second... Error: ${error.message}`,
         );
@@ -78,11 +80,23 @@ export class ListenerService extends EventEmitter {
   ) {
     // Check if a CollectionChangeListener object already exists for this collection
     let collectionChangeListener = this.changeStreams.get(collectionName);
+
     if (!collectionChangeListener) {
       // Create a new CollectionChangeListener object for this collection
       const db = this.client.db(dbName);
       const collection: Collection = db.collection(collectionName);
-      const stream: ChangeStream = collection.watch();
+      const collections = await db
+        .listCollections({ name: collectionName })
+        .toArray();
+      if (collections.length === 0) {
+        throw new Error("Collection doesn't exist");
+      }
+      await db.command({ collMod: collectionName, recordPreImages: true });
+
+      const stream: ChangeStream = collection.watch([], {
+        fullDocument: 'updateLookup',
+        fullDocumentBeforeChange: 'whenAvailable',
+      });
       const listeners: Set<(change: any) => void> = new Set();
       collectionChangeListener = { stream, listeners, dbName };
       const key = `${db.databaseName}.${collectionName}`;
@@ -113,6 +127,44 @@ export class ListenerService extends EventEmitter {
     if (collectionChangeListener) {
       collectionChangeListener.stream.close();
       this.changeStreams.delete(key);
+    }
+  }
+
+  /**
+   * Check if the connection to MongoDB is established.
+   * @returns A boolean representing the connection status.
+   */
+  public isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  /**
+   * Execute an aggregation pipeline on a given database and collection.
+   * @param dbName The name of the MongoDB database.
+   * @param collectionName The name of the MongoDB collection.
+   * @param pipeline The aggregation pipeline to execute.
+   * @returns An array of documents returned by the aggregation pipeline.
+   */
+  public async executeAggregatePipeline(
+    dbName: string,
+    collectionName: string,
+    pipeline: any[],
+  ): Promise<any[]> {
+    if (!this.isConnected()) {
+      throw new Error('MongoDB connection is not established');
+    }
+
+    const db = this.client.db(dbName);
+    const collection = db.collection(collectionName);
+
+    try {
+      const results = await collection.aggregate(pipeline).toArray();
+      return results;
+    } catch (error) {
+      this.logger.error(
+        `Error executing aggregate pipeline on ${collectionName}: ${error.message}`,
+      );
+      throw error;
     }
   }
 }

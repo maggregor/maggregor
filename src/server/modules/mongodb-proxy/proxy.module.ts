@@ -5,24 +5,19 @@ import { RequestModule } from '../request/request.module';
 import { RequestService } from '../request/request.service';
 import { Request, RequestSchema } from '../request/request.schema';
 import { DatabaseModule } from '../database/database.module';
-import { ConfigModule } from '@nestjs/config';
 import { LoggerService } from '@/server/modules/logger/logger.service';
 import { LoggerModule } from '../logger/logger.module';
-import { MaterializedViewService } from '../materialized-view/materialized-view.service';
+import { MaterializedViewModule } from '../materialized-view/materialized-view.module';
+
 @Module({
   imports: [
     LoggerModule,
-    ConfigModule,
     DatabaseModule,
     RequestModule,
+    MaterializedViewModule,
     MongooseModule.forFeature([{ name: Request.name, schema: RequestSchema }]),
   ],
   controllers: [],
-  providers: [
-    LoggerService,
-    MongoDBTcpProxyService,
-    RequestService,
-    MaterializedViewService,
-  ],
+  providers: [LoggerService, MongoDBTcpProxyService, RequestService],
 })
 export class ProxyModule {}

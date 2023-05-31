@@ -2,19 +2,34 @@ import { RequestService } from '@server/modules/request/request.service';
 import { Request } from '@server/modules/request/request.schema';
 import { IRequest } from '@/server/modules/request/request.interface';
 import { IResponse } from '@/server/modules/mongodb-proxy/payload-resolver';
-import { simulateDelay, wait } from 'tests/e2e/utils';
+import { simulateDelay, startRedisServer, wait } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
 import { MaterializedViewService } from '@/server/modules/materialized-view/materialized-view.service';
 import { mockedSession } from 'tests/unit/server/mocks';
+import RedisMemoryServer from 'redis-memory-server';
+import { ListenerService } from '@/server/modules/mongodb-listener/listener.service';
 
 describe('RequestService (integration)', () => {
   let requestService: RequestService;
   let mvService: MaterializedViewService;
+  let listenerService: ListenerService;
+  let redis: RedisMemoryServer;
 
   beforeAll(async () => {
-    const module = await createMaggregorModule();
+    redis = await startRedisServer();
+    const module = await createMaggregorModule({
+      env: {
+        REDIS_HOST: await redis.getHost(),
+        REDIS_PORT: await redis.getPort(),
+      },
+    });
     requestService = module.get<RequestService>(RequestService);
     mvService = module.get<MaterializedViewService>(MaterializedViewService);
+    listenerService = module.get<ListenerService>(ListenerService);
+    // Mock listener service methods
+    listenerService.executeAggregatePipeline = vitest.fn().mockReturnValue([]);
+    listenerService.subscribeToCollectionChanges = vitest.fn();
+    listenerService.unsubscribeFromCollectionChanges = vitest.fn();
   });
 
   beforeEach(async () => {
@@ -23,6 +38,7 @@ describe('RequestService (integration)', () => {
 
   afterAll(async () => {
     await requestService?.deleteAll();
+    await redis.stop();
   });
 
   const expectRequest = (actual: Request, request: Request) => {
@@ -214,7 +230,7 @@ describe('RequestService (integration)', () => {
       expect(requests.length).toEqual(2);
       expect(requests.at(1).requestSource).toEqual('maggregor_cache');
     });
-    it('should be be processed with a Materialized View', async () => {
+    it('should be processed with a Materialized View', async () => {
       const aggregateReq: IRequest = {
         id: '1',
         type: 'aggregate',
@@ -229,7 +245,7 @@ describe('RequestService (integration)', () => {
           },
         ],
       };
-      mvService.register({
+      await mvService.createMaterializedView({
         db: 'mydb',
         collection: 'collection',
         groupBy: { field: 'country' },
@@ -240,6 +256,7 @@ describe('RequestService (integration)', () => {
         mockedSession,
       );
       await wait(5); // Wait for the request to be stored in the DB
+      expect(mvService.getMaterializedViews().length).toEqual(1);
       const req = (await requestService.findAll()).at(0);
       expect(req).toBeDefined();
       expect(req.requestSource).toStrictEqual('maggregor_mv');
