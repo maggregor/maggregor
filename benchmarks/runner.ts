@@ -3,9 +3,14 @@ import { MaggregorBenchmarkScenario } from 'benchmarks';
 import { MongoClient } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MaggregorProcess, startMaggregor } from '../tests/e2e/setup-maggregor';
-import { loadTestData, startMongoServer } from '../tests/e2e/utils';
+import {
+  loadTestData,
+  startMongoServer,
+  startRedisServer,
+} from '../tests/e2e/utils';
 import logger from '../tests/__utils__/logger';
 import fs from 'fs';
+import RedisMemoryServer from 'redis-memory-server';
 
 const COLLECTION = 'mycoll';
 const DATABASE = 'mydb';
@@ -13,6 +18,7 @@ const OUTPUT_DIR = 'benchmarks/.results';
 
 let mongodb: MongoMemoryReplSet;
 let maggregor: MaggregorProcess;
+let redis: RedisMemoryServer;
 
 export type RunnerOptions = {
   totalDocs: number;
@@ -24,7 +30,12 @@ export async function runBenchmarks(
   opts: RunnerOptions,
 ) {
   mongodb = await startMongoServer();
-  maggregor = await startMaggregor({ targetUri: mongodb.getUri(), port: 4200 });
+  redis = await startRedisServer();
+  maggregor = await startMaggregor({
+    targetUri: mongodb.getUri(),
+    port: 4200,
+    redisPort: await redis.getPort(),
+  });
   const totalScenarios = scenarios.length;
   let totalScenariosSuccessed = 0;
   for (const s of scenarios) {

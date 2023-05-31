@@ -4,20 +4,21 @@
  * Run this script with `ts-node scripts/run-redis.ts`.
  */
 
-import RedisMemoryServer from 'redis-memory-server';
-
+import waitPort from 'wait-port';
+import { startRedisServer } from '../tests/e2e/utils';
 import logger from '../tests/__utils__/logger';
 
-async function startRedisServer() {
-  const redisServer = await RedisMemoryServer.create({
-    instance: {
-      port: 6379,
-    },
-  });
-
-  await redisServer.start();
-
-  logger.info(`Redis server started on port ${await redisServer.getPort()}`);
-}
-
-startRedisServer();
+const port = 6379;
+waitPort({ port, timeout: 300, output: 'silent' }).then(
+  ({ open }: { open: boolean }) => {
+    if (open) {
+      logger.error(`Port ${port} already used`);
+      process.exit(1);
+    }
+    startRedisServer({
+      instance: {
+        port,
+      },
+    });
+  },
+);
