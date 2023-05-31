@@ -178,4 +178,8 @@ export class CountCachedAccumulator extends AbstractCachedAccumulator {
   initialize(n: number): void {
     this.__cachedValue = n;
   }
+
+  getCachedValue(): number {
+    return this.__cachedValue;
+  }
 }

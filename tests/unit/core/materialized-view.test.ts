@@ -76,6 +76,14 @@ describe('MaterializedView', () => {
     mv.addDocument({ genre: 'action', score: 10 });
     expect(mv.isFaulty()).toBe(false);
     mv.deleteDocument({ genre: 'action', score: 10 });
+    // False because the accumulator doesn't exist anymore, the 'action' group was deleted.
+    expect(mv.isFaulty()).toBe(false);
+    // Add a document to the 'action' group again to recreate the accumulator.
+    mv.addDocument({ genre: 'action', score: 42 });
+    mv.addDocument({ genre: 'action', score: 10 });
+    expect(mv.isFaulty()).toBe(false);
+    mv.deleteDocument({ genre: 'action', score: 10 });
+    // Faulty because the entry for the 'action' group is still there, but we don't know the min anymore.
     expect(mv.isFaulty()).toBe(true);
     mv.addDocument({ genre: 'action', score: 15 });
     expect(mv.isFaulty()).toBe(true);
@@ -100,5 +108,15 @@ describe('MaterializedView', () => {
     expect(mv.getView({ useFieldHashes: false })).toEqual([
       { _id: 'Switzerland' },
     ]);
+    mv.addDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([]);
   });
 });

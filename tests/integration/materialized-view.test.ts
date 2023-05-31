@@ -208,14 +208,26 @@ describe('MaterializedViews (integration)', () => {
       const initialView = mv.getView({ useFieldHashes: false });
       expect(initialView.find((v) => v._id === 'test').amountTotal).toBe(30);
       expect(initialView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
-      await client.db('test').collection('test').deleteMany({
+      await client.db('test').collection('test').deleteOne({
         name: 'test',
+        amount: 10,
       });
-      await wait(1000); // Wait for the materialized view to be updated
+      await wait(500); // Wait for the materialized view to be updated
       // Materialized view should be correctly recalculated
       const updatedView = mv.getView({ useFieldHashes: false });
-      expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(0);
+
+      expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(20);
       expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+      await client.db('test').collection('test').deleteOne({
+        name: 'test',
+        amount: 20,
+      });
+      await wait(500); // Wait for the materialized view to be updated
+      // Materialized view should be correctly recalculated
+      const updatedView2 = mv.getView({ useFieldHashes: false });
+
+      expect(updatedView2.find((v) => v._id === 'test')).toBeUndefined();
+      expect(updatedView2.find((v) => v._id === 'mytest').amountTotal).toBe(20);
     });
   });
 });

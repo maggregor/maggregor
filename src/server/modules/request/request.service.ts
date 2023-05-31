@@ -22,7 +22,7 @@ export class RequestService implements MongoDBProxyListener {
   }
 
   async create(request: Request): Promise<Request> {
-    return this.requestModel.create(request);
+    return await this.requestModel.create(request);
   }
 
   async findAll(): Promise<Request[]> {

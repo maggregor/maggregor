@@ -167,7 +167,9 @@ describe('MaterializedViewService', () => {
     it('should return a pipeline - 1', async () => {
       const mv = new MaterializedView(MV_DEF);
       const pipeline = mv.buildAsMongoAggregatePipeline();
-      expect(pipeline).toEqual([{ $group: { _id: '$country' } }]);
+      expect(pipeline).toEqual([
+        { $group: { __id_count: { $sum: 1 }, _id: '$country' } },
+      ]);
     });
     it('should return a pipeline - 2', async () => {
       const mv = new MaterializedView({
@@ -186,8 +188,8 @@ describe('MaterializedViewService', () => {
       expect(pipeline).toEqual([
         {
           $group: {
+            __id_count: { $sum: 1 },
             _id: '$country',
-
             mySum: {
               $sum: '$age',
             },
