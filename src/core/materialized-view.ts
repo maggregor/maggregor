@@ -46,6 +46,14 @@ export class MaterializedView
     this.definitions = def.accumulatorDefs;
   }
 
+  /**
+   * Updates the 'faulty' status of the materialized view.
+   * If the view is already faulty, checks all global accumulators to see if any of them are faulty.
+   * If any global accumulator is faulty, the entire view is marked as faulty.
+   * If the view is not faulty, only the passed accumulators are checked for faulty status.
+   *
+   * @param accumulators - An optional array of CachedAccumulators for which to check the faulty status.
+   */
   private updateFaultyStatus(accumulators?: CachedAccumulator[]): void {
     if (this.faulty) {
       // We will check if any accumulators in the global results are faulty
@@ -59,7 +67,14 @@ export class MaterializedView
     }
   }
 
-  // Method to initialize accumulators
+  /**
+   * Initializes a set of accumulators for a specific group key, based on the definitions provided in the view.
+   * It also initializes a special count accumulator that keeps track of the document count for the group.
+   *
+   * @param groupKeyString - The string representation of the group key.
+   * @param result - The current result object associated with the group key.
+   * @returns An array of initialized CachedAccumulators.
+   */
   private initializeAccumulators(
     groupKeyString: string,
     result: any,
@@ -95,8 +110,16 @@ export class MaterializedView
     return accumulators;
   }
 
-  // Method to update accumulators
-  private updateAccumulators(
+  /**
+   * Updates the accumulators when a new document is added to a group.
+   * If the group does not exist yet, new accumulators are created and added to the results map.
+   * Also ensures that a count accumulator exists for the group.
+   *
+   * @param groupKeyString - The string representation of the group key.
+   * @param doc - The document being added to the group.
+   * @returns An array of updated CachedAccumulators for the group.
+   */
+  private updateAccumulatorsOnAdd(
     groupKeyString: string,
     doc: Document,
   ): CachedAccumulator[] {
@@ -127,13 +150,18 @@ export class MaterializedView
     const groupKey = evaluateExpression(this.groupBy, doc);
     const groupKeyString = JSON.stringify(groupKey);
 
-    const accumulators = this.updateAccumulators(groupKeyString, doc);
+    const accumulators = this.updateAccumulatorsOnAdd(groupKeyString, doc);
 
     this.updateFaultyStatus(accumulators);
 
     this.emit('change', { type: 'add', document: doc });
   }
 
+  /**
+   * Initializes the materialized view by creating accumulators for each result and populating them with initial data.
+   *
+   * @param results - An array of result objects. Each result object corresponds to a group.
+   */
   initialize(results: any[]) {
     for (let i = 0; i < results.length; i++) {
       const result = results[i] as any;
@@ -149,7 +177,7 @@ export class MaterializedView
    * @param doc - The document to delete.
    * @returns True if there are more documents in the group, false otherwise.
    */
-  private updateCountAccumulator(
+  private updateCountAccumulatorOnDelete(
     groupKeyString: string,
     doc: Document,
   ): boolean {
@@ -177,7 +205,7 @@ export class MaterializedView
    * @param groupKeyString - The group key as a string.
    * @param doc - The document to delete.
    */
-  private updateResultAccumulators(
+  private updateResultAccumulatorsOnDelete(
     groupKeyString: string,
     doc: Document,
   ): void {
@@ -201,15 +229,15 @@ export class MaterializedView
     const groupByValue = evaluateExpression(this.groupBy, doc);
     const groupByValueString = JSON.stringify(groupByValue);
 
-    if (this.updateCountAccumulator(groupByValueString, doc)) {
-      this.updateResultAccumulators(groupByValueString, doc);
+    if (this.updateCountAccumulatorOnDelete(groupByValueString, doc)) {
+      this.updateResultAccumulatorsOnDelete(groupByValueString, doc);
     }
 
     // Emit a change event after the document has been deleted.
     this.emit('change', { type: 'delete', document: doc });
   }
 
-  updateDocument(oldDoc: Document, newDoc: Document): void {
+  public updateDocument(oldDoc: Document, newDoc: Document): void {
     this.deleteDocument(oldDoc);
     this.addDocument(newDoc);
     this.emit('change', {
