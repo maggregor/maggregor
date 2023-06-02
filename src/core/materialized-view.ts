@@ -59,10 +59,47 @@ export class MaterializedView
     }
   }
 
-  addDocument(doc: Document): void {
-    const groupKey = evaluateExpression(this.groupBy, doc);
-    const groupKeyString = JSON.stringify(groupKey);
+  // Method to initialize accumulators
+  private initializeAccumulators(
+    groupKeyString: string,
+    result: any,
+  ): CachedAccumulator[] {
+    const accumulators = this.definitions.map(createCachedAccumulator);
+    this.results.set(groupKeyString, accumulators);
 
+    const groupCountAcc = createCachedAccumulator({
+      operator: 'count',
+      outputFieldName: GROUP_COUNT_ACC_NAME,
+      expression: this.groupBy,
+    }) as CountCachedAccumulator;
+
+    groupCountAcc.initialize(result[GROUP_COUNT_ACC_NAME]);
+    this.groupKeyDocumentCount.set(groupKeyString, groupCountAcc);
+
+    accumulators.forEach((a, i) => {
+      if (a.operator === 'avg') {
+        /**
+         * Avg accumulators require a different initialization process.
+         * The AvgCachedAccumulator will initialize itself with the sum and count values.
+         */
+        const avgAcc = a as AvgCachedAccumulator;
+        avgAcc.initialize({
+          count: result[this.definitions[i].outputFieldName + '_count'],
+          sum: result[this.definitions[i].outputFieldName + '_sum'],
+        });
+      } else {
+        a.initialize(result[this.definitions[i].outputFieldName]);
+      }
+    });
+
+    return accumulators;
+  }
+
+  // Method to update accumulators
+  private updateAccumulators(
+    groupKeyString: string,
+    doc: Document,
+  ): CachedAccumulator[] {
     let accumulators = this.results.get(groupKeyString);
     if (!accumulators) {
       accumulators = this.definitions.map(createCachedAccumulator);
@@ -79,32 +116,96 @@ export class MaterializedView
         }) as CountCachedAccumulator,
       );
     }
+
     this.groupKeyDocumentCount.get(groupKeyString).addDocument(doc);
     accumulators.forEach((a) => a.addDocument(doc));
+
+    return accumulators;
+  }
+
+  addDocument(doc: Document): void {
+    const groupKey = evaluateExpression(this.groupBy, doc);
+    const groupKeyString = JSON.stringify(groupKey);
+
+    const accumulators = this.updateAccumulators(groupKeyString, doc);
 
     this.updateFaultyStatus(accumulators);
 
     this.emit('change', { type: 'add', document: doc });
   }
 
+  initialize(results: any[]) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i] as any;
+      const id = result._id;
+      this.initializeAccumulators(JSON.stringify(id), result);
+    }
+  }
+
+  /**
+   * Updates the count accumulator with the given group key and document.
+   * If the count reaches zero, deletes the group key from the results and groupKeyDocumentCount maps.
+   * @param groupKeyString - The group key as a string.
+   * @param doc - The document to delete.
+   * @returns True if there are more documents in the group, false otherwise.
+   */
+  private updateCountAccumulator(
+    groupKeyString: string,
+    doc: Document,
+  ): boolean {
+    const countAccumulator = this.groupKeyDocumentCount.get(groupKeyString);
+    if (!countAccumulator) {
+      // If no count accumulator exists for this group, there's nothing to update.
+      return false;
+    }
+
+    countAccumulator.deleteDocument(doc);
+    if (countAccumulator.getCachedValue() <= 0) {
+      // If the count has reached zero, remove this group from the results and groupKeyDocumentCount maps.
+      this.results.delete(groupKeyString);
+      this.groupKeyDocumentCount.delete(groupKeyString);
+      return false;
+    }
+
+    // If the count is greater than zero, there are still documents in this group.
+    return true;
+  }
+
+  /**
+   * Updates the result accumulators with the given group key and document.
+   * Checks the faulty status after updating.
+   * @param groupKeyString - The group key as a string.
+   * @param doc - The document to delete.
+   */
+  private updateResultAccumulators(
+    groupKeyString: string,
+    doc: Document,
+  ): void {
+    const accumulators = this.results.get(groupKeyString);
+    if (!accumulators) {
+      // If no result accumulators exist for this group, there's nothing to update.
+      return;
+    }
+
+    // Remove the document from each accumulator and update the faulty status.
+    accumulators.forEach((a) => a.deleteDocument(doc));
+    this.updateFaultyStatus(accumulators);
+  }
+
+  /**
+   * Deletes a document from the materialized view.
+   * Updates the count and result accumulators, and emits a change event.
+   * @param doc - The document to delete.
+   */
   deleteDocument(doc: Document): void {
     const groupByValue = evaluateExpression(this.groupBy, doc);
     const groupByValueString = JSON.stringify(groupByValue);
 
-    const countAccumulator = this.groupKeyDocumentCount.get(groupByValueString);
-    if (countAccumulator) {
-      countAccumulator.deleteDocument(doc);
-      if (countAccumulator.getCachedValue() <= 0) {
-        this.results.delete(groupByValueString);
-        this.groupKeyDocumentCount.delete(groupByValueString);
-      } else {
-        const accumulators = this.results.get(groupByValueString);
-        accumulators.forEach((a) => a.deleteDocument(doc));
-        this.updateFaultyStatus(accumulators);
-        this.groupKeyDocumentCount.get(groupByValueString).deleteDocument(doc);
-      }
+    if (this.updateCountAccumulator(groupByValueString, doc)) {
+      this.updateResultAccumulators(groupByValueString, doc);
     }
 
+    // Emit a change event after the document has been deleted.
     this.emit('change', { type: 'delete', document: doc });
   }
 
@@ -144,38 +245,6 @@ export class MaterializedView
       });
       return obj;
     });
-  }
-
-  initialize(results: any[]) {
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i] as any;
-      const id = result._id;
-      const groupCountAcc = createCachedAccumulator({
-        operator: 'count',
-        outputFieldName: GROUP_COUNT_ACC_NAME,
-        expression: this.groupBy,
-      }) as CountCachedAccumulator;
-      groupCountAcc.initialize(result[GROUP_COUNT_ACC_NAME]);
-      this.groupKeyDocumentCount.set(JSON.stringify(id), groupCountAcc);
-      const accumulators = this.definitions.map((d: AccumulatorDefinition) => {
-        const acc = createCachedAccumulator(d);
-        if (acc.operator === 'avg') {
-          /**
-           * Avg accumulators require a different initialization process.
-           * The AvgCachedAccumulator will initialize itself with the sum and count values.
-           */
-          const avgAcc = acc as AvgCachedAccumulator;
-          avgAcc.initialize({
-            count: result[d.outputFieldName + '_count'],
-            sum: result[d.outputFieldName + '_sum'],
-          });
-        } else {
-          acc.initialize(result[d.outputFieldName]);
-        }
-        return acc;
-      });
-      this.results.set(JSON.stringify(id), accumulators);
-    }
   }
 
   getAccumulatorHashes(): string[] {
