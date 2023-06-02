@@ -183,8 +183,12 @@ export class MaterializedView
   ): boolean {
     const countAccumulator = this.groupKeyDocumentCount.get(groupKeyString);
     if (!countAccumulator) {
-      // If no count accumulator exists for this group, there's nothing to update.
-      return false;
+      // If no count accumulator exists for this group but a delete was called, something is wrong.
+      // This should never happen.
+      this.faulty = true;
+      throw new Error(
+        `Count accumulator not found for group key ${groupKeyString} when deleting document ${doc._id}. This MaterializedView is faulty.`,
+      );
     }
 
     countAccumulator.deleteDocument(doc);
@@ -229,9 +233,8 @@ export class MaterializedView
     const groupByValue = evaluateExpression(this.groupBy, doc);
     const groupByValueString = JSON.stringify(groupByValue);
 
-    if (this.updateCountAccumulatorOnDelete(groupByValueString, doc)) {
-      this.updateResultAccumulatorsOnDelete(groupByValueString, doc);
-    }
+    this.updateCountAccumulatorOnDelete(groupByValueString, doc);
+    this.updateResultAccumulatorsOnDelete(groupByValueString, doc);
 
     // Emit a change event after the document has been deleted.
     this.emit('change', { type: 'delete', document: doc });

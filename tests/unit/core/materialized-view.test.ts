@@ -118,5 +118,11 @@ describe('MaterializedView', () => {
     ]);
     mv.deleteDocument({ country: 'Switzerland' });
     expect(mv.getView({ useFieldHashes: false })).toEqual([]);
+    expect(mv.isFaulty()).toBe(false);
+    // Simulates a situation where a view receives a document delete even though it was unaware of it.
+    // In this case (which should not happen) you have to pass the view to faulty.
+    // Switzerland was added twice and will be deleted three times:
+    expect(() => mv.deleteDocument({ country: 'Switzerland' })).toThrowError();
+    expect(mv.isFaulty()).toBe(true);
   });
 });
