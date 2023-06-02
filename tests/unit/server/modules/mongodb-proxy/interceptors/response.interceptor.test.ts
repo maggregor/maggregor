@@ -1,17 +1,18 @@
 import {
-  ReplyInterceptor,
-  ReplyInterceptorHook,
+  ResponseInterceptor,
+  ResponseInterceptorHook,
 } from '@/server/modules/mongodb-proxy/interceptors/response.interceptor';
 import {
   MongoDBMessage,
   encodeMessage,
 } from '@/server/modules/mongodb-proxy/protocol';
+import { mockedSession } from 'tests/unit/server/mocks';
 
-describe('ReplyInterceptor', () => {
-  let interceptor: ReplyInterceptor;
+describe('ResponseInterceptor', () => {
+  let interceptor: ResponseInterceptor;
 
   beforeEach(() => {
-    interceptor = new ReplyInterceptor();
+    interceptor = new ResponseInterceptor(mockedSession);
   });
 
   it('should trigger registered hooks with resolved response', async () => {
@@ -35,7 +36,7 @@ describe('ReplyInterceptor', () => {
       },
     };
     const buffer = encodeMessage(OP_MSG_1);
-    const hook: ReplyInterceptorHook = vitest
+    const hook: ResponseInterceptorHook = vitest
       .fn()
       .mockImplementation(async () => null);
     interceptor.registerHook(hook);
@@ -79,7 +80,7 @@ describe('ReplyInterceptor', () => {
     ]);
 
     // Register a hook
-    const hook: ReplyInterceptorHook = vitest
+    const hook: ResponseInterceptorHook = vitest
       .fn()
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       .mockImplementation(async () => {});

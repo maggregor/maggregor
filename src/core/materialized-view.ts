@@ -9,6 +9,7 @@ import { createCachedAccumulator } from './pipeline/accumulators';
 import { evaluateExpression, toHashExpression } from './pipeline/expressions';
 import type { Expression } from './pipeline/expressions';
 import EventEmitter from 'events';
+
 export interface MaterializedViewDefinition {
   db: string;
   collection: string;
@@ -43,6 +44,19 @@ export class MaterializedView
     this._collection = def.collection;
     this.groupBy = def.groupBy;
     this.definitions = def.accumulatorDefs;
+  }
+
+  private updateFaultyStatus(accumulators?: CachedAccumulator[]): void {
+    if (this.faulty) {
+      // We will check if any accumulators in the global results are faulty
+      // If so, we will mark this materialized view as faulty
+      const allAccumulators = Array.from(this.results.values()).flat();
+      this.faulty = allAccumulators.some((a) => a.isFaulty());
+    } else {
+      // If the materialized view is not faulty, we will check if any of the accumulators
+      // for this group are faulty
+      this.faulty = accumulators?.some((a) => a.isFaulty());
+    }
   }
 
   addDocument(doc: Document): void {
@@ -104,15 +118,13 @@ export class MaterializedView
     });
   }
 
-  private updateFaultyStatus(accumulators?: CachedAccumulator[]): void {
-    if (this.faulty) {
-      const allAccumulators = Array.from(this.results.values()).flat();
-      this.faulty = allAccumulators.some((a) => a.isFaulty());
-    } else if (accumulators) {
-      this.faulty = accumulators.some((a) => a.isFaulty());
-    }
-  }
-
+  /**
+   * Returns the data in the materialized view as an array of objects
+   * Each object has the groupBy field and the accumulator fields
+   * By default the field names are hashes of the expression that defines the data
+   *
+   * @returns
+   */
   getView(opts?: { useFieldHashes: boolean }): Document[] {
     const useFieldHashes = opts?.useFieldHashes ?? true;
     const hashes = this.getAccumulatorHashes();

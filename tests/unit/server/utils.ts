@@ -215,7 +215,8 @@ export async function createListenerService(config: TestConfigServiceOptions) {
 
 export const createMockRequest = (overrides?: Partial<IRequest>): IRequest => {
   return {
-    requestID: 1,
+    id: 'reqId',
+    mongoRequestID: 1,
     db: 'myDb',
     collName: 'myCollection',
     startAt: new Date(),
@@ -235,7 +236,7 @@ export const createMockResponse = (
   overrides?: Partial<IResponse>,
 ): IResponse => {
   return {
-    requestID: 1,
+    mongoRequestID: 1,
     responseTo: 0,
     data: [{ name: 'John' }],
     ...overrides,
