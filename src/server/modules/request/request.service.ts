@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MongoDBProxyListener } from '../mongodb-proxy/proxy.service';
+import { MongoDBProxyListener, Session } from '../mongodb-proxy/proxy.service';
 import { Request } from './request.schema';
 import { IResponse } from '../mongodb-proxy/payload-resolver';
 import { MsgResult } from '../mongodb-proxy/protocol';
@@ -29,21 +29,17 @@ export class RequestService implements MongoDBProxyListener {
     return this.requestModel.find();
   }
 
-  async findOneByRequestId(requestID: number): Promise<Request> {
-    return this.requestModel.findOne({ requestID });
+  async findOne(id: string): Promise<Request> {
+    return this.requestModel.findOne({ id });
   }
 
-  async updateOne(request: Request): Promise<Request> {
-    // eslint-disable-next-line
-    // @ts-ignore - TODO: fix this
-    await this.requestModel.updateOne({ _id: request._id }, request);
-    // eslint-disable-next-line
-    // @ts-ignore - TODO: fix this
-    return this.requestModel.findOne(request._id);
+  async updateOne(req: IRequest): Promise<Request> {
+    await this.requestModel.updateOne({ id: req.id }, req);
+    return this.requestModel.findOne({ id: req.id });
   }
 
-  async deleteByRequestID(requestID: number): Promise<Request> {
-    return this.requestModel.findOneAndDelete({ requestID });
+  async deleteById(id: string): Promise<Request> {
+    return this.requestModel.findOneAndDelete({ id });
   }
 
   async deleteAll(): Promise<{ deletedCount: number }> {
@@ -55,8 +51,18 @@ export class RequestService implements MongoDBProxyListener {
     return this.requestModel.count();
   }
 
-  // Event: on aggregate query from client
-  async onRequest(req: IRequest): Promise<MsgResult> {
+  /**
+   * Called when a request is received from the client.
+   * This method is called before the request is forwarded to MongoDB.
+   * It allows to intercept the request and to answer it directly from Maggregor.
+   *
+   * @param session
+   * @param req
+   * @returns
+   */
+  async onRequest(req: IRequest, session: Session): Promise<MsgResult> {
+    // Define a unique id for the request
+    req.id = this.resolveUniqueRequestId(session, req.mongoRequestID);
     let results = null;
     req.startAt = new Date();
 
@@ -84,40 +90,44 @@ export class RequestService implements MongoDBProxyListener {
     // Save the request to the database
     this.create(req);
 
-    this.makeAsCompleted(req);
-
     if (req.requestSource === 'mongodb') {
       // Forward the request to MongoDB
       return null;
     }
+
     // Maggregor is able to answer by itself
+    this.markAsCompleted(req);
     return {
       db: req.db,
       collection: req.collName,
       results,
-      responseTo: req.requestID,
+      responseTo: req.mongoRequestID,
     } as MsgResult;
   }
 
   // Event: on result from server
-  async onResult(res: IResponse): Promise<void> {
-    const requestID = res.responseTo;
-    const req = await this.findOneByRequestId(requestID);
+  async onResponse(res: IResponse, session: Session): Promise<void> {
+    const id = this.resolveUniqueRequestId(session, res.responseTo);
+    const req = await this.findOne(id);
     if (!req) return;
-    this.makeAsCompleted(req);
+    this.markAsCompleted(req);
     this.updateOne(req);
     this.cacheService.tryCacheResults(req, res);
   }
 
-  makeAsCompleted(req: IRequest) {
+  markAsCompleted(req: IRequest) {
     if (req.type === 'unknown') {
       // We ignore unknown requests (such as heartbeat, listDatabases, etc.)
       return;
     }
-    const id = req.requestID;
+    const id = req.mongoRequestID;
     const src = req.requestSource;
     req.endAt = new Date();
     this.logger.log(`${id}: (${req.type}) Answered from ${src} (${ms(req)})`);
+  }
+
+  resolveUniqueRequestId(session: Session, mongoRequestId: number) {
+    return `${session.id}-${mongoRequestId}`;
   }
 }
 

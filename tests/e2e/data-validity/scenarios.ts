@@ -9,7 +9,7 @@ export interface E2EScenarios {
 }
 
 const recomputingDelay = 2000;
-const cacheInvalidationDelay = 2000;
+const cacheDelay = 2000;
 
 export default [
   {
@@ -188,12 +188,14 @@ export default [
       const c = db.collection('col2');
       // Count documents before insert
       const res1 = await c.aggregate([{ $count: 'count' }]).toArray();
+      await wait(cacheDelay);
       const inserted = await c.insertOne({ name: 'John Doe' });
-      await wait(cacheInvalidationDelay);
+      await wait(cacheDelay);
       // Count documents after insert
       const res2 = await c.aggregate([{ $count: 'count' }]).toArray();
+      await wait(cacheDelay);
       await c.deleteOne({ _id: inserted.insertedId });
-      await wait(cacheInvalidationDelay);
+      await wait(cacheDelay);
       // Count documents after delete
       const res3 = await c.aggregate([{ $count: 'count' }]).toArray();
 

@@ -1,18 +1,24 @@
 import { PassThrough } from 'stream';
 import { OP_MSG, decodeMessage } from '../protocol';
 import { IResponse, resolveResponse } from '../payload-resolver';
+import { Session } from '../proxy.service';
 
-export type ReplyInterceptorHook = (intercepted: IResponse) => Promise<void>;
+export type ResponseInterceptorHook = (
+  intercepted: IResponse,
+  session: Session,
+) => Promise<void>;
 
-export class ReplyInterceptor extends PassThrough {
-  hooks: ReplyInterceptorHook[];
+export class ResponseInterceptor extends PassThrough {
+  hooks: ResponseInterceptorHook[];
+  session: Session;
 
-  constructor() {
+  constructor(session: Session) {
     super();
     this.hooks = [];
+    this.session = session;
   }
 
-  registerHook(hook: ReplyInterceptorHook): void {
+  registerHook(hook: ResponseInterceptorHook): void {
     hook && this.hooks.push(hook);
   }
 
@@ -31,10 +37,11 @@ export class ReplyInterceptor extends PassThrough {
       if (msg.header.opCode === OP_MSG) {
         const res: IResponse = resolveResponse(requestID, responseTo, payload);
         for (const hook of this.hooks) {
-          hook(res);
+          hook(res, this.session);
         }
       }
     } catch (e) {}
+    this.session.isConnected = true;
     this.push(chunk);
     callback();
   }

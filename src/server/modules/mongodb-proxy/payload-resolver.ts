@@ -60,7 +60,7 @@ export const resolveRequest = (
   const collName = find || aggregate || count || distinct;
   const type = resolveRequestType(payload);
   return {
-    requestID,
+    mongoRequestID: requestID,
     db: $db,
     collName: collName,
     pipeline,
@@ -102,7 +102,7 @@ export const resolveResponse = (
 ): IResponse => {
   const { cursor } = payload;
   return {
-    requestID,
+    mongoRequestID: requestID,
     responseTo,
     // Retrieve the results from the cursor or the n field (count request)
     // TODO: Improve this
@@ -111,7 +111,7 @@ export const resolveResponse = (
 };
 
 export interface IResponse {
-  requestID: number;
+  mongoRequestID: number;
   responseTo: number;
   data: unknown;
 }

@@ -12,8 +12,11 @@ export type RequestDocument = HydratedDocument<Request>;
   minimize: false,
 })
 export class Request implements IRequest {
+  @Prop({ type: String, required: true })
+  id: string;
+
   @Prop({ type: Number, required: true })
-  requestID: number;
+  mongoRequestID: number;
 
   @Prop({ type: String, required: true })
   db: string;

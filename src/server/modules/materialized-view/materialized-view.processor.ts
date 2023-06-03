@@ -2,7 +2,6 @@ import { Inject } from '@nestjs/common';
 import {
   OnQueueCompleted,
   OnQueueError,
-  OnQueueProgress,
   Process,
   Processor,
 } from '@nestjs/bull';
@@ -29,10 +28,10 @@ export class MaterializedViewJobProcessor {
   onFailed(error: Error): void {
     this.logger.error(`Job failed: ${error}`);
   }
+
   @OnQueueCompleted()
-  async onCompleted(job: Job): Promise<void> {
-    if (await job.isFailed())
-      this.logger.log(`Job completed: Materialized view created`);
+  onCompleted(): void {
+    this.logger.log(`Job completed: Materialized view created`);
   }
 
   @Process('create')
