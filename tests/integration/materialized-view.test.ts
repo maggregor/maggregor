@@ -180,9 +180,21 @@ describe('MaterializedViews (integration)', () => {
         .insertOne({ name: 'test', amount: 30 });
       await changeEvent;
       // Materialized view should be correctly recalculated
-      const updatedView = mv.getView({ useFieldHashes: false });
+      let updatedView: any;
+      updatedView = mv.getView({ useFieldHashes: false });
       expect(updatedView.find((v) => v._id === 'test').amountTotal).toBe(60);
       expect(updatedView.find((v) => v._id === 'mytest').amountTotal).toBe(20);
+      // Insert a new group
+      expect(updatedView.find((v) => v._id === 'mytest42')).toBeUndefined();
+      await client
+        .db('test')
+        .collection('test')
+        .insertOne({ name: 'mytest42', amount: 30 });
+      await wait(100);
+      updatedView = mv.getView({ useFieldHashes: false });
+      expect(updatedView.find((v) => v._id === 'test')).toBeDefined();
+      expect(updatedView.find((v) => v._id === 'mytest')).toBeDefined();
+      expect(updatedView.find((v) => v._id === 'mytest42')).toBeDefined();
     });
 
     it('on update is correctly recomputed', async () => {

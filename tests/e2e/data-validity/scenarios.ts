@@ -218,11 +218,11 @@ export default [
       await wait(recomputingDelay);
       const res3 = await c.aggregate([{ $group: { _id: '$city' } }]).toArray();
       await wait(recomputingDelay);
-      const sorted = [res1, res2, res3].sort();
+      const sorted = [res1.sort(), res2.sort(), res3.sort()];
       logger.debug('res1', sorted[0]);
       logger.debug('res2', sorted[1]);
       logger.debug('res3', sorted[2]);
-      return sorted;
+      return [res1.sort(), res2.sort(), res3.sort()];
     },
   },
 ].map((scenario) => ({

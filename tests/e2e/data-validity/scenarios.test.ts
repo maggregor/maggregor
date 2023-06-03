@@ -28,7 +28,7 @@ async function runTests(context: Context) {
         expected = await scenario.request(mongoClient);
       }
       expect(actual.length).toBe(expected.length);
-      expect(actual.sort()).toEqual(expected.sort());
+      expect(actual).toEqual(expected);
     });
     afterAll(async () => {
       context.maggregor?.stop();
