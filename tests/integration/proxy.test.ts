@@ -4,6 +4,7 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { MongoClient } from 'mongodb';
 import { startMongoServer } from 'tests/e2e/utils';
 import { createMaggregorModule } from 'tests/unit/server/utils';
+import { createClient } from 'tests/e2e/contexts';
 
 describe('MongoDBTcpProxyService: with mongodb-memory-server without interception', () => {
   let service: MongoDBTcpProxyService;
@@ -24,9 +25,21 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
   });
 
   afterAll(async () => {
+    await mongodbClient.close();
     await mongodbServer.stop();
     service.stop();
-    await mongodbClient.close();
+  });
+
+  test('Connect to the proxy', async () => {
+    const db = await createClient(
+      `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
+    );
+    const collection = db.db('test').collection('test-1');
+    await collection.insertOne({ name: 'John' });
+    const docs = await collection.find().toArray();
+    expect(docs.length).toBe(1);
+    expect(docs[0].name).toBe('John');
+    await db.close();
   });
 
   test('Simple aggregate query with group', async () => {
@@ -55,20 +68,5 @@ describe('MongoDBTcpProxyService: with mongodb-memory-server without interceptio
     expect((console.error as any).mock.calls.length).toBe(1);
 
     vitest.restoreAllMocks();
-  });
-
-  test('Connect to the proxy', async () => {
-    const db = await MongoClient.connect(
-      `mongodb://${service.getProxyHost()}:${service.getProxyPort()}/`,
-      {
-        directConnection: true,
-      },
-    );
-    const collection = db.db('test').collection('test-1');
-    await collection.insertOne({ name: 'John' });
-    const docs = await collection.find().toArray();
-    expect(docs.length).toBe(1);
-    expect(docs[0].name).toBe('John');
-    await db.close();
   });
 });

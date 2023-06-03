@@ -1,18 +1,24 @@
 import type { CollectionListener, Document } from '@core/index';
 import type {
   AccumulatorDefinition,
+  AvgCachedAccumulator,
   CachedAccumulator,
+  CountCachedAccumulator,
 } from './pipeline/accumulators';
 import { createCachedAccumulator } from './pipeline/accumulators';
 import { evaluateExpression, toHashExpression } from './pipeline/expressions';
 import type { Expression } from './pipeline/expressions';
 import EventEmitter from 'events';
+
 export interface MaterializedViewDefinition {
   db: string;
   collection: string;
   groupBy: Expression;
   accumulatorDefs: AccumulatorDefinition[];
 }
+
+// Name of the accumulator storing the document count for each group.
+const GROUP_COUNT_ACC_NAME = '__id_count';
 
 export class MaterializedView
   extends EventEmitter
@@ -22,7 +28,14 @@ export class MaterializedView
   private _collection: string;
   private groupBy: Expression;
   private definitions: AccumulatorDefinition[];
+
+  // Map storing document count for each group. Allows group removal when there are no more documents.
+  private groupKeyDocumentCount = new Map<string, CountCachedAccumulator>();
+
+  // Map storing results for each group.
   private results = new Map<string, CachedAccumulator[]>();
+
+  // Boolean flag indicating if the view is faulty.
   private faulty = false;
 
   constructor(def: MaterializedViewDefinition) {
@@ -33,6 +46,14 @@ export class MaterializedView
     this.definitions = def.accumulatorDefs;
   }
 
+  /**
+   * Updates the 'faulty' status of the materialized view.
+   * If the view is already faulty, checks all global accumulators to see if any of them are faulty.
+   * If any global accumulator is faulty, the entire view is marked as faulty.
+   * If the view is not faulty, only the passed accumulators are checked for faulty status.
+   *
+   * @param accumulators - An optional array of CachedAccumulators for which to check the faulty status.
+   */
   private updateFaultyStatus(accumulators?: CachedAccumulator[]): void {
     if (this.faulty) {
       // We will check if any accumulators in the global results are faulty
@@ -46,35 +67,180 @@ export class MaterializedView
     }
   }
 
-  addDocument(doc: Document): void {
-    const groupByValue = evaluateExpression(this.groupBy, doc);
-    const groupByValueString = JSON.stringify(groupByValue);
-    if (!this.results.has(groupByValueString)) {
-      this.results.set(
-        groupByValueString,
-        this.definitions.map((d) => createCachedAccumulator(d)),
+  /**
+   * Initializes a set of accumulators for a specific group key, based on the definitions provided in the view.
+   * It also initializes a special count accumulator that keeps track of the document count for the group.
+   *
+   * @param groupKeyString - The string representation of the group key.
+   * @param result - The current result object associated with the group key.
+   * @returns An array of initialized CachedAccumulators.
+   */
+  private initializeAccumulators(
+    groupKeyString: string,
+    result: any,
+  ): CachedAccumulator[] {
+    const accumulators = this.definitions.map(createCachedAccumulator);
+    this.results.set(groupKeyString, accumulators);
+
+    const groupCountAcc = createCachedAccumulator({
+      operator: 'count',
+      outputFieldName: GROUP_COUNT_ACC_NAME,
+      expression: this.groupBy,
+    }) as CountCachedAccumulator;
+
+    groupCountAcc.initialize(result[GROUP_COUNT_ACC_NAME]);
+    this.groupKeyDocumentCount.set(groupKeyString, groupCountAcc);
+
+    accumulators.forEach((a, i) => {
+      if (a.operator === 'avg') {
+        /**
+         * Avg accumulators require a different initialization process.
+         * The AvgCachedAccumulator will initialize itself with the sum and count values.
+         */
+        const avgAcc = a as AvgCachedAccumulator;
+        avgAcc.initialize({
+          count: result[this.definitions[i].outputFieldName + '_count'],
+          sum: result[this.definitions[i].outputFieldName + '_sum'],
+        });
+      } else {
+        a.initialize(result[this.definitions[i].outputFieldName]);
+      }
+    });
+
+    return accumulators;
+  }
+
+  /**
+   * Updates the accumulators when a new document is added to a group.
+   * If the group does not exist yet, new accumulators are created and added to the results map.
+   * Also ensures that a count accumulator exists for the group.
+   *
+   * @param groupKeyString - The string representation of the group key.
+   * @param doc - The document being added to the group.
+   * @returns An array of updated CachedAccumulators for the group.
+   */
+  private updateAccumulatorsOnAdd(
+    groupKeyString: string,
+    doc: Document,
+  ): CachedAccumulator[] {
+    let accumulators = this.results.get(groupKeyString);
+    if (!accumulators) {
+      accumulators = this.definitions.map(createCachedAccumulator);
+      this.results.set(groupKeyString, accumulators);
+    }
+
+    if (!this.groupKeyDocumentCount.has(groupKeyString)) {
+      this.groupKeyDocumentCount.set(
+        groupKeyString,
+        createCachedAccumulator({
+          operator: 'count',
+          outputFieldName: GROUP_COUNT_ACC_NAME,
+          expression: this.groupBy,
+        }) as CountCachedAccumulator,
       );
     }
-    const accumulators = this.results.get(groupByValueString);
-    accumulators?.forEach((a) => a.addDocument(doc));
+
+    this.groupKeyDocumentCount.get(groupKeyString).addDocument(doc);
+    accumulators.forEach((a) => a.addDocument(doc));
+
+    return accumulators;
+  }
+
+  addDocument(doc: Document): void {
+    const groupKey = evaluateExpression(this.groupBy, doc);
+    const groupKeyString = JSON.stringify(groupKey);
+
+    const accumulators = this.updateAccumulatorsOnAdd(groupKeyString, doc);
+
+    this.updateFaultyStatus(accumulators);
+
     this.emit('change', { type: 'add', document: doc });
+  }
+
+  /**
+   * Initializes the materialized view by creating accumulators for each result and populating them with initial data.
+   *
+   * @param results - An array of result objects. Each result object corresponds to a group.
+   */
+  initialize(results: any[]) {
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i] as any;
+      const id = result._id;
+      this.initializeAccumulators(JSON.stringify(id), result);
+    }
+  }
+
+  /**
+   * Updates the count accumulator with the given group key and document.
+   * If the count reaches zero, deletes the group key from the results and groupKeyDocumentCount maps.
+   * @param groupKeyString - The group key as a string.
+   * @param doc - The document to delete.
+   * @returns True if there are more documents in the group, false otherwise.
+   */
+  private updateCountAccumulatorOnDelete(
+    groupKeyString: string,
+    doc: Document,
+  ): boolean {
+    const countAccumulator = this.groupKeyDocumentCount.get(groupKeyString);
+    if (!countAccumulator) {
+      // If no count accumulator exists for this group but a delete was called, something is wrong.
+      // This should never happen.
+      this.faulty = true;
+      throw new Error(
+        `Count accumulator not found for group key ${groupKeyString} when deleting document ${doc._id}. This MaterializedView is faulty.`,
+      );
+    }
+
+    countAccumulator.deleteDocument(doc);
+    if (countAccumulator.getCachedValue() <= 0) {
+      // If the count has reached zero, remove this group from the results and groupKeyDocumentCount maps.
+      this.results.delete(groupKeyString);
+      this.groupKeyDocumentCount.delete(groupKeyString);
+      return false;
+    }
+
+    // If the count is greater than zero, there are still documents in this group.
+    return true;
+  }
+
+  /**
+   * Updates the result accumulators with the given group key and document.
+   * Checks the faulty status after updating.
+   * @param groupKeyString - The group key as a string.
+   * @param doc - The document to delete.
+   */
+  private updateResultAccumulatorsOnDelete(
+    groupKeyString: string,
+    doc: Document,
+  ): void {
+    const accumulators = this.results.get(groupKeyString);
+    if (!accumulators) {
+      // If no result accumulators exist for this group, there's nothing to update.
+      return;
+    }
+
+    // Remove the document from each accumulator and update the faulty status.
+    accumulators.forEach((a) => a.deleteDocument(doc));
     this.updateFaultyStatus(accumulators);
   }
 
+  /**
+   * Deletes a document from the materialized view.
+   * Updates the count and result accumulators, and emits a change event.
+   * @param doc - The document to delete.
+   */
   deleteDocument(doc: Document): void {
     const groupByValue = evaluateExpression(this.groupBy, doc);
     const groupByValueString = JSON.stringify(groupByValue);
-    if (!this.results.has(groupByValueString)) {
-      return;
-    }
-    const accumulators = this.results.get(groupByValueString);
-    accumulators?.forEach((a) => a.deleteDocument(doc));
 
+    this.updateCountAccumulatorOnDelete(groupByValueString, doc);
+    this.updateResultAccumulatorsOnDelete(groupByValueString, doc);
+
+    // Emit a change event after the document has been deleted.
     this.emit('change', { type: 'delete', document: doc });
-    this.updateFaultyStatus(accumulators);
   }
 
-  updateDocument(oldDoc: Document, newDoc: Document): void {
+  public updateDocument(oldDoc: Document, newDoc: Document): void {
     this.deleteDocument(oldDoc);
     this.addDocument(newDoc);
     this.emit('change', {
@@ -103,36 +269,13 @@ export class MaterializedView
         [groupByKey]: JSON.parse(key),
       };
       value.forEach((a, i) => {
-        let accKey: string;
-        if (useFieldHashes) {
-          accKey = hashes[i];
-        } else {
-          accKey = accumulatorDefs[i].outputFieldName;
-        }
+        const accKey = useFieldHashes
+          ? hashes[i]
+          : accumulatorDefs[i].outputFieldName;
         obj[accKey] = a.getCachedValue();
       });
       return obj;
     });
-  }
-
-  initialize(results: any[]) {
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i] as any;
-      const id = result._id;
-      const accumulators = this.definitions.map((d) => {
-        const acc = createCachedAccumulator(d);
-        if (acc.operator === 'avg') {
-          acc.initialize({
-            count: result[d.outputFieldName + '_count'],
-            sum: result[d.outputFieldName + '_sum'],
-          });
-        } else {
-          acc.initialize(result[d.outputFieldName]);
-        }
-        return acc;
-      });
-      this.results.set(JSON.stringify(id), accumulators);
-    }
   }
 
   getAccumulatorHashes(): string[] {
@@ -185,6 +328,10 @@ export class MaterializedView
   buildAsMongoAggregatePipeline(): any {
     const accumulators = this.getAccumulatorDefinitions();
     const accumulatorsOutput: Record<string, any> = {};
+
+    accumulatorsOutput[GROUP_COUNT_ACC_NAME] = {
+      $sum: 1,
+    };
 
     accumulators.forEach((acc) => {
       if (acc.operator === 'avg') {

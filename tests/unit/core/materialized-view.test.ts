@@ -76,10 +76,53 @@ describe('MaterializedView', () => {
     mv.addDocument({ genre: 'action', score: 10 });
     expect(mv.isFaulty()).toBe(false);
     mv.deleteDocument({ genre: 'action', score: 10 });
+    // False because the accumulator doesn't exist anymore, the 'action' group was deleted.
+    expect(mv.isFaulty()).toBe(false);
+    // Add a document to the 'action' group again to recreate the accumulator.
+    mv.addDocument({ genre: 'action', score: 42 });
+    mv.addDocument({ genre: 'action', score: 10 });
+    expect(mv.isFaulty()).toBe(false);
+    mv.deleteDocument({ genre: 'action', score: 10 });
+    // Faulty because the entry for the 'action' group is still there, but we don't know the min anymore.
     expect(mv.isFaulty()).toBe(true);
     mv.addDocument({ genre: 'action', score: 15 });
     expect(mv.isFaulty()).toBe(true);
     mv.addDocument({ genre: 'action', score: 8 });
     expect(mv.isFaulty()).toBe(false);
+  });
+
+  it('should correctly delete documents', () => {
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'country' },
+      accumulatorDefs: [],
+    });
+    mv.addDocument({ country: 'France' });
+    mv.addDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'France' },
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'France' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+    mv.addDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'Switzerland' },
+    ]);
+    mv.deleteDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([]);
+    expect(mv.isFaulty()).toBe(false);
+    // Simulates a situation where a view receives a document delete even though it was unaware of it.
+    // In this case (which should not happen) you have to pass the view to faulty.
+    // Switzerland was added twice and will be deleted three times:
+    expect(() => mv.deleteDocument({ country: 'Switzerland' })).toThrowError();
+    expect(mv.isFaulty()).toBe(true);
   });
 });
