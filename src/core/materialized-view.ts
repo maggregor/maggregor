@@ -18,7 +18,14 @@ export interface MaterializedViewDefinition {
 }
 
 // Name of the accumulator storing the document count for each group.
-const GROUP_COUNT_ACC_NAME = '__id_count';
+const groupCountKey = '__id_count';
+
+// Represent the MongoDB result for each group.
+export type MaterialziedViewEntryResult = {
+  _id: string;
+  [groupCountKey]: number;
+  [key: string]: any;
+};
 
 export class MaterializedView
   extends EventEmitter
@@ -33,7 +40,7 @@ export class MaterializedView
   private groupKeyDocumentCount = new Map<string, CountCachedAccumulator>();
 
   // Map storing results for each group.
-  private results = new Map<string, CachedAccumulator[]>();
+  private entries = new Map<string, CachedAccumulator[]>();
 
   // Boolean flag indicating if the view is faulty.
   private faulty = false;
@@ -58,7 +65,7 @@ export class MaterializedView
     if (this.faulty) {
       // We will check if any accumulators in the global results are faulty
       // If so, we will mark this materialized view as faulty
-      const allAccumulators = Array.from(this.results.values()).flat();
+      const allAccumulators = Array.from(this.entries.values()).flat();
       this.faulty = allAccumulators.some((a) => a.isFaulty());
     } else {
       // If the materialized view is not faulty, we will check if any of the accumulators
@@ -72,23 +79,23 @@ export class MaterializedView
    * It also initializes a special count accumulator that keeps track of the document count for the group.
    *
    * @param groupKeyString - The string representation of the group key.
-   * @param result - The current result object associated with the group key.
+   * @param entry - The current result object associated with the group key.
    * @returns An array of initialized CachedAccumulators.
    */
   private initializeAccumulators(
     groupKeyString: string,
-    result: any,
+    entry: MaterialziedViewEntryResult,
   ): CachedAccumulator[] {
     const accumulators = this.definitions.map(createCachedAccumulator);
-    this.results.set(groupKeyString, accumulators);
+    this.entries.set(groupKeyString, accumulators);
 
     const groupCountAcc = createCachedAccumulator({
       operator: 'count',
-      outputFieldName: GROUP_COUNT_ACC_NAME,
+      outputFieldName: groupCountKey,
       expression: this.groupBy,
     }) as CountCachedAccumulator;
 
-    groupCountAcc.initialize(result[GROUP_COUNT_ACC_NAME]);
+    groupCountAcc.initialize(entry[groupCountKey]);
     this.groupKeyDocumentCount.set(groupKeyString, groupCountAcc);
 
     accumulators.forEach((a, i) => {
@@ -99,11 +106,11 @@ export class MaterializedView
          */
         const avgAcc = a as AvgCachedAccumulator;
         avgAcc.initialize({
-          count: result[this.definitions[i].outputFieldName + '_count'],
-          sum: result[this.definitions[i].outputFieldName + '_sum'],
+          count: entry[this.definitions[i].outputFieldName + '_count'],
+          sum: entry[this.definitions[i].outputFieldName + '_sum'],
         });
       } else {
-        a.initialize(result[this.definitions[i].outputFieldName]);
+        a.initialize(entry[this.definitions[i].outputFieldName]);
       }
     });
 
@@ -123,10 +130,10 @@ export class MaterializedView
     groupKeyString: string,
     doc: Document,
   ): CachedAccumulator[] {
-    let accumulators = this.results.get(groupKeyString);
+    let accumulators = this.entries.get(groupKeyString);
     if (!accumulators) {
       accumulators = this.definitions.map(createCachedAccumulator);
-      this.results.set(groupKeyString, accumulators);
+      this.entries.set(groupKeyString, accumulators);
     }
 
     if (!this.groupKeyDocumentCount.has(groupKeyString)) {
@@ -134,7 +141,7 @@ export class MaterializedView
         groupKeyString,
         createCachedAccumulator({
           operator: 'count',
-          outputFieldName: GROUP_COUNT_ACC_NAME,
+          outputFieldName: groupCountKey,
           expression: this.groupBy,
         }) as CountCachedAccumulator,
       );
@@ -162,11 +169,11 @@ export class MaterializedView
    *
    * @param results - An array of result objects. Each result object corresponds to a group.
    */
-  initialize(results: any[]) {
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i] as any;
-      const id = result._id;
-      this.initializeAccumulators(JSON.stringify(id), result);
+  initialize(entries: Array<MaterialziedViewEntryResult>) {
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const id = entry._id;
+      this.initializeAccumulators(JSON.stringify(id), entry);
     }
   }
 
@@ -194,7 +201,7 @@ export class MaterializedView
     countAccumulator.deleteDocument(doc);
     if (countAccumulator.getCachedValue() <= 0) {
       // If the count has reached zero, remove this group from the results and groupKeyDocumentCount maps.
-      this.results.delete(groupKeyString);
+      this.entries.delete(groupKeyString);
       this.groupKeyDocumentCount.delete(groupKeyString);
       return false;
     }
@@ -213,7 +220,7 @@ export class MaterializedView
     groupKeyString: string,
     doc: Document,
   ): void {
-    const accumulators = this.results.get(groupKeyString);
+    const accumulators = this.entries.get(groupKeyString);
     if (!accumulators) {
       // If no result accumulators exist for this group, there's nothing to update.
       return;
@@ -261,7 +268,7 @@ export class MaterializedView
     const useFieldHashes = opts?.useFieldHashes ?? true;
     const hashes = this.getAccumulatorHashes();
     const accumulatorDefs = this.getAccumulatorDefinitions();
-    return Array.from(this.results.entries()).map(([key, value]) => {
+    return Array.from(this.entries.entries()).map(([key, value]) => {
       const groupByKey = useFieldHashes
         ? toHashExpression(this.groupBy)
         : '_id';
@@ -329,7 +336,7 @@ export class MaterializedView
     const accumulators = this.getAccumulatorDefinitions();
     const accumulatorsOutput: Record<string, any> = {};
 
-    accumulatorsOutput[GROUP_COUNT_ACC_NAME] = {
+    accumulatorsOutput[groupCountKey] = {
       $sum: 1,
     };
 
