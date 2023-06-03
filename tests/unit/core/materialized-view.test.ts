@@ -1,4 +1,7 @@
-import { MaterializedView } from '@/core/materialized-view';
+import {
+  MaterializedView,
+  MaterializedViewDefinition,
+} from '@/core/materialized-view';
 import { AccumulatorDefinition } from '@/core/pipeline/accumulators';
 import { toHashExpression } from '@/core/pipeline/expressions';
 
@@ -91,6 +94,22 @@ describe('MaterializedView', () => {
     expect(mv.isFaulty()).toBe(false);
   });
 
+  it('should correctly insert documents', () => {
+    const mv = new MaterializedView({
+      db: 'db',
+      collection: 'collection',
+      groupBy: { field: 'country' },
+      accumulatorDefs: [],
+    });
+    mv.initialize([{ _id: 'France', __id_count: 1 }]);
+    expect(mv.getView({ useFieldHashes: false })).toEqual([{ _id: 'France' }]);
+    mv.addDocument({ country: 'Switzerland' });
+    expect(mv.getView({ useFieldHashes: false })).toEqual([
+      { _id: 'France' },
+      { _id: 'Switzerland' },
+    ]);
+  });
+
   it('should correctly delete documents', () => {
     const mv = new MaterializedView({
       db: 'db',
@@ -98,8 +117,10 @@ describe('MaterializedView', () => {
       groupBy: { field: 'country' },
       accumulatorDefs: [],
     });
-    mv.addDocument({ country: 'France' });
-    mv.addDocument({ country: 'Switzerland' });
+    mv.initialize([
+      { _id: 'France', __id_count: 1 },
+      { _id: 'Switzerland', __id_count: 1 },
+    ]);
     expect(mv.getView({ useFieldHashes: false })).toEqual([
       { _id: 'France' },
       { _id: 'Switzerland' },
