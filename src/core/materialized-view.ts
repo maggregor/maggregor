@@ -21,7 +21,7 @@ export interface MaterializedViewDefinition {
 const groupCountKey = '__id_count';
 
 // Represent the MongoDB result for each group.
-export type MaterialziedViewEntryResult = {
+export type MaterializedViewEntryResult = {
   _id: string;
   [groupCountKey]: number;
   [key: string]: any;
@@ -84,7 +84,7 @@ export class MaterializedView
    */
   private initializeAccumulators(
     groupKeyString: string,
-    entry: MaterialziedViewEntryResult,
+    entry: MaterializedViewEntryResult,
   ): CachedAccumulator[] {
     const accumulators = this.definitions.map(createCachedAccumulator);
     this.entries.set(groupKeyString, accumulators);
@@ -169,7 +169,7 @@ export class MaterializedView
    *
    * @param results - An array of result objects. Each result object corresponds to a group.
    */
-  initialize(entries: Array<MaterialziedViewEntryResult>) {
+  initialize(entries: Array<MaterializedViewEntryResult>) {
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
       const id = entry._id;
