@@ -69,7 +69,7 @@ function encodeOpMsg(message: MongoDBMessage): Buffer {
 
   const headerBuffer = encodeHeader(
     message.header,
-    flagBitsBuffer.length + sectionsBuffer.length, // TAILLE DANS LE HEADER
+    flagBitsBuffer.length + sectionsBuffer.length,
   );
 
   const buffer = Buffer.concat([headerBuffer, flagBitsBuffer, sectionsBuffer]);
